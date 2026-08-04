@@ -7,10 +7,14 @@ body:
     id: pipeline
     attributes:
       label: Pipeline issue
-      description: "Odkaz na [PIPELINE] issue ve formátu #N (musí mít label multiagent/pipeline)"
+      description: "Jen číslo (#N); do body issue doplň samostatný řádek `Pipeline: #N` (anchored regex v CI)"
       placeholder: "#9"
     validations:
       required: true
+  - type: markdown
+    attributes:
+      value: |
+        **Povinný řádek v body** (samostatně, mimo tabulky): `Pipeline: #<číslo z pole výše>`
   - type: input
     id: goal
     attributes:

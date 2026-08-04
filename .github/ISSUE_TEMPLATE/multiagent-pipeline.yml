@@ -20,7 +20,8 @@ body:
   - type: textarea
     id: links
     attributes:
-      label: Odkazy na child issues
+      label: Odkazy na child issues (ruční fallback)
+      description: Bot doplňuje tabulku v sekci Auto-přehled; checklist lze vyplnit ručně do doby sync
       value: |
         - [ ] ANALÝZA: #
         - [ ] VERDIKT-A: #
@@ -28,6 +29,15 @@ body:
         - [ ] VERDIKT-V: #
         - [ ] TESTY: #
         - [ ] VERDIKT-T: #
+  - type: textarea
+    id: prehled
+    attributes:
+      label: Auto-přehled (bot)
+      description: Sekci mezi markery udržuje workflow multiagent-pipeline-sync.yml — neupravovat ručně uvnitř markerů
+      value: |
+        <!-- multiagent:prehled:start -->
+        _(generuje multiagent-pipeline-sync.yml)_
+        <!-- multiagent:prehled:end -->
   - type: textarea
     id: done
     attributes:

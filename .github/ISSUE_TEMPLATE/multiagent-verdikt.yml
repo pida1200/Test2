@@ -26,10 +26,14 @@ body:
     id: pipeline
     attributes:
       label: Pipeline issue #
-      description: "Ve formátu #N"
+      description: "Jen číslo (#N); do body doplň samostatný řádek `Pipeline: #N`"
       placeholder: "#9"
     validations:
       required: true
+  - type: markdown
+    attributes:
+      value: |
+        **Povinný řádek v body** (samostatně): `Pipeline: #<číslo z pole výše>`
   - type: input
     id: input_issue
     attributes:
