@@ -1,0 +1,297 @@
+name: Multi-agent pipeline sync
+
+# Udržuje auto-přehled mezi markery v [PIPELINE] body.
+# Bot mění jen <!-- multiagent:prehled:start --> … <!-- multiagent:prehled:end -->.
+
+on:
+  issues:
+    types: [opened, labeled, unlabeled, closed, reopened, edited]
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  sync-prehled:
+    if: >
+      contains(join(github.event.issue.labels.*.name, ','), 'multiagent') &&
+      !(github.event.action == 'edited' && github.actor == 'github-actions[bot]')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sync pipeline overview section
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const START = '<!-- multiagent:prehled:start -->';
+            const END = '<!-- multiagent:prehled:end -->';
+            const PIPELINE_RE = /^\s*Pipeline(?:\s+issue)?:\s*#?(\d+)\s*$/m;
+
+            const PHASES = [
+              { key: 'ANALÝZA', artifact: 'multiagent/analyza', verdict: null },
+              { key: 'VERDIKT-A', artifact: 'multiagent/verdikt', verdict: 'A' },
+              { key: 'IMPLEMENTACE', artifact: 'multiagent/implementace', verdict: null },
+              { key: 'VERDIKT-V', artifact: 'multiagent/verdikt', verdict: 'V' },
+              { key: 'TESTY', artifact: 'multiagent/testy', verdict: null },
+              { key: 'VERDIKT-T', artifact: 'multiagent/verdikt', verdict: 'T' },
+            ];
+
+            function resolveGate(labelList) {
+              const gates = labelList.filter(l => l.startsWith('gate/'));
+              const precedence = ['gate/go', 'gate/no-go', 'gate/blocked', 'gate/pending'];
+              for (const g of precedence) {
+                if (gates.includes(g)) return g;
+              }
+              return 'gate/pending';
+            }
+
+            function verdictKind(t) {
+              if (/\[VERDIKT-A\]|VERDIKT-A/i.test(t)) return 'A';
+              if (/\[VERDIKT-V\]|VERDIKT-V/i.test(t)) return 'V';
+              if (/\[VERDIKT-T\]|VERDIKT-T/i.test(t)) return 'T';
+              return null;
+            }
+
+            function parsePipelineNum(body) {
+              const m = (body || '').match(PIPELINE_RE);
+              return m ? m[1] : null;
+            }
+
+            function phaseForIssue(issue) {
+              const labels = (issue.labels || []).map(l => l.name);
+              const title = issue.title || '';
+              const vk = verdictKind(title);
+              for (const phase of PHASES) {
+                if (phase.verdict) {
+                  if (labels.includes('multiagent/verdikt') && vk === phase.verdict) return phase.key;
+                } else if (labels.includes(phase.artifact)) {
+                  return phase.key;
+                }
+              }
+              return null;
+            }
+
+            function issueGate(issue) {
+              return resolveGate((issue.labels || []).map(l => l.name));
+            }
+
+            function issueState(issue) {
+              return issue.state === 'closed' ? 'closed' : 'open';
+            }
+
+            const trigger = context.payload.issue;
+            const triggerLabels = (trigger.labels || []).map(l => l.name);
+
+            let pipelineNum = null;
+            if (triggerLabels.includes('multiagent/pipeline')) {
+              pipelineNum = String(trigger.number);
+            } else {
+              pipelineNum = parsePipelineNum(trigger.body || '');
+            }
+
+            if (!pipelineNum) {
+              core.info('No pipeline number — skip sync');
+              return;
+            }
+
+            const { data: pipelineIssue } = await github.rest.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: parseInt(pipelineNum, 10),
+            });
+
+            const plLabels = (pipelineIssue.labels || []).map(l => l.name);
+            if (!plLabels.includes('multiagent/pipeline')) {
+              core.info(`#${pipelineNum} is not a pipeline issue — skip`);
+              return;
+            }
+
+            const allIssues = await github.paginate(github.rest.issues.listForRepo, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'multiagent',
+              state: 'all',
+              per_page: 100,
+            });
+
+            const children = allIssues.filter(i => {
+              if (i.number === parseInt(pipelineNum, 10)) return false;
+              if (i.pull_request) return false;
+              return parsePipelineNum(i.body || '') === pipelineNum;
+            });
+
+            const byPhase = {};
+            for (const phase of PHASES) byPhase[phase.key] = [];
+
+            for (const child of children) {
+              const pk = phaseForIssue(child);
+              if (pk) byPhase[pk].push(child);
+            }
+
+            for (const phase of PHASES) {
+              byPhase[phase.key].sort((a, b) => a.number - b.number);
+            }
+
+            function latestIssue(phaseKey) {
+              const list = byPhase[phaseKey] || [];
+              return list.length ? list[list.length - 1] : null;
+            }
+
+            const tableRows = PHASES.map(phase => {
+              const iss = latestIssue(phase.key);
+              if (!iss) {
+                return `| ${phase.key} | — | — | — |`;
+              }
+              const gate = issueGate(iss);
+              const state = issueState(iss);
+              return `| ${phase.key} | #${iss.number} | \`${gate}\` | ${state} |`;
+            });
+
+            const historyParts = [];
+            for (const phase of PHASES.filter(p => p.verdict)) {
+              const list = byPhase[phase.key] || [];
+              const noGos = list.filter(i => issueGate(i) === 'gate/no-go');
+              const go = list.find(i => issueGate(i) === 'gate/go');
+              if (noGos.length === 0 && !go) continue;
+              if (noGos.length === 0 && go) {
+                historyParts.push(`${phase.key} #${go.number} GO`);
+                continue;
+              }
+              const chain = noGos.map(i => `#${i.number} NO-GO`).join(' → ');
+              if (go) {
+                historyParts.push(`${phase.key} ${chain} → #${go.number} GO (rework ${noGos.length}/3)`);
+              } else {
+                historyParts.push(`${phase.key} ${chain} (rework ${noGos.length}/3)`);
+              }
+            }
+
+            const historyLine = historyParts.length
+              ? `Historie verdiktů: ${historyParts.join('; ')}`
+              : 'Historie verdiktů: —';
+
+            let nextRole = 'Integrátor → Analytik';
+            let nextModel = 'composer-2.5-fast';
+            let nextHint = `/m #${pipelineNum}`;
+
+            outer: for (const phase of PHASES) {
+              const iss = latestIssue(phase.key);
+              if (!iss) {
+                if (phase.key === 'ANALÝZA') {
+                  nextRole = 'Analytik';
+                  nextModel = 'claude-opus-5-thinking-high';
+                } else if (phase.key.startsWith('VERDIKT')) {
+                  nextRole = phase.key === 'VERDIKT-A' ? 'Kontrolor analytika'
+                    : phase.key === 'VERDIKT-V' ? 'Kontrolor vývojáře'
+                    : 'Kontrolor testera';
+                  nextModel = phase.key === 'VERDIKT-V' ? 'gpt-5.6-sol-medium' : 'claude-opus-5-thinking-high';
+                } else if (phase.key === 'IMPLEMENTACE') {
+                  nextRole = 'Vývojář';
+                  nextModel = 'composer-2.5-fast';
+                } else {
+                  nextRole = 'Tester';
+                  nextModel = 'composer-2.5-fast';
+                }
+                break outer;
+              }
+              const gate = issueGate(iss);
+              if (gate === 'gate/no-go') {
+                if (phase.key === 'ANALÝZA' || phase.key === 'VERDIKT-A') {
+                  nextRole = 'Analytik (rework)';
+                  nextModel = 'claude-opus-5-thinking-high';
+                } else if (phase.key === 'IMPLEMENTACE' || phase.key === 'VERDIKT-V') {
+                  nextRole = 'Vývojář (rework)';
+                  nextModel = 'composer-2.5-fast';
+                } else {
+                  nextRole = 'Tester (rework)';
+                  nextModel = 'composer-2.5-fast';
+                }
+                break outer;
+              }
+              if (gate === 'gate/pending') {
+                if (phase.key === 'ANALÝZA') {
+                  nextRole = 'Analytik';
+                  nextModel = 'claude-opus-5-thinking-high';
+                } else if (phase.key === 'VERDIKT-A') {
+                  nextRole = 'Kontrolor analytika';
+                  nextModel = 'claude-opus-5-thinking-high';
+                } else if (phase.key === 'IMPLEMENTACE') {
+                  nextRole = 'Vývojář';
+                  nextModel = 'composer-2.5-fast';
+                } else if (phase.key === 'VERDIKT-V') {
+                  nextRole = 'Kontrolor vývojáře';
+                  nextModel = 'gpt-5.6-sol-medium';
+                } else if (phase.key === 'TESTY') {
+                  nextRole = 'Tester';
+                  nextModel = 'composer-2.5-fast';
+                } else {
+                  nextRole = 'Kontrolor testera';
+                  nextModel = 'claude-sonnet-5-thinking-high';
+                }
+                break outer;
+              }
+            }
+
+            if (plLabels.includes('gate/blocked')) {
+              nextRole = 'Eskalace';
+              nextModel = '—';
+              nextHint = 'Vyřeš gate/blocked (≥3 reworky)';
+            } else {
+              const allGo = ['VERDIKT-A', 'VERDIKT-V', 'VERDIKT-T'].every(k => {
+                const iss = latestIssue(k);
+                return iss && issueGate(iss) === 'gate/go';
+              });
+              if (allGo && plLabels.includes('gate/go')) {
+                nextRole = 'Integrátor';
+                nextModel = 'composer-2.5-fast';
+                nextHint = 'Pipeline dokončena — uzavři issue';
+              }
+            }
+
+            const section = [
+              START,
+              '',
+              '| Fáze | Issue | Gate | Stav |',
+              '|------|-------|------|------|',
+              ...tableRows,
+              '',
+              historyLine,
+              '',
+              `Další krok: **${nextRole}** · \`${nextModel}\` · ${nextHint}`,
+              '',
+              END,
+            ].join('\n');
+
+            let body = pipelineIssue.body || '';
+            let newBody;
+            if (body.includes(START) && body.includes(END)) {
+              const re = new RegExp(`${START}[\\s\\S]*?${END}`);
+              newBody = body.replace(re, section);
+            } else {
+              newBody = body.trimEnd() + '\n\n' + section + '\n';
+            }
+
+            if (newBody === body) {
+              core.info('Pipeline prehled unchanged — skip edit');
+              return;
+            }
+
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: parseInt(pipelineNum, 10),
+              body: newBody,
+            });
+
+            const maxRework = Math.max(
+              0,
+              ...['VERDIKT-A', 'VERDIKT-V', 'VERDIKT-T'].map(k =>
+                (byPhase[k] || []).filter(i => issueGate(i) === 'gate/no-go').length
+              )
+            );
+            if (maxRework >= 3 && !plLabels.includes('gate/blocked')) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: parseInt(pipelineNum, 10),
+                labels: ['gate/blocked'],
+              });
+            }
