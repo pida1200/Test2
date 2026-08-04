@@ -1,0 +1,40 @@
+name: Multi-agent PIPELINE
+description: Epic issue pro multi-agent pipeline (Integrátor kickoff)
+title: "[PIPELINE] "
+labels: ["multiagent", "multiagent/pipeline", "gate/pending"]
+body:
+  - type: input
+    id: feature
+    attributes:
+      label: Feature (1 věta)
+      placeholder: Přidat endpoint POST /echo s validací
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Kontext
+      description: Cesty v repu, relevantní docs/rules
+    validations:
+      required: true
+  - type: textarea
+    id: links
+    attributes:
+      label: Odkazy na child issues
+      value: |
+        - [ ] ANALÝZA: #
+        - [ ] VERDIKT-A: #
+        - [ ] IMPLEMENTACE: #
+        - [ ] VERDIKT-V: #
+        - [ ] TESTY: #
+        - [ ] VERDIKT-T: #
+  - type: textarea
+    id: done
+    attributes:
+      label: Kritéria hotovo (návrh)
+      placeholder: 3–5 bodů
+  - type: textarea
+    id: verify
+    attributes:
+      label: Ověření
+      placeholder: npm test / lint / docker

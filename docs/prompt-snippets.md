@@ -89,14 +89,56 @@ Hotovo když:
 Ověření: N/A
 ```
 
-## Multi‑agent (implementace + code review)
+## Multi‑agent role 3+3 (I/O + gate + rework)
+
+Detail šablon VSTUP/VÝSTUP/GATE: [`multi-agent-workflow.md`](multi-agent-workflow.md).  
+Rule: `.cursor/rules/multi-agenti.mdc`.
+
+```text
+Cíl: <1 věta>
+Scope: <složky/soubory>
+Mimo scope: <…>
+
+I/O: GitHub Issues (`.github/ISSUE_TEMPLATE/`)
+Pipeline + MODEL:
+1) [PIPELINE] → Analytik → [ANALÝZA] → K.A → [VERDIKT-A] [claude-opus-4-8-thinking-high]
+2) Vývojář → [IMPLEMENTACE] [composer-2.5] → K.V → [VERDIKT-V] [gpt-5.6-sol-high]
+3) Tester → [TESTY] [composer-2.5] → K.T → [VERDIKT-T] [gpt-5.5-high]
+4) Integrátor [composer-2.5] uzavře [PIPELINE] jen při gate/go na A+V+T
+
+Gate:
+- NO-GO = STOP; oprav produkční issue dle verdikt issue; znovu verdikt
+- další issue až po label gate/go
+- kontrolor neimplementuje
+- uzavření [PIPELINE] jen při gate/go na A+V+T
+
+Hotovo když:
+- VERDIKT-A/V/T mají gate/go
+- ověření dle oblasti
+- záznam v docs/learning-log.md + zavřený [PIPELINE]
+```
+
+### Mini-template role (vlož do každého sub-agenta)
+
+```text
+ROLE: <Analytik|Kontrolor analytika|Vývojář|Kontrolor vývojáře|Tester|Kontrolor testera>
+MODEL: <slug dle tabulky Modely>
+VSTUP_ISSUE: #<…>
+VÝSTUP_ISSUE: #<…>   # nebo „vytvoř ze šablony“
+GATE: <komu odevzdávám / kdy smím dál>
+PŘI NO-GO: <kdo opravuje produkční issue; znovu který verdikt>
+```
+
+## Multi‑agent (rychlá 2er — implementace + review)
+
+Když nestačí plná 3+3, aspoň vývojář + kontrolor:
 
 ```text
 Cíl: <1 věta>
 Scope: <složky/soubory>
 Rozdělení:
-- Agent A (implementace): <scope>
-- Agent B (code review): čte diff a vrací připomínky, nic neimplementuje
+- Vývojář (implementace): <scope>
+- Kontrolor vývojáře: čte diff a vrací GO/NO-GO + připomínky, nic neimplementuje
 
 Hotovo když:
 - připomínky z review jsou zapracované (nebo zdůvodněné)
@@ -112,16 +154,16 @@ Cíl: <1 věta>
 Scope: <přesně vyjmenuj složky/soubory, např. examples/backend/src/*>
 Mimo scope: <např. docs/*, .cursor/rules/*, změna dependency>
 
-Agent A (implementace):
+Vývojář:
 - Udělej změny pouze ve scope.
 - Přidej/aktualizuj unit testy.
 - Ověř: npm run check
 - Vrať: shrnutí + soubory + jak ověřit.
 
-Agent B (code review):
+Kontrolor vývojáře:
 - Neimplementuj nic.
 - Projdi diff: kontrakt, error envelope, edge cases, test coverage, bezpečnost.
-- Vrať: konkrétní připomínky + doporučené fixy.
+- Vrať: GO/NO-GO + konkrétní připomínky + doporučené fixy.
 
 Integrátor:
 - Zapracuj připomínky (nebo zdůvodni proč ne).

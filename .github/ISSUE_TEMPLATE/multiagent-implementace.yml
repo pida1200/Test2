@@ -1,0 +1,51 @@
+name: Multi-agent IMPLEMENTACE
+description: Výstup Vývojáře (vstup pro Kontrolora vývojáře)
+title: "[IMPLEMENTACE] "
+labels: ["multiagent", "multiagent/implementace", "gate/pending"]
+body:
+  - type: input
+    id: pipeline
+    attributes:
+      label: Pipeline issue #
+    validations:
+      required: true
+  - type: input
+    id: analyza
+    attributes:
+      label: ANALÝZA issue # (musí mít gate/go)
+    validations:
+      required: true
+  - type: input
+    id: verdikt_a
+    attributes:
+      label: VERDIKT-A issue # (gate/go)
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: Shrnutí změn
+    validations:
+      required: true
+  - type: textarea
+    id: files
+    attributes:
+      label: Seznam souborů
+    validations:
+      required: true
+  - type: textarea
+    id: deviations
+    attributes:
+      label: Odchylky od ANALÝZY
+      value: "Žádné"
+  - type: textarea
+    id: verify
+    attributes:
+      label: Ověření (příkazy + výsledek)
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Verze artefaktu
+      value: "v1"

@@ -26,6 +26,41 @@ Pravidlo: `repo-kvalita.mdc`.
 
 ## Záznamy
 
+### 2026-08-04 – CI: SonarCloud ciselniky job při chybějícím projektu
+
+- Výsledek: `test-coverage-ciselniky` padal na `setup-node` cache (`ciselniky/package-lock.json` neexistuje). Jobi mujdum/ciselniky i scan mají `if: hashFiles('…/package-lock.json') != ''`.
+- Ověření: lokálně složka `ciselniky/` v Test2 chybí; po pushi CI má ciselniky skipnout.
+- Riziko: až se ciselniky znovu objeví v repu, job se automaticky zapne.
+- Další krok: počkat na zelený check na PR #1.
+
+### 2026-08-04 – Multi-agent I/O přes GitHub Issues
+
+- Výsledek: vstupy/výstupy rolí = GitHub Issues (`[PIPELINE|ANALÝZA|VERDIKT-*|IMPLEMENTACE|TESTY]`); labely `multiagent/*` + `gate/go|no-go|pending`; šablony v `.github/ISSUE_TEMPLATE/`; I/O šablony rolí používají `VSTUP_ISSUE`/`VÝSTUP_ISSUE`.
+- Ověření: docs + issue templates v gitu; labely je potřeba založit v GitHub UI / `gh label create`.
+- Riziko: cloud agent může mít `gh` read-only — Issues pak zakládá uživatel/Integrátor ručně ze šablon.
+- Další krok: vytvořit labely v repo a vyzkoušet kickoff na jedné feature.
+
+### 2026-08-04 – Multi-agent: doporučené modely podle role
+
+- Výsledek: tabulka role → model (Analytik/K.A: Opus 4.8; Vývojář/Tester/Integrátor: Composer 2.5; K. vývojáře: GPT-5.6 Sol; K. testera: GPT-5.5); pravidlo kontrolor ≠ produkční model kde to jde.
+- Ověření: `docs/multi-agent-workflow.md`, `multi-agenti.mdc`, `prompt-snippets.md`.
+- Riziko: dostupnost slugů závisí na Cursor plánu/týmu — při chybějícím modelu použij Alternativu z tabulky.
+- Další krok: ostrý běh s `MODEL:` v zadání každé role.
+
+### 2026-08-04 – Multi-agent I/O šablony + rework při NO-GO
+
+- Výsledek: u každé role (vč. Integrátora) šablona VSTUP / VÝSTUP / GATE / PŘI NO-GO; NO-GO = STOP a předchozí produkční role musí vyřešit vady, pak znovu stejný kontrolor; eskalace z testů zpět na vývojáře.
+- Ověření: `docs/multi-agent-workflow.md`, `multi-agenti.mdc`, `prompt-snippets.md` sladěny.
+- Riziko: bez disciplíny Integrátora lze bránu přeskočit — rule to výslovně zakazuje.
+- Další krok: ostrý běh na konkrétní feature.
+
+### 2026-08-04 – Multi-agent role 3+3 (analytik / vývojář / tester + kontroloři)
+
+- Výsledek: pipeline s bránami GO — Analytik→K. analytika→Vývojář→K. vývojáře→Tester→K. testera→Integrátor; aktualizováno `docs/multi-agent-workflow.md`, `.cursor/rules/multi-agenti.mdc`, `docs/prompt-snippets.md`.
+- Ověření: konzistence šablon a role tabulky napříč třemi soubory; bez změny runtime kódu.
+- Riziko: 6 agentů je drahé na drobné úkoly — rule zůstává „jen na explicitní žádost“; zkrácená 2er varianta v prompt-snippets.
+- Další krok: vyzkoušet ostrý běh na konkrétní feature (např. examples/backend nebo mujdum endpoint).
+
 ### 2026-06-27 – Projekt audi zrušen
 
 - Výsledek: lokální projekt `audi/` (interní auditní aplikace) smazán z disku; odstraněno pravidlo `.cursor/rules/audi.mdc`; `AGENTS.md` bez odkazu na audi. V gitu nikdy nebyl commitnutý.
