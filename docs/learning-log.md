@@ -26,6 +26,13 @@ Pravidlo: `repo-kvalita.mdc`.
 
 ## Záznamy
 
+### 2026-08-04 – /m #8–#9: automatizace multi-agent workflow (3+3)
+
+- Výsledek: doplněn spustitelný `/m` (`.cursor/commands/m.md` + `.cursor/skills/m/SKILL.md`), verifikované model slugy, `multiagent-next.yml` + `multiagent-gate-check.yml`, šablony ANALÝZA/IMPLEMENTACE/VERDIKT, `gate/blocked`, dry-run skript, poctivý `npm run check` wrapper. PR #3 zavřen bez merge (stale merge-base, `ma/*` odmítnuto; adoptovány jen skill/command/next přemapované na `multiagent/*`).
+- Ověření: VERDIKT-A #10 GO → VERDIKT-V #14 GO (po NO-GO #12) → VERDIKT-T #16 GO; Tester #15 10/10; `npm run check:docs` 0; dry-run next OK.
+- Riziko: E2E Action dedupe až po push workflows; auto-spouštění agentů z CI (Cursor API key) mimo scope.
+- Další krok: po merge ověřit zelený run `multiagent-next` na test issue; případně Cursor secret pro auto-kick.
+
 ### 2026-08-04 – /m 2 ostrý běh: revize multiagent setup (#2)
 
 - Výsledek: audit + opravy docs/rules — slash aliasy `/m` a `/m 2`, kickoff Integrátora (doplnit existující vs vytvořit), fallback modelů (ne-fast Alternativa; `*-fast` jen bez alternativy nebo rework); labely `multiagent*`/`gate*` založeny. Pipeline #2 → IMPLEMENTACE #4 → NO-GO #5/#6 → GO #7 (2er).
