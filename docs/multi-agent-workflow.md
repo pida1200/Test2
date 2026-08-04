@@ -1,91 +1,177 @@
-# Multi‑agent workflow (Cursor) – šablony
+# Multi‑agent workflow (Cursor) – role 3+3
 
-Cíl: u větších úkolů rozdělit práci mezi více agentů paralelně, ale mít **1 integrátora**, který změny spojí, otestuje a uzavře (**commit / merge / push bez PR**).
+Cíl: větší úkoly řešit jako **pipeline s bránami** — každá produkční role má **kontrolora**, který schválí výstup dřív, než se jde dál. **1 integrátor** drží celek, testy/lint a uzavření (**commit / merge / push bez PR**).
 
-## Role
+## Role (6 + integrátor)
 
-- **Integrátor (ty / hlavní agent)**: rozdělení práce, finální rozhodnutí, integrace, testy/lint, uzavření na feature větvi.
-- **Implementační agenti**: pracují v jasně vymezeném prostoru (složky/soubory).
-- **Code review agent**: čte diff/změny a vrací připomínky (styl, edge cases, testy, rizika).
+| Role | Co dělá | Co **nedělá** |
+|------|---------|----------------|
+| **Analytik** | Cíl, scope, API kontrakt, kritéria hotovo, edge cases, rizika | Nekóduje, nespouští git push |
+| **Kontrolor analytika** | Kontrola úplnosti a konzistence analýzy | Neimplementuje, nepřepisuje zadání „za analytika“ bez výhrad |
+| **Vývojář** | Implementace ve scope dle schválené analýzy + unit testy happy path | Nemění kontrakt bez eskalace; neřeší git push |
+| **Kontrolor vývojáře** | Code review diffu (kontrakt, chyby, konvence, bezpečnost) | Neimplementuje |
+| **Tester** | Test plán, edge/regresní testy, ověření příkazů | Nerozšiřuje feature mimo testy / minimální testovatelnost |
+| **Kontrolor testera** | Kontrola pokrytí, chybějících scénářů, flaky rizik | Neimplementuje produkční kód |
+| **Integrátor** | Orchestruje pipeline, konflikty, finální testy/lint, commit, learning-log | — |
 
-## Kdy použít více agentů
+## Pipeline (povinné brány)
 
-- Úkol má **aspoň 2 nezávislé části** (např. backend API + frontend UI + testy + docs).
-- Je potřeba paralelně: **implementace vs review vs test plan**.
+```text
+[1] Analytik
+      ↓
+[1✓] Kontrolor analytika  →  GO / změny analýzy
+      ↓
+[2] Vývojář
+      ↓
+[2✓] Kontrolor vývojáře   →  GO / fixy
+      ↓
+[3] Tester
+      ↓
+[3✓] Kontrolor testera    →  GO / doplnění testů
+      ↓
+[I] Integrátor            →  testy+lint, commit, learning-log
+```
 
-## Standardní rozdělení (doporučené)
+**Pravidlo brány:** další fáze startuje až po **GO** (nebo po zapracování připomínek a druhém GO). Připomínky bez zdůvodnění se nesmí přeskočit.
 
-### Agent A – Backend
+## Kdy použít
 
-- Scope: `mujdum/backend/` nebo `examples/backend/`, API kontrakt, validace, error handling
-- Výstup: seznam změn, endpointy, jak otestovat, návrh error kontraktu
+- Úkol má **aspoň 2 vrstvy** (analýza → kód → ověření) nebo větší změnu API/UI.
+- Explicitní žádost uživatele o multi‑agent / role 3+3.
 
-### Agent B – Frontend
+**Nepoužívat** na drobný bugfix / jeden soubor — stačí 1 agent + mini checklist v `repo-kvalita.mdc`.
 
-- Scope: `mujdum/frontend/`, UI napojení na API, responsivita
-- Výstup: komponenty, stavy (loading/error), test plan
+Zkrácená varianta (když uživatel chce méně agentů): Analytik+Vývojář sloučit do jednoho chatu, ale **kontrolor vývojáře** a **tester** (nebo aspoň review + testy) nechat.
 
-### Agent C – Test/QA
+## Výstup každé role (kontrakt)
 
-- Scope: unit testy, edge cases, “co může spadnout”
-- Výstup: nové testy / návrh testů, příkazy pro spuštění, nalezené problémy
+### Analytik → dokument analýzy
 
-### Agent D – Code review (povinný u větších změn)
+- Cíl (1 věta), kontext, scope / mimo scope
+- API / UI kontrakt (request/response, stavy, chyby)
+- Kritéria hotovo (3–5 bodů), edge cases, rizika
+- Návrh ověření (jaké testy/lint)
 
-- Scope: přečíst diff a návrh řešení (neimplementuje)
-- Výstup: checklist připomínek + doporučené fixy
+### Kontrolor analytika → verdikt
 
-## Šablona zadání pro agenty (kopíruj)
+- GO / NO-GO + 3–8 konkrétních připomínek
+- Kontrola: chybějící edge case, nejasný kontrakt, scope creep, chybějící DoD
 
-### Zadání pro Integrátora (hlavní)
+### Vývojář → diff + shrnutí
+
+- Seznam změněných souborů
+- Co ověřil (příkazy)
+- Odchylky od analýzy (pokud nutně)
+
+### Kontrolor vývojáře → verdikt
+
+- GO / NO-GO + připomínky
+- Checklist: API kontrakt, error envelope + HTTP statusy, edge cases v kódu, testy, bezpečnost (žádné secrety/citlivé logy)
+
+### Tester → test plán / testy
+
+- Scénáře (happy + edge + error)
+- Implementované nebo navržené unit testy
+- Příkazy a výsledek
+
+### Kontrolor testera → verdikt
+
+- GO / NO-GO + připomínky
+- Kontrola: pokrytí DoD a edge cases z analýzy, asserty dávají smysl, žádné flaky / overmock
+
+### Integrátor → uzavření
+
+- Připomínky zapracované nebo zdůvodněné
+- Relevantní testy + lint
+- Sebehodnocení (`repo-kvalita.mdc`)
+- Zápis do `docs/learning-log.md` (**povinně** u multi‑agent běhu)
+
+## Šablony zadání (kopíruj)
+
+### Kickoff pro Integrátora
 
 ```text
 Cíl: <1 věta>
 Kontext: <kde v repu + proč>
+Pipeline: Analytik → K. analytika → Vývojář → K. vývojáře → Tester → K. testera → Integrátor
 Kritéria hotovo: <3–5 bodů>
-Ověření: <jaké testy/lint>
-Pravidla: .cursor/rules/ + repo-git (bez PR) + po běhu zápis do docs/learning-log.md
+Ověření: <testy/lint/docker dle oblasti>
+Pravidla: .cursor/rules/ + repo-git (bez PR) + po běhu docs/learning-log.md
 ```
 
-### Zadání pro Backend agenta
+### Analytik
 
 ```text
-Jsi backend agent. Scope: <složky/soubory>.
-Dodrž .cursor/rules/ (mujdum.mdc nebo examples-architektura.mdc).
-Navrhni API kontrakt (request/response), validaci vstupu a konzistentní chyby.
-Přidej unit testy pro hlavní tok + 1 edge case.
-Výstup: stručné shrnutí + které soubory jsi změnil + jak to otestovat.
-Neřeš frontend ani git push.
+Jsi analytik. Nekóduj.
+Scope úkolu: <složky / oblast>.
+Dodrž .cursor/rules/ a AGENTS.md (návrat jen pokud je nový kontext).
+Výstup:
+1) cíl + scope / mimo scope
+2) API nebo UI kontrakt (request/response, chyby, stavy)
+3) kritéria hotovo + edge cases + rizika
+4) návrh ověření
+Nepřecházej do implementace.
 ```
 
-### Zadání pro Frontend agenta
+### Kontrolor analytika
 
 ```text
-Jsi frontend agent. Scope: <složky/soubory>.
-Dodrž .cursor/rules/mujdum.mdc.
-Implementuj UI + napojení na API, loading/error stavy, responsivitu.
-Výstup: stručné shrnutí + které soubory + jak to manuálně ověřit.
-Neřeš backend ani git push.
+Jsi kontrolor analytika. Neimplementuj.
+Přečti výstup analytika a zhodnoť úplnost a konzistenci.
+Zaměř se na: nejasný kontrakt, chybějící edge cases, scope creep, slabá DoD, chybějící ověření.
+Výstup: GO nebo NO-GO + 3–8 konkrétních připomínek (co doplnit/opravit).
 ```
 
-### Zadání pro Test/QA agenta
+### Vývojář
 
 ```text
-Jsi test/QA agent. Scope: testy a ověřování.
+Jsi vývojář. Scope: <složky/soubory>.
+Implementuj jen dle schválené analýzy (po GO kontrolora analytika).
+Dodrž .cursor/rules/ (mujdum / ciselniky / examples dle cesty).
+Přidej unit testy: hlavní tok + aspoň 1 edge case.
+Výstup: shrnutí + soubory + jak ověřit.
+Neřeš git push. Neměň kontrakt bez eskalace integrátorovi.
+```
+
+### Kontrolor vývojáře
+
+```text
+Jsi kontrolor vývojáře (code review). Neimplementuj.
+Přečti diff oproti schválené analýze.
+Zhodnoť: shoda s kontraktem, error envelope + statusy, testy, čitelnost, bezpečnost/logy.
+Výstup: GO nebo NO-GO + konkrétní připomínky + doporučené fixy.
+```
+
+### Tester
+
+```text
+Jsi tester. Scope: testy a ověření chování dle analýzy + DoD.
 Dodrž .cursor/rules/repo-kvalita.mdc.
-Zaměř se na: edge cases, regresní rizika, chybové stavy.
-Výstup: checklist testů + návrh (nebo implementace) unit testů + co opravit.
-Neřeš implementaci feature mimo testy.
+Doplň/spusť testy: edge cases, chybové stavy, regrese.
+Výstup: checklist scénářů + co jsi přidal/spustil + nalezené problémy.
+Nerozšiřuj feature mimo testy (výjimka: minimální úprava pro testovatelnost — nahlásit).
 ```
 
-### Zadání pro Code review agenta
+### Kontrolor testera
 
 ```text
-Jsi code review agent. Neimplementuj nic.
-Přečti změny a zhodnoť:
-- API kontrakt a error handling
-- test coverage a edge cases
-- čitelnost a konvence
-- bezpečnost / logování (bez citlivých dat)
-Výstup: 5–10 konkrétních připomínek + doporučené úpravy.
+Jsi kontrolor testera. Neimplementuj produkční kód.
+Přečti test plán / diff testů oproti kritériím hotovo a edge cases z analýzy.
+Zhodnoť: chybějící scénáře, slabé asserty, flaky rizika, false confidence.
+Výstup: GO nebo NO-GO + konkrétní připomínky.
 ```
+
+## Scope (povinné v každém zadání)
+
+- scope (složky/soubory)
+- co je mimo scope
+- expected output (shrnutí + soubory/dokument + verdikt GO/NO-GO u kontrolorů)
+
+## Mapování na starší role A–D
+
+| Dříve | Teď |
+|-------|-----|
+| Agent A Backend / B Frontend | **Vývojář** (případně 2 vývojáři se stejným schváleným kontraktem) |
+| Agent C Test/QA | **Tester** |
+| Agent D Code review | **Kontrolor vývojáře** (+ nově kontroloři analýzy a testů) |
+| (chybělo) | **Analytik** + **Kontrolor analytika** |

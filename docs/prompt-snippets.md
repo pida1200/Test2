@@ -89,14 +89,37 @@ Hotovo když:
 Ověření: N/A
 ```
 
-## Multi‑agent (implementace + code review)
+## Multi‑agent role 3+3 (analytik / vývojář / tester + kontroloři)
+
+Detail: [`multi-agent-workflow.md`](multi-agent-workflow.md). Rule: `.cursor/rules/multi-agenti.mdc`.
+
+```text
+Cíl: <1 věta>
+Scope: <složky/soubory>
+Mimo scope: <…>
+
+Pipeline (brány GO povinné):
+1) Analytik → Kontrolor analytika
+2) Vývojář → Kontrolor vývojáře
+3) Tester → Kontrolor testera
+4) Integrátor: testy+lint, commit, docs/learning-log.md
+
+Hotovo když:
+- všechny tři kontroloři dali GO (nebo připomínky zapracované/zdůvodněné)
+- ověření dle oblasti (npm test/lint / npm run check)
+- záznam v docs/learning-log.md
+```
+
+## Multi‑agent (rychlá 2er — implementace + review)
+
+Když nestačí plná 3+3, aspoň vývojář + kontrolor:
 
 ```text
 Cíl: <1 věta>
 Scope: <složky/soubory>
 Rozdělení:
-- Agent A (implementace): <scope>
-- Agent B (code review): čte diff a vrací připomínky, nic neimplementuje
+- Vývojář (implementace): <scope>
+- Kontrolor vývojáře: čte diff a vrací GO/NO-GO + připomínky, nic neimplementuje
 
 Hotovo když:
 - připomínky z review jsou zapracované (nebo zdůvodněné)
@@ -112,16 +135,16 @@ Cíl: <1 věta>
 Scope: <přesně vyjmenuj složky/soubory, např. examples/backend/src/*>
 Mimo scope: <např. docs/*, .cursor/rules/*, změna dependency>
 
-Agent A (implementace):
+Vývojář:
 - Udělej změny pouze ve scope.
 - Přidej/aktualizuj unit testy.
 - Ověř: npm run check
 - Vrať: shrnutí + soubory + jak ověřit.
 
-Agent B (code review):
+Kontrolor vývojáře:
 - Neimplementuj nic.
 - Projdi diff: kontrakt, error envelope, edge cases, test coverage, bezpečnost.
-- Vrať: konkrétní připomínky + doporučené fixy.
+- Vrať: GO/NO-GO + konkrétní připomínky + doporučené fixy.
 
 Integrátor:
 - Zapracuj připomínky (nebo zdůvodni proč ne).

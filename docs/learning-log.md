@@ -26,6 +26,13 @@ Pravidlo: `repo-kvalita.mdc`.
 
 ## Záznamy
 
+### 2026-08-04 – Multi-agent role 3+3 (analytik / vývojář / tester + kontroloři)
+
+- Výsledek: pipeline s bránami GO — Analytik→K. analytika→Vývojář→K. vývojáře→Tester→K. testera→Integrátor; aktualizováno `docs/multi-agent-workflow.md`, `.cursor/rules/multi-agenti.mdc`, `docs/prompt-snippets.md`.
+- Ověření: konzistence šablon a role tabulky napříč třemi soubory; bez změny runtime kódu.
+- Riziko: 6 agentů je drahé na drobné úkoly — rule zůstává „jen na explicitní žádost“; zkrácená 2er varianta v prompt-snippets.
+- Další krok: vyzkoušet ostrý běh na konkrétní feature (např. examples/backend nebo mujdum endpoint).
+
 ### 2026-06-27 – Projekt audi zrušen
 
 - Výsledek: lokální projekt `audi/` (interní auditní aplikace) smazán z disku; odstraněno pravidlo `.cursor/rules/audi.mdc`; `AGENTS.md` bez odkazu na audi. V gitu nikdy nebyl commitnutý.

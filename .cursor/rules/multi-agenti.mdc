@@ -1,34 +1,48 @@
 ---
-description: Více agentů paralelně + code review — jen na explicitní žádost
+description: Více agentů paralelně + role 3+3 s kontrolory — jen na explicitní žádost
 alwaysApply: false
 ---
 
-# Multi-agent práce
+# Multi-agent práce (role 3+3)
 
-**Použij jen když uživatel chce paralelní agenty nebo samostatný code review** — pro běžný úkol stačí jeden agent + mini checklist v `repo-kvalita.mdc`.
+**Použij jen když uživatel chce multi-agent / paralelní agenty / role analytik–vývojář–tester** — pro běžný úkol stačí jeden agent + mini checklist v `repo-kvalita.mdc`.
 
 Detailní šablony: `docs/multi-agent-workflow.md`, `docs/prompt-snippets.md`.
 
-## Kdy použít
-
-- Úkol má nezávislé oblasti (backend + frontend + testy + docs).
-- Paralelně implementace a code review.
-
 ## Role
 
-- **Integrátor**: spojí změny, konflikty, testy/lint, commit/merge/push (**bez PR**, viz `repo-git.mdc`).
-- **Code review agent**: u větších změn checklist připomínek (neimplementuje).
+| Produkce | Kontrola výstupu |
+|----------|------------------|
+| **Analytik** (kontrakt, DoD, edge cases) | **Kontrolor analytika** |
+| **Vývojář** (implementace + základní testy) | **Kontrolor vývojáře** |
+| **Tester** (edge/regresní testy, ověření) | **Kontrolor testera** |
+
+**Integrátor**: orchestruje pipeline, konflikty, finální testy/lint, commit/merge/push (**bez PR**, viz `repo-git.mdc`), learning-log.
+
+## Pipeline (brány)
+
+1. Analytik → GO kontrolora analytika  
+2. Vývojář → GO kontrolora vývojáře  
+3. Tester → GO kontrolora testera  
+4. Integrátor uzavře  
+
+Další fáze **až po GO** (nebo po zapracování připomínek). Kontrolor **neimplementuje**.
+
+## Kdy použít
+
+- Větší úkol s analýzou + kódem + ověřením.
+- Nezávislé oblasti (backend + frontend) — max. 2 vývojáři se **stejným** schváleným kontraktem.
 
 ## Scope (povinné v zadání)
 
 - scope (složky/soubory)
 - co je mimo scope
-- expected output (shrnutí + soubory + ověření)
+- expected output (shrnutí / soubory / verdikt GO|NO-GO)
 
 ## Výstup sub-agenta
 
-- co změnil (soubory)
-- co ověřil (testy/lint)
+- **Produkce:** co dodal (analýza / soubory / testy) + co ověřil
+- **Kontrolor:** GO nebo NO-GO + konkrétní připomínky
 - rizika / otevřené body
 
 ## Ukončení (integrátor)
@@ -36,4 +50,4 @@ Detailní šablony: `docs/multi-agent-workflow.md`, `docs/prompt-snippets.md`.
 - relevantní testy + lint
 - sebehodnocení dle `repo-kvalita.mdc`
 - zápis do `docs/learning-log.md` (u multi-agent běhu **povinně**)
-- review gate: připomínky zapracované nebo zdůvodněné před merge/push
+- review gate: připomínky ze **všech tří** kontrolorů zapracované nebo zdůvodněné před merge/push
