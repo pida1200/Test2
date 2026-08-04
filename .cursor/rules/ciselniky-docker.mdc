@@ -1,0 +1,32 @@
+---
+description: číselníky — po implementaci vždy lokální Docker deploy
+globs: cursor/ciselniky/**
+alwaysApply: false
+---
+
+# číselníky — lokální Docker
+
+## Výchozí pravidlo
+
+Po **každé** implementaci měnící běh aplikace v `cursor/ciselniky/**` agent **sám** spustí lokální deploy — bez čekání na žádost uživatele.
+
+```bash
+cd cursor/ciselniky
+npm test          # po změně logiky
+npm run deploy
+```
+
+Detailní postup: `cursor/ciselniky/.cursor/rules/lokalni-deploy.mdc`.
+
+## Ověření
+
+Po deployu `npm run check` — očekává se vše ✓ (loopback i LAN IP).
+
+## Výjimky
+
+- jen dokumentace bez dopadu na běh;
+- uživatel explicitně „bez docker“ / „nedeployuj“.
+
+## Git
+
+Commit/push jen na explicitní žádost.

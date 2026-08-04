@@ -1,0 +1,47 @@
+---
+description: mujdum — lokální Docker po implementaci; vzdálený server jen na explicitní žádost
+globs: mujdum/**
+alwaysApply: false
+---
+
+# mujdum — Docker
+
+## Výchozí pravidlo
+
+| Cíl | Kdy | Příkaz |
+|-----|-----|--------|
+| **Lokální** (`localhost:3000` / `3001`) | Po implementaci měnící běh — agent sám | `cd mujdum && docker compose up -d --build frontend backend` |
+| **Vzdálený** (`192.168.1.123`, `deploy-remote.sh`) | **Jen když uživatel výslovně požádá** | `mujdum/scripts/deploy-remote.sh` |
+
+**Nikdy** nenahrazuj lokální deploy vzdáleným ani naopak bez domluvy. Po úpravách v `mujdum/**` neběží `deploy-remote.sh`, `rsync` na server ani SSH rebuild — pokud uživatel neřekne např. „nasad na 123“, „deploy remote“, „na server“.
+
+## Lokální — povinné po implementaci
+
+Po **každé** implementaci, která mění běh aplikace v kontejnerech (`mujdum/frontend/`, `mujdum/backend/`, `docker-compose.yml`, `Dockerfile`, workspace `package.json` / lockfile), agent **sám spustí** lokální rebuild — **bez čekání** na „nasad na docker“.
+
+Celý stack (db, ES, …): `docker compose up -d --build`
+
+Po příkazu ověř (pokud běží): `curl -s -o /dev/null -w "%{http_code}" http://localhost:3001/health` a `http://localhost:3000/` — očekává se `200`.
+
+V odpovědi uveď, že **lokální** Docker byl nasazen (nebo proč ne — výjimka níže). Nevykazuj vzdálený deploy, pokud nebyl výslovně požadován.
+
+**Pořadí:** testy + lint (dle `repo-kvalita.mdc`) → pak lokální Docker.
+
+**Výjimky (bez lokálního deploye):** jen `mujdum/docs/**`; uživatel explicitně „bez docker“ / „jen commit“ / „nedeployuj“.
+
+## Vzdálený server — jen na žádost
+
+- **Zákaz proaktivního deploye** — ne jako „doplnění“ po lokálním buildu, ne „nasadím i na server“ bez dotazu.
+- Spouštěj až po explicitní žádosti uživatele.
+- Postup: `mujdum/.deploy.env` z `.deploy.env.example`, pak `mujdum/scripts/deploy-remote.sh`.
+- Alternativa: `docker -H "ssh://zkorinek@192.168.1.123" compose up -d --build` z `mujdum/`.
+- Detail: **`mujdum/README.md`** — sekce „Nasazení na vzdálený Docker“.
+- Lokální `.env` se rsyncem **nepřenáší** — na serveru vlastní `mujdum/.env`.
+
+## Logy
+
+Při úpravách compose zachovej rotaci logů (`logging` driver options) — viz incident zaplněného disku na serveru.
+
+## Mimo agenta
+
+Z `mujdum`: **`npm run docker:watch`** (Compose Watch).

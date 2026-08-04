@@ -1,0 +1,61 @@
+---
+description: Kvalita kódu, DoD, ověření, kdy psát learning-log; odkazy na playbooky
+alwaysApply: true
+---
+
+# Kvalita + učení
+
+## Postup (každý úkol)
+
+1. **Mini-plán** (1–3 věty): cíl, dotčené soubory, jak ověřím.
+2. **Kontext** — nový chat / návrat / „navazuj“: checklist v **`AGENTS.md`** a `repo-navrat.mdc` (git log, learning-log; Obsidian u mujdum nebo ciselniky dle scope).
+3. **Trezor** (pokud úkol souvisí s Obsidianem): dle `obsidian-prace-programovani.mdc` / u `mujdum/**` dle `mujdum-obsidian-workflow.mdc`.
+4. **Implementace:** konvence repa, scope guard (mimo scope jen po domluvě).
+5. **Ověření:** relevantní testy + lint (viz níže).
+6. **Zápis / sebehodnocení:** Obsidian session nebo learning-log dle DoD; v odpovědi co se povedlo, riziko, další krok.
+
+## Ověření podle oblasti
+
+| Oblast | Příkaz |
+|--------|--------|
+| `examples/backend` | `npm run check` (kořen repa) |
+| `mujdum/backend` | `cd mujdum/backend && npm test && npm run lint` |
+| `mujdum/frontend` | `cd mujdum/frontend && npm test && npm run lint` |
+| `mujdum/**` | navíc **lokální** Docker dle `mujdum-docker.mdc` (vzdálený server jen na žádost) |
+| `ciselniky/**` | `cd ciselniky && npm test`; po změně běhu `npm run deploy && npm run check` (`ciselniky-docker.mdc`) |
+
+## Definition of Done
+
+- `git diff` odpovídá zadání (bez scope creep)
+- testy + lint prošly (relevantní subset)
+- **mujdum** změny běhu → **lokální** Docker nasazen (`mujdum-docker.mdc`); vzdálený `192.168.1.123` / `deploy-remote.sh` **ne**, pokud uživatel výslovně nepožádá
+- **ciselniky** změny běhu → `npm run deploy` + `npm run check` (`ciselniky-docker.mdc`)
+- **Obsidian** (u `mujdum/**` nebo `ciselniky/**` větší/střední úloha) nebo **learning-log** — dle sekce níže; nečekej na připomínku uživatele
+
+## Learning log (`docs/learning-log.md`)
+
+**Povinně zapisuj** při: změně konvencí/rules, multi-agent běhu, větším refaktoru, incidentu (infra, produkce).
+
+**mujdum:** větší i střední úloha → **povinně** Obsidian session (`mujdum-obsidian-workflow.mdc`). Běžný bugfix → stačí chat; pokud řešíš „proč“ z minulé session, trezor **přečti**.
+
+**ciselniky:** větší i střední úloha → Obsidian `projekty/ciselniky/session-*.md`; vstupní kontext vždy `ciselniky/AGENTS.md`.
+
+Šablona záznamu: v hlavičce `docs/learning-log.md`.
+
+## Mini review checklist (i solo)
+
+- Kontrakt request/response stabilní
+- Chyby: error envelope + správné HTTP statusy
+- Edge cases: aspoň 1–2 testy
+- Bezpečnost: žádné secrety v gitu, žádné citlivé logy v response
+
+## Delší návody (`docs/`)
+
+- `AGENTS.md` — průvodce pro agenty, návrat k projektu
+- `docs/navrat-k-projektu.md` — prompty po restartu
+- `docs/session-template.md` — šablona Obsidian session
+- `docs/multi-agent-workflow.md` — šablony zadání pro více agentů
+- `docs/prompt-snippets.md` — copy-paste prompty
+- `docs/learning-log.md` — historie kroků
+
+Pravidla v `.cursor/rules/` jsou krátká a závazná; detaily drž v `docs/` a `mujdum/docs/`.

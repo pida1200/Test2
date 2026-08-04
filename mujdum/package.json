@@ -1,0 +1,18 @@
+{
+  "name": "@mujdum/root",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  },
+  "scripts": {
+    "dev": "concurrently -n frontend,backend -c blue,green \"npm -w @mujdum/frontend run dev\" \"npm -w @mujdum/backend run dev\"",
+    "docker:watch": "docker compose watch",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present"
+  }
+}
+

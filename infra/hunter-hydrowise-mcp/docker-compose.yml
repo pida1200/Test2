@@ -1,0 +1,22 @@
+# Hydrawise MCP na stejném hostu jako mujdum (192.168.1.123).
+# network_mode: host — proces naslouchá na HYDRAWISE_MCP_HOST (LAN IP),
+# aby Host header z klienta (192.168.1.123:8765) prošel hostGuard v upstreamu.
+#
+# Po startu: v Cursor MCP nastav URL http://192.168.1.123:8765/mcp
+# + Authorization: Bearer <HYDRAWISE_MCP_AUTH_TOKEN> (stejná hodnota jako v .env).
+
+services:
+  hydrowise-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hydrowise-mcp
+    restart: unless-stopped
+    network_mode: host
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    env_file:
+      - .env

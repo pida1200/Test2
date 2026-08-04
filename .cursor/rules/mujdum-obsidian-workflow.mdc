@@ -1,0 +1,57 @@
+---
+description: mujdum — povinný Obsidian před/po práci, session, DoD
+globs: mujdum/**
+alwaysApply: false
+---
+
+# mujdum + Obsidian (MCP)
+
+## Před každou netriviální úpravou (povinné)
+
+Netriviální = nová metrika, UI panel, integrace HA, docker/deploy, refaktor API, změna `mujdum/docs/`.
+
+0. Návrat / nový chat: **`AGENTS.md`** + `git log -5` (viz `repo-navrat.mdc`).
+1. `obsidian_list_files_in_dir` → `projekty/mujdum` **nebo** `obsidian_simple_search` → `mujdum`.
+2. Načti **`projekty/mujdum/hub.md`** (`obsidian_get_file_contents`).
+3. Pokud existuje, přečti **nejnovější** `session-YYYY-MM-DD.md` (datum z názvu souboru).
+4. Příslušná spec v gitu (např. **`mujdum/docs/sport.md`** — sekce „Kontext pro agenta“).
+5. Teprve pak kód — nesahat na mapování HA „naslepo“.
+
+V odpovědi po startu úkolu **jedna věta**: co z trezoru ovlivnilo postup (nebo „v trezoru nic relevantního“).
+
+## Po dokončení (povinné, bez připomínky uživatele)
+
+**Větší úloha** = nová funkce, změna architektury, deploy, 2+ logické commity, změna dashboardu/integrace.
+
+**Střední úloha** = jedna srozumitelná feature v jednom commitu (např. nová metrika + UI řádek) → aspoň **krátký odstavec** do dnešní session.
+
+Zápis (max ~30 řádků):
+
+- soubor `projekty/mujdum/session-YYYY-MM-DD.md` (stejný den = append; nový den = ze `session-template.md` v trezoru nebo `docs/session-template.md` v gitu),
+- sekce: **Meta** (větev, commit), co se změnilo (odkazy `mujdum/...`), rozhodnutí, follow-up `[ ]`, ověření (testy/Docker).
+
+**Nepřepisuj** celou spec z gitu — jen kontext a odkazy (`mujdum/docs/home-assistant-mapovani.md`, …).
+
+Po zápisu: jedna věta v odpovědi, **kam** v trezoru (např. `[[projekty/mujdum/session-2026-05-16]]`).
+
+## Rozdělení s learning logem
+
+| Událost | Kam |
+|---------|-----|
+| Změna `.cursor/rules`, multi-agent, incident infra | `docs/learning-log.md` |
+| Feature / deploy / rozhodnutí v mujdum | Obsidian session |
+| Obojí u změny rules + mujdum feature | oba, bez duplikace textu |
+
+## Zdroj pravdy
+
+- Spec a API: **`mujdum/docs/`** v gitu.
+- Session, proč, follow-up: **`projekty/mujdum/`** v Obsidianu.
+
+## Bezpečnost
+
+- Žádné tokeny z `.env` do vaultu.
+
+## Výjimky
+
+- Čistě lokální experiment bez commitu a bez dopadu na produkci — zápis volitelný.
+- Explicitní „bez Obsidianu“ od uživatele.

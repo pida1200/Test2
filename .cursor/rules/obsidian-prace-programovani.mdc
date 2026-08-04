@@ -1,0 +1,55 @@
+---
+description: Obsidian vault (MCP) — proaktivní čtení/zápis, bezpečnost, vztah k gitu
+alwaysApply: true
+---
+
+# Obsidian pro práci (programování)
+
+Trezor je **doplňková znalostní báze** k repu: rozhodnutí, research, meetingy, checklisty — ne duplikát technické spec.
+
+## Default: používej Obsidian MCP (nečekej na výzvu)
+
+- **Nový chat / návrat:** nejdřív `AGENTS.md` + git; pak Obsidian hub + poslední session (`docs/navrat-k-projektu.md`).
+- **Na začátku** úkolu s kontextem v trezoru (projekt, integrace, minulá rozhodnutí): krátký lookup ve vaultu **před** implementací.
+- **Na konci** větší úlohy: stručný zápis do vaultu (session / follow-up) — **bez ptaní**, pokud uživatel neřekl „bez Obsidianu“.
+- Uživatel nemusí říct „zapiš do Obsidianu“ — to je součást DoD u větších změn.
+
+## Kdy číst
+
+- Neznámý kontext projektu, integrace (HA, deploy), „proč to tak je“.
+- Odkaz na minulé poznámky, schůzky, rozhodnutí.
+- Před refaktorem nebo změnou mapování entit / architektury.
+
+Postup: `obsidian_simple_search` / `obsidian_complex_search` nebo `obsidian_list_files_in_dir` → konkrétní soubor přes `obsidian_get_file_contents` (ne celý vault).
+
+## Kdy zapisovat
+
+- Nová funkce, změna architektury, deploy, série commitů.
+- Nové **rozhodnutí** (varianta A/B, důsledky).
+- Otevřené follow-upy (co zbývá, co ověřit v produkci).
+
+Nástroje: `obsidian_append_content`, `obsidian_patch_content` (nejdřív schéma MCP).
+
+## Zdroj pravdy
+
+| Obsah | Kde |
+|--------|-----|
+| Kód, API, chování | git (`docs/`, `mujdum/docs/`) |
+| Proč, domluvy, session, follow-up | Obsidian + odkazy na git |
+
+U **mujdum** platí navíc `mujdum-obsidian-workflow.mdc` (`globs: mujdum/**`) — přísnější checklist.
+
+## Bezpečnost
+
+- Do vaultu ani odpovědí: hesla, API klíče, tokeny z `.env`.
+- Citlivé údaje mimo trezor (vault není vůči AI plně utajený).
+
+## Konvence
+
+- Odkazy `[[...]]`, konzistentní názvy souborů.
+- Rozhodnutí: kontext → varianta → důsledky (3–5 vět, ne román).
+
+## Výjimky (bez zápisu do vaultu)
+
+- Triviální oprava (typo, jeden řádek), čistě technický dotaz bez změny kódu.
+- Uživatel explicitně: „bez Obsidianu“, „jen commit“, „nepiš do trezoru“.

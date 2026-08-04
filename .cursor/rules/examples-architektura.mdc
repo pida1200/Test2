@@ -1,0 +1,16 @@
+---
+description: Ukázkový examples/backend — třívrstvá konvence pro cvičení
+globs: examples/**
+alwaysApply: false
+---
+
+# Architektura (examples)
+
+Cvičební kód v `examples/backend/` — stejné principy jako produkční mujdum:
+
+- Business logika na backendu; frontend (pokud přibude) je thin client.
+- Endpointy: jasný kontrakt, validace vstupů.
+- Chyby: `{ error: { code, message, issues? } }`, `code` = `UPPER_SNAKE_CASE`.
+- Validace: 400 + `VALIDATION_ERROR` + `issues`.
+- Nová logika → **unit testy**.
+- Ověření: `npm run check` v kořeni repa (= test + lint v `examples/backend`).

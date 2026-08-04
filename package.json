@@ -1,0 +1,11 @@
+{
+  "name": "cursor-learning-sandbox",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "npm run check:examples-backend",
+    "check:all": "npm run check:examples-backend",
+    "check:examples-backend": "test -f examples/backend/package.json && (npm --prefix examples/backend test && npm --prefix examples/backend run lint) || echo \"[check] examples/backend not present - skipped\""
+  }
+}
+

@@ -1,0 +1,14 @@
+---
+description: Git bez PR — feature větve, commity, kontrola před push
+alwaysApply: true
+---
+
+# Git (bez PR)
+
+- **Pull requesty se nepoužívají** — změny jdou přímo (commit, merge/rebase, push podle domluvy).
+- Netriviální úkol: pracuj na **feature větvi**, ne na `main`.
+- Commity: **malé a srozumitelné** (jedna logická změna ≈ jeden commit nebo krátká série).
+- Nová logika → odpovídající **unit testy**.
+- Před **push** nebo sloučením do sdílené větve:
+  - `git status` — víš, co commituješ
+  - `git diff` — odpovídá zadání, žádný náhodný šum

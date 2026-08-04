@@ -1,0 +1,130 @@
+name: SonarCloud
+
+# SonarCloud Free: branch analysis jen na main; PR scan často selže (ALM sync).
+# https://docs.sonarsource.com/sonarqube-cloud/administering-sonarcloud/managing-subscription/subscription-plans
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: sonarcloud-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-coverage-mujdum:
+    name: Test coverage mujdum
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: mujdum/package-lock.json
+
+      - name: Install dependencies
+        working-directory: mujdum
+        run: npm ci
+
+      - name: Test with coverage
+        working-directory: mujdum
+        run: |
+          npm -w @mujdum/backend run test:coverage
+          npm -w @mujdum/frontend run test:coverage
+
+      - name: Upload coverage
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: mujdum-coverage
+          path: |
+            mujdum/backend/coverage/
+            mujdum/frontend/coverage/
+
+  test-coverage-ciselniky:
+    name: Test coverage ciselniky
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: ciselniky/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ciselniky
+        run: npm ci
+
+      - name: Test with coverage
+        working-directory: ciselniky
+        run: npm run test:coverage
+
+      - name: Upload coverage
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ciselniky-coverage
+          path: |
+            ciselniky/backend/coverage/
+            ciselniky/frontend/coverage/
+
+  sonarcloud-mujdum:
+    name: Scan mujdum
+    if: github.event_name != 'pull_request'
+    needs: test-coverage-mujdum
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: mujdum-coverage
+          path: mujdum
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarqube-scan-action@v5.0.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          projectBaseDir: mujdum
+
+  sonarcloud-ciselniky:
+    name: Scan ciselniky
+    if: github.event_name != 'pull_request'
+    needs: test-coverage-ciselniky
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: ciselniky-coverage
+          path: ciselniky
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarqube-scan-action@v5.0.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          projectBaseDir: ciselniky

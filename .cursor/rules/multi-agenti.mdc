@@ -1,0 +1,39 @@
+---
+description: Více agentů paralelně + code review — jen na explicitní žádost
+alwaysApply: false
+---
+
+# Multi-agent práce
+
+**Použij jen když uživatel chce paralelní agenty nebo samostatný code review** — pro běžný úkol stačí jeden agent + mini checklist v `repo-kvalita.mdc`.
+
+Detailní šablony: `docs/multi-agent-workflow.md`, `docs/prompt-snippets.md`.
+
+## Kdy použít
+
+- Úkol má nezávislé oblasti (backend + frontend + testy + docs).
+- Paralelně implementace a code review.
+
+## Role
+
+- **Integrátor**: spojí změny, konflikty, testy/lint, commit/merge/push (**bez PR**, viz `repo-git.mdc`).
+- **Code review agent**: u větších změn checklist připomínek (neimplementuje).
+
+## Scope (povinné v zadání)
+
+- scope (složky/soubory)
+- co je mimo scope
+- expected output (shrnutí + soubory + ověření)
+
+## Výstup sub-agenta
+
+- co změnil (soubory)
+- co ověřil (testy/lint)
+- rizika / otevřené body
+
+## Ukončení (integrátor)
+
+- relevantní testy + lint
+- sebehodnocení dle `repo-kvalita.mdc`
+- zápis do `docs/learning-log.md` (u multi-agent běhu **povinně**)
+- review gate: připomínky zapracované nebo zdůvodněné před merge/push
