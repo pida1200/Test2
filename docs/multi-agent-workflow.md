@@ -8,7 +8,17 @@ Multiagent #N
 
 Agent přečte issue, podle labelu udělá aktuální roli, zapíše výstup **do stejného issue** (sekce v body + komentář), posune label na další fázi.
 
-Detailní starší model (7 issues) je dole jako volitelný — default je tento.
+## Spuštění (nejjednodušší)
+
+V Agent chatu:
+
+```text
+/m 2
+```
+
+nebo `/m #2`. Stejné jako `Multiagent #2`.
+
+Slash command: `.cursor/skills/m/SKILL.md` (+ legacy `.cursor/commands/m.md`).
 
 ## Stavový stroj (labely)
 
@@ -29,14 +39,14 @@ Plus vždy label `multiagent`.
 
 ## Start (2 kroky)
 
-1. **GitHub** → New issue → šablona *Multi-agent feature* → vznikne issue s `multiagent` + `ma/analyza`.
-2. **Cursor** (nový Agent chat):
+1. **GitHub** → New issue → šablona *Multi-agent feature* → issue s `multiagent` + `ma/analyza`.
+2. **Cursor** Agent chat:
 
 ```text
-Multiagent #N
+/m 2
 ```
 
-Hotovo. Po každém běhu agent posune label → GitHub Action napíše komentář s dalším `Multiagent #N` (copy-paste). Znovu stejný prompt.
+(nebo `Multiagent #2`). Po každém běhu znovu `/m 2` — bot v issue komentuje připomínku.
 
 ## Co agent při `Multiagent #N` dělá
 

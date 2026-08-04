@@ -41,16 +41,18 @@ jobs:
             };
 
             const info = map[phase] || map['ma/analyza'];
-            const body = [
+              const body = [
               `### Multiagent — další krok`,
               ``,
               `Fáze: \`${phase}\` · Role: **${info.role}** · Model: \`${info.model}\``,
               ``,
-              `V Cursoru (Agent chat) vlož:`,
+              `V Cursoru (Agent chat):`,
               ``,
               '```text',
-              `Multiagent #${n}`,
+              `/m ${n}`,
               '```',
+              ``,
+              `_(stejné jako \`Multiagent #${n}\`)_`,
               ``,
               `_${info.hint}_`,
               ``,
@@ -65,7 +67,7 @@ jobs:
               per_page: 10,
             });
             const last = comments.length ? comments[comments.length - 1].body : '';
-            if (last && last.includes(`Multiagent #${n}`) && last.includes(phase)) {
+            if (last && last.includes(`/m ${n}`) && last.includes(phase)) {
               core.info('Skip duplicate next-step comment');
               return;
             }

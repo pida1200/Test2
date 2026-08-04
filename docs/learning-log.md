@@ -26,6 +26,13 @@ Pravidlo: `repo-kvalita.mdc`.
 
 ## Záznamy
 
+### 2026-08-04 – Multi-agent slash `/m`
+
+- Výsledek: skill `.cursor/skills/m/SKILL.md` + legacy `.cursor/commands/m.md` — v Agent chatu `/m 2` (nebo `/m #2`); GH Action komentuje `/m N`.
+- Ověření: soubory v gitu; po merge vyzkoušet `/m` v Cursor Desktop.
+- Riziko: cloud agent bez Issues práv nemůže dokončit zápis do GitHubu.
+- Další krok: na `#2` label `ma/analyza` + `/m 2`.
+
 ### 2026-08-04 – Multi-agent zjednodušen: 1 issue + ma/* + Multiagent #N
 
 - Výsledek: místo 7 issues a dlouhých promptů stačí šablona *Multi-agent feature* a opakovat `Multiagent #N`; stav = labely `ma/analyza|review-a|vyvoj|…|done`; GH Action `multiagent-next.yml` komentuje další krok.

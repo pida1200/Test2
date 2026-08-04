@@ -98,11 +98,11 @@ Detail: [`multi-agent-workflow.md`](multi-agent-workflow.md). Rule: `.cursor/rul
 **V Cursoru pořád dokola:**
 
 ```text
-Multiagent #N
+/m 2
 ```
 
-Agent podle labelu `ma/*` udělá správnou roli, zapíše do issue, posune stav.  
-Bot (GH Action) po změně labelu komentuje stejný prompt.
+(nebo `Multiagent #2`). Agent podle labelu `ma/*` udělá správnou roli, zapíše do issue, posune stav.  
+Bot (GH Action) po změně labelu komentuje další krok.
 
 **Kickoff včetně vytvoření issue:**
 

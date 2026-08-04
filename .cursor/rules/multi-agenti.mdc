@@ -11,16 +11,12 @@ Detail: `docs/multi-agent-workflow.md`. Snippet: `docs/prompt-snippets.md`.
 ## Spuštění
 
 ```text
-Multiagent #N
+/m 2
 ```
 
-nebo kickoff:
+nebo `Multiagent #2` / kickoff `Multiagent start` + cíl.
 
-```text
-Multiagent start
-Cíl: …
-Scope: …
-```
+Skill: `.cursor/skills/m/SKILL.md` (slash `/m`).
 
 ## Fáze → role → model
 

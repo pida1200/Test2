@@ -43,6 +43,6 @@ body:
     attributes:
       value: |
         ## Jak dál
-        1. Po vytvoření issue zkopíruj číslo.
-        2. V Cursoru Agent chat: `Multiagent #N`
-        3. Opakuj stejný prompt po každém posunu labelu (nebo použij komentář od bota).
+                        1. Po vytvoření issue zkopíruj číslo.
+                        2. V Cursoru Agent chat: `/m N` (např. `/m 2`)
+                        3. Opakuj `/m N` po každém posunu fáze (nebo použij komentář od bota).
