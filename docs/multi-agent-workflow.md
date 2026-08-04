@@ -68,7 +68,8 @@ Uživatel může přepsat; Integrátor v kickoffu uvede `MODEL:` u každé role.
 3. Kontrolor **neimplementuje** a **nesmí** „opravit za“ produkční roli — jen verdikt + připomínky.
 4. Po opravě jde artefakt **znovu ke stejnému kontrolorovi** (nové GO/NO-GO).
 5. Max. doporučené kol **reworku na bránu: 3**; potom label `gate/blocked` na pipeline + eskalace na Integrátora / uživatele.
-6. Přeskočení NO-GO bez zdůvodnění Integrátora je zakázané.
+6. **Verdikt = nové issue každé kolo:** Kontrolor vytvoří **nové** `[VERDIKT-*]` issue; existující NO-GO verdikt se needituje na GO (body `Verdikt: NO-GO` zůstává audit trail). Sync workflow počítá NO-GO z body všech verdikt child issues (`state: all`).
+7. Přeskočení NO-GO bez zdůvodnění Integrátora je zakázané.
 
 ## GitHub Issues = vstupy a výstupy
 
@@ -127,7 +128,7 @@ GO:     verdikt issue má label gate/go; body začíná „Verdikt: GO“
 NO-GO:  verdikt issue má label gate/no-go; body = seznam vad + odkaz na produkční issue
         → produkční issue: label gate/no-go + gate/pending, otevřený
         → předchozí role opraví body produkčního issue (verze v2…)
-        → nový verdikt issue (nebo update stávajícího) po opravě
+        → **nové** verdikt issue po opravě (staré NO-GO issue neměnit — audit trail)
 ```
 
 1. Další produkční issue **nevytvářej**, dokud předchozí verdikt není `gate/go`.
@@ -199,7 +200,7 @@ NESMÍŠ: implementovat; uzavírat verdikt; git push
 ROLE: Kontrolor analytika
 MODEL: claude-opus-5-thinking-high
 VSTUP_ISSUE: #<ANALÝZA>
-VÝSTUP_ISSUE: #<VERDIKT-A>  (vytvoř nový nebo aktualizuj; label multiagent/verdikt)
+VÝSTUP_ISSUE: #<VERDIKT-A>  (vždy **vytvoř nové** issue pro každé kolo; label multiagent/verdikt)
 
 Do body VÝSTUP_ISSUE:
 - Verdikt: GO | NO-GO

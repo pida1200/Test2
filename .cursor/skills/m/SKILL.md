@@ -89,6 +89,8 @@ Artefakty: `[IMPLEMENTACE]` → `[VERDIKT-V]`. Pole ANALÝZA/VERDIKT-A v šablon
 
 Max ~3 reworky na bránu. Po 3. NO-GO → label `gate/blocked` na pipeline + eskalace Integrátorovi.
 
+**Verdikt issue = 1 kolo (audit trail):** Kontrolor pro každé kolo review vytvoří **nové** `[VERDIKT-A|V|T]` issue. **Nepřepisuj** existující NO-GO verdikt na GO — staré issue zůstává s `Verdikt: NO-GO` v body (sync počítá NO-GO z body všech verdikt child issues, open i closed). Po opravě produkčního artefaktu → nový verdikt issue → znovu review.
+
 ## Modely — ověř dostupnost
 
 Před spuštěním ověř slug v Cursor Task. Uveď skutečný slug v odpovědi (`MODEL:`).

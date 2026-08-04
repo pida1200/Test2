@@ -104,7 +104,7 @@ Skill: `.cursor/skills/m/SKILL.md` · Command: `.cursor/commands/m.md`
 
 I/O vždy přes GitHub Issues (`VSTUP_ISSUE` / `VÝSTUP_ISSUE`). Integrátor při kickoffu: existující pipeline issue **doplní** (`[PIPELINE]` titulek + labely); nové vytvoří jen když žádné neexistuje.
 
-GH Action `multiagent-next.yml` komentuje další krok + `/m #N` po změně labelů.  
+GH Action `multiagent-next.yml` komentuje další krok + `/m #N` po změně labelů.
 Přehled celé pipeline: `[PIPELINE]` issue — sekce mezi markery `multiagent:prehled` (bot) nebo `bash docs/scripts/ma-pipeline-view.sh #N` lokálně.
 
 ## Multi‑agent role 3+3 — `/m` (I/O + gate + rework)

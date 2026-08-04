@@ -80,6 +80,7 @@ produkce → kontrolor → GO → další fáze
 - Kontrolor **neimplementuje** a neopravuje „za“ produkční roli.
 - **Synchronizuj `gate/*`** na verdikt issue **i** produkční issue.
 - Max. ~3 reworky na bránu; po 3. NO-GO → label `gate/blocked` na pipeline + eskalace.
+- **Verdikt = nové issue každé kolo** (NO-GO body neměnit; sync počítá z audit trail).
 - Uzavření jen když VERDIKT_A + VERDIKT_V + VERDIKT_T = GO (`gate/go` na verdikt issues).
 - Vada produktu zjištěná ve fázi testů → návrat na **Vývojáře**.
 

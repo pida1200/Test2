@@ -2,6 +2,7 @@ name: Multi-agent pipeline sync
 
 # Udržuje auto-přehled mezi markery v [PIPELINE] body.
 # Bot mění jen <!-- multiagent:prehled:start --> … <!-- multiagent:prehled:end -->.
+# Logika: docs/scripts/pipeline-sync-lib.cjs (unit test: test-pipeline-sync.sh)
 
 on:
   issues:
@@ -18,13 +19,16 @@ jobs:
       !(github.event.action == 'edited' && github.actor == 'github-actions[bot]')
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
       - name: Sync pipeline overview section
         uses: actions/github-script@v7
         with:
           script: |
-            const START = '<!-- multiagent:prehled:start -->';
-            const END = '<!-- multiagent:prehled:end -->';
-            const PIPELINE_RE = /^\s*Pipeline(?:\s+issue)?:\s*#?(\d+)\s*$/m;
+            const sync = require('./docs/scripts/pipeline-sync-lib.cjs');
+            const { START, END, PIPELINE_RE, parsePipelineNum, replacePrehledSection,
+              buildVerdictHistoryLine, countNoGoRounds, shouldBlockPipeline,
+              safeUpdatePipelineBody } = sync;
 
             const PHASES = [
               { key: 'ANALÝZA', artifact: 'multiagent/analyza', verdict: null },
@@ -49,11 +53,6 @@ jobs:
               if (/\[VERDIKT-V\]|VERDIKT-V/i.test(t)) return 'V';
               if (/\[VERDIKT-T\]|VERDIKT-T/i.test(t)) return 'T';
               return null;
-            }
-
-            function parsePipelineNum(body) {
-              const m = (body || '').match(PIPELINE_RE);
-              return m ? m[1] : null;
             }
 
             function phaseForIssue(issue) {
@@ -148,20 +147,8 @@ jobs:
 
             const historyParts = [];
             for (const phase of PHASES.filter(p => p.verdict)) {
-              const list = byPhase[phase.key] || [];
-              const noGos = list.filter(i => issueGate(i) === 'gate/no-go');
-              const go = list.find(i => issueGate(i) === 'gate/go');
-              if (noGos.length === 0 && !go) continue;
-              if (noGos.length === 0 && go) {
-                historyParts.push(`${phase.key} #${go.number} GO`);
-                continue;
-              }
-              const chain = noGos.map(i => `#${i.number} NO-GO`).join(' → ');
-              if (go) {
-                historyParts.push(`${phase.key} ${chain} → #${go.number} GO (rework ${noGos.length}/3)`);
-              } else {
-                historyParts.push(`${phase.key} ${chain} (rework ${noGos.length}/3)`);
-              }
+              const line = buildVerdictHistoryLine(phase.key, byPhase[phase.key] || []);
+              if (line) historyParts.push(line);
             }
 
             const historyLine = historyParts.length
@@ -234,6 +221,10 @@ jobs:
               nextRole = 'Eskalace';
               nextModel = '—';
               nextHint = 'Vyřeš gate/blocked (≥3 reworky)';
+            } else if (shouldBlockPipeline(byPhase)) {
+              nextRole = 'Eskalace';
+              nextModel = '—';
+              nextHint = '≥3 NO-GO verdikty — gate/blocked';
             } else {
               const allGo = ['VERDIKT-A', 'VERDIKT-V', 'VERDIKT-T'].every(k => {
                 const iss = latestIssue(k);
@@ -246,7 +237,7 @@ jobs:
               }
             }
 
-            const section = [
+            const sectionBlock = [
               START,
               '',
               '| Fáze | Issue | Gate | Stav |',
@@ -260,38 +251,25 @@ jobs:
               END,
             ].join('\n');
 
-            let body = pipelineIssue.body || '';
-            let newBody;
-            if (body.includes(START) && body.includes(END)) {
-              const re = new RegExp(`${START}[\\s\\S]*?${END}`);
-              newBody = body.replace(re, section);
-            } else {
-              newBody = body.trimEnd() + '\n\n' + section + '\n';
-            }
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const issueNumber = parseInt(pipelineNum, 10);
 
-            if (newBody === body) {
+            const currentBody = pipelineIssue.body || '';
+            const preview = replacePrehledSection(currentBody, sectionBlock);
+            if (preview === currentBody) {
               core.info('Pipeline prehled unchanged — skip edit');
-              return;
+            } else {
+              const result = await safeUpdatePipelineBody(github, owner, repo, issueNumber, sectionBlock);
+              core.info(`Pipeline prehled update: ${JSON.stringify(result)}`);
             }
 
-            await github.rest.issues.update({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: parseInt(pipelineNum, 10),
-              body: newBody,
-            });
-
-            const maxRework = Math.max(
-              0,
-              ...['VERDIKT-A', 'VERDIKT-V', 'VERDIKT-T'].map(k =>
-                (byPhase[k] || []).filter(i => issueGate(i) === 'gate/no-go').length
-              )
-            );
-            if (maxRework >= 3 && !plLabels.includes('gate/blocked')) {
+            if (shouldBlockPipeline(byPhase) && !plLabels.includes('gate/blocked')) {
               await github.rest.issues.addLabels({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: parseInt(pipelineNum, 10),
+                owner,
+                repo,
+                issue_number: issueNumber,
                 labels: ['gate/blocked'],
               });
+              core.info('Added gate/blocked — ≥3 NO-GO verdikt issues (body audit)');
             }
