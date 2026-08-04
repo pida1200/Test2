@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Vytvoří labely pro multi-agent I/O přes GitHub Issues.
+# Labely pro multi-agent 7-issue model (multiagent/* + gate/*).
+# Labely ma/* z PR #3 NEZAVÁDĚT.
 # Spusť z kořene repa: bash docs/scripts/create-multiagent-labels.sh
 set -euo pipefail
 create() {
@@ -16,4 +17,5 @@ create "multiagent/verdikt" "D93F0B" "Controller verdict"
 create "gate/pending" "C2E0C6" "Awaiting review or rework"
 create "gate/go" "0E8A16" "Gate passed"
 create "gate/no-go" "B60205" "Gate blocked"
-echo "OK: multi-agent labels ready"
+create "gate/blocked" "B60205" "Escalation after 3 reworks"
+echo "OK: multi-agent labels ready (no ma/* labels)"
