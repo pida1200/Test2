@@ -86,6 +86,7 @@ PŘI NO-GO: …
 
 ```text
 ROLE: Analytik
+MODEL: claude-opus-4-8-thinking-high
 VSTUP:
 - cíl od uživatele / Integrátora (1 věta)
 - kontext (cesty v repu, relevantní docs/rules)
@@ -141,6 +142,7 @@ NESMÍŠ: přepsat analýzu, kódovat, posunout na Vývojáře při NO-GO
 
 ```text
 ROLE: Vývojář
+MODEL: composer-2.5
 VSTUP:
 - schválená ANALÝZA (po GO Kontrolora analytika) — povinné
 - scope souborů/složek
@@ -165,6 +167,7 @@ NESMÍŠ: měnit kontrakt bez eskalace; git push; spustit Testera bez GO
 
 ```text
 ROLE: Kontrolor vývojáře
+MODEL: gpt-5.6-sol-high
 VSTUP:
 - schválená ANALÝZA
 - artefakt IMPLEMENTACE (diff + shrnutí + výsledky ověření)
@@ -194,6 +197,7 @@ NESMÍŠ: implementovat fixy sám; posunout dál při NO-GO
 
 ```text
 ROLE: Tester
+MODEL: composer-2.5
 VSTUP:
 - schválená ANALÝZA (DoD + edge cases)
 - IMPLEMENTACE po GO Kontrolora vývojáře
@@ -220,6 +224,7 @@ NESMÍŠ: rozšiřovat feature mimo testy (výjimka: minimální testovatelnost 
 
 ```text
 ROLE: Kontrolor testera
+MODEL: gpt-5.5-high
 VSTUP:
 - schválená ANALÝZA (DoD + edge cases)
 - artefakt TESTY (plán + diff testů + výsledky)
@@ -244,6 +249,7 @@ NESMÍŠ: psát produkční kód; posunout na Integrátora při NO-GO
 
 ```text
 ROLE: Integrátor
+MODEL: composer-2.5
 VSTUP:
 - cíl uživatele
 - všechny artefakty s finálními GO (ANALÝZA, IMPLEMENTACE, TESTY + VERDIKT_*)
