@@ -89,14 +89,22 @@ Hotovo když:
 Ověření: N/A
 ```
 
-## Multi‑agent: slash aliasy
+## Multi‑agent: slash gramatika
 
-| Alias | Kdy použít |
+Skill: `.cursor/skills/m/SKILL.md` · Command: `.cursor/commands/m.md`
+
+| Vstup | Kdy použít |
 |-------|------------|
-| **`/m`** | Plná pipeline 3+3 — Analytik → Vývojář → Tester + kontroloři + Integrátor |
-| **`/m 2`** | Rychlá 2er: jen Vývojář + Kontrolor vývojáře (audit, docs, malý fix ve scope) |
+| **`/m`** | Plná pipeline 3+3 — Integrátor kickoff |
+| **`/m #N`** | Pokračuj v pipeline `#N` (fáze z labelů) |
+| **`/m 2`** | Rychlá 2er: Vývojář + Kontrolor vývojáře |
+| **`/m 2 #N`** | Rychlá 2er nad pipeline `#N` |
+
+Číslo issue **vždy s `#`**. Labely `ma/*` nezavádět.
 
 I/O vždy přes GitHub Issues (`VSTUP_ISSUE` / `VÝSTUP_ISSUE`). Integrátor při kickoffu: existující pipeline issue **doplní** (`[PIPELINE]` titulek + labely); nové vytvoří jen když žádné neexistuje.
+
+GH Action `multiagent-next.yml` komentuje další krok + `/m #N` po změně labelů.
 
 ## Multi‑agent role 3+3 — `/m` (I/O + gate + rework)
 
@@ -109,11 +117,11 @@ Scope: <složky/soubory>
 Mimo scope: <…>
 
 I/O: GitHub Issues (`.github/ISSUE_TEMPLATE/`)
-Pipeline + MODEL:
-1) [PIPELINE] → Analytik → [ANALÝZA] → K.A → [VERDIKT-A] [claude-opus-4-8-thinking-high]
-2) Vývojář → [IMPLEMENTACE] [composer-2.5] → K.V → [VERDIKT-V] [gpt-5.6-sol-high]
-3) Tester → [TESTY] [composer-2.5] → K.T → [VERDIKT-T] [gpt-5.5-high]
-4) Integrátor [composer-2.5] uzavře [PIPELINE] jen při gate/go na A+V+T
+Pipeline + MODEL (ověř dostupnost slugů):
+1) [PIPELINE] → Analytik → [ANALÝZA] → K.A → [VERDIKT-A] [claude-opus-5-thinking-high]
+2) Vývojář → [IMPLEMENTACE] [composer-2.5-fast] → K.V → [VERDIKT-V] [gpt-5.6-sol-medium]
+3) Tester → [TESTY] [composer-2.5-fast] → K.T → [VERDIKT-T] [claude-sonnet-5-thinking-high]
+4) Integrátor [composer-2.5-fast] uzavře [PIPELINE] jen při gate/go na A+V+T
 
 Gate:
 - NO-GO = STOP; oprav produkční issue dle verdikt issue; znovu verdikt
@@ -125,6 +133,28 @@ Hotovo když:
 - VERDIKT-A/V/T mají gate/go
 - ověření dle oblasti
 - záznam v docs/learning-log.md + zavřený [PIPELINE]
+```
+
+### Snippet ANALÝZA (Analytik → body issue)
+
+```text
+ROLE: Analytik
+MODEL: claude-opus-5-thinking-high
+VSTUP_ISSUE: #<PIPELINE>
+VÝSTUP_ISSUE: #<ANALÝZA>
+
+Do body VÝSTUP_ISSUE:
+1. Cíl (1 věta)
+2. Scope / mimo scope
+3. API nebo UI kontrakt
+4. Kritéria hotovo (3–5)
+5. Edge cases + rizika
+6. Návrh ověření
+7. Doporučené implementační kroky (pořadí commitů)
+8. Pipeline: #<PIPELINE>
+
+GATE: → Kontrolor analytika
+PŘI NO-GO: oprav body dle #<VERDIKT-A>
 ```
 
 ### Mini-template role (vlož do každého sub-agenta)
@@ -153,15 +183,15 @@ I/O: GitHub Issues
 
 Vývojář:
 ROLE: Vývojář
-MODEL: composer-2.5   # fallback: claude-4.6-sonnet-high-thinking (ne-fast); *-fast jen když není dostupná ne-fast alternativa NEBO rutinní rework
+MODEL: composer-2.5-fast   # alt: claude-sonnet-5-thinking-high; *-fast OK když ne-fast není dostupná
 VSTUP_ISSUE: #<PIPELINE nebo zadání>
 VÝSTUP_ISSUE: #<IMPLEMENTACE>
-GATE: → Kontrolor vývojáře; nic necommituj (Integrátor commitne po GO)
+GATE: → Kontrolor vývojáře; WIP commit(y) na feature větvi OK, NE push
 PŘI NO-GO: oprav dle #<VERDIKT-V>, bump verze v body, znovu review
 
 Kontrolor vývojáře:
 ROLE: Kontrolor vývojáře
-MODEL: gpt-5.6-sol-high   # fallback: claude-opus-4-8-thinking-high (ne-fast), pak gpt-5.6-sol-medium; *-fast jen když není dostupná ne-fast alternativa NEBO rutinní rework
+MODEL: gpt-5.6-sol-medium   # alt: claude-opus-5-thinking-high
 VSTUP_ISSUE: #<IMPLEMENTACE>
 VÝSTUP_ISSUE: #<VERDIKT-V>
 GATE: GO → Integrátor může commitnout; NO-GO → Vývojář opraví

@@ -7,16 +7,20 @@ alwaysApply: false
 
 **Použij jen když uživatel chce multi-agent / paralelní agenty / role analytik–vývojář–tester** — pro běžný úkol stačí jeden agent + mini checklist v `repo-kvalita.mdc`.
 
-Detailní I/O šablony: `docs/multi-agent-workflow.md`. Snippety: `docs/prompt-snippets.md`.
+Detailní I/O šablony: `docs/multi-agent-workflow.md`. Snippety: `docs/prompt-snippets.md`.  
+Skill: `.cursor/skills/m/SKILL.md` · Command: `.cursor/commands/m.md`
 
-## Slash aliasy (copy-paste kickoff)
+## Slash gramatika (závazná)
 
-| Alias | Význam |
+| Vstup | Význam |
 |-------|--------|
-| **`/m`** | Plná pipeline 3+3 (Analytik → Vývojář → Tester + kontroloři + Integrátor) |
-| **`/m 2`** | Rychlá 2er: **Vývojář** + **Kontrolor vývojáře** (bez Analytika/Testera); I/O stále přes GitHub Issues |
+| **`/m`** | Plná pipeline 3+3; Integrátor doplní/vytvoří `[PIPELINE]` |
+| **`/m #N`** | Pokračuj v pipeline `#N`; fázi odvoď z labelů child issues |
+| **`/m 2`** | Rychlá 2er: Vývojář + Kontrolor vývojáře |
+| **`/m 2 #N`** | Rychlá 2er nad pipeline `#N` |
 
-Detail + šablony: `docs/prompt-snippets.md` (sekce Multi-agent).
+Číslo issue **vždy s `#`**. Bez `#` je `2` režim, ne issue.  
+Labely `ma/*` z PR #3 **nezavádět** — používej `multiagent/*` + `gate/*`.
 
 ## Role
 
@@ -44,22 +48,24 @@ Každý vstup/výstup role je **GitHub Issue** (šablony `.github/ISSUE_TEMPLATE
 | Tester | `[TESTY] …` |
 | K. testera | `[VERDIKT-T] …` |
 
-Labely: `multiagent`, `multiagent/*`, `gate/pending|go|no-go`.  
+Labely: `multiagent`, `multiagent/*`, `gate/pending|go|no-go|blocked`.  
 V zadání vždy `VSTUP_ISSUE:` / `VÝSTUP_ISSUE:`. Obsah do **body issue**, ne jen chat.
 
-## Modely (default)
+Zápis body: `gh issue edit --body-file` (ne inline `--body`).
 
-| Role | Model |
-|------|--------|
-| Analytik / K. analytika | `claude-opus-4-8-thinking-high` |
-| Vývojář / Tester / Integrátor | `composer-2.5` |
-| Kontrolor vývojáře | `gpt-5.6-sol-high` |
-| Kontrolor testera | `gpt-5.5-high` |
+## Modely (verifikované slugy)
 
-Detail + alternativy: `docs/multi-agent-workflow.md` (sekce Modely).  
+| Role | Doporučený model | Alternativa |
+|------|------------------|-------------|
+| Analytik / K. analytika | `claude-opus-5-thinking-high` | `claude-4.5-opus-high-thinking` |
+| Vývojář / Tester / Integrátor | `composer-2.5-fast` | `claude-sonnet-5-thinking-high` |
+| Kontrolor vývojáře | `gpt-5.6-sol-medium` | `claude-opus-5-thinking-high` |
+| Kontrolor testera | `claude-sonnet-5-thinking-high` | `gpt-5.6-terra-medium` |
+
+Detail: `docs/multi-agent-workflow.md` (sekce Modely).  
 V kickoffu uveď `MODEL:` u role; kontrolor ideálně **jiný** model než produkce.
 
-**Fallback:** pokud doporučený slug není v Cursor Task dostupný, použij slug ze sloupce **Alternativa** v tabulce Modely (preferuj **ne-fast**). `*-fast` jen když není jiná alternativa, nebo jde o rutinní rework po jasném seznamu vad — uveď skutečný slug v `MODEL:`.
+**Fallback:** pokud doporučený slug není v Cursor Task dostupný, použij alternativu ze sloupce Alternativa. **`*-fast` je legitimní**, když ne-fast alternativa neexistuje (dnes Vývojář/Tester/Integrátor) — uveď skutečný slug v `MODEL:`.
 
 ## Gate + rework (závazné)
 
@@ -70,11 +76,20 @@ produkce → kontrolor → GO → další fáze
 
 - Další fáze **jen po GO**.
 - Kontrolor **neimplementuje** a neopravuje „za“ produkční roli.
-- Max. ~3 reworky na bránu, pak eskalace Integrátorovi / uživateli.
+- **Synchronizuj `gate/*`** na verdikt issue **i** produkční issue.
+- Max. ~3 reworky na bránu; po 3. NO-GO → label `gate/blocked` na pipeline + eskalace.
 - Uzavření jen když VERDIKT_A + VERDIKT_V + VERDIKT_T = GO (`gate/go` na verdikt issues).
-- Vada produktu zjištěná ve fázi testů → návrat na **Vývojáře** (ne jen Tester).
+- Vada produktu zjištěná ve fázi testů → návrat na **Vývojáře**.
 
-Každé zadání role musí mít: **VSTUP_ISSUE / VÝSTUP_ISSUE / GATE / PŘI NO-GO** (+ MODEL).
+## Předávání kódu mezi rolemi
+
+Vývojář v oddělených agent sessions **nic necommituje** (Integrátor commitne po GO), ale **WIP commit(y) na feature větvi jsou povoleny**, aby Tester/Kontrolor viděli diff. Integrátor pak squashne. Alternativa: stejný working tree.
+
+## Automatizace
+
+- `.github/workflows/multiagent-next.yml` — komentuje další roli + `/m #N` při změně labelů.
+- `.github/workflows/multiagent-gate-check.yml` — validace verdiktů (komentář při chybě).
+- Labely: `bash docs/scripts/create-multiagent-labels.sh`
 
 ## Kdy použít
 
