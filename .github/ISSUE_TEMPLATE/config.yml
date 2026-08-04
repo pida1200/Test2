@@ -1,2 +1,5 @@
 blank_issues_enabled: true
-contact_links: []
+contact_links:
+  - name: Multi-agent docs
+    url: https://github.com/pida1200/Test2/blob/main/docs/multi-agent-workflow.md
+    about: Jak spustit Multiagent #N (1 issue + labely ma/*)
