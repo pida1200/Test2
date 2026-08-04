@@ -99,22 +99,23 @@ Cíl: <1 věta>
 Scope: <složky/soubory>
 Mimo scope: <…>
 
-Pipeline + MODEL (viz docs/multi-agent-workflow.md → Modely):
-1) Analytik [claude-opus-4-8-thinking-high] → Kontrolor analytika [claude-opus-4-8-thinking-high]
-2) Vývojář [composer-2.5] → Kontrolor vývojáře [gpt-5.6-sol-high]
-3) Tester [composer-2.5] → Kontrolor testera [gpt-5.5-high]
-4) Integrátor [composer-2.5]: testy+lint, commit, docs/learning-log.md
+I/O: GitHub Issues (`.github/ISSUE_TEMPLATE/`)
+Pipeline + MODEL:
+1) [PIPELINE] → Analytik → [ANALÝZA] → K.A → [VERDIKT-A] [claude-opus-4-8-thinking-high]
+2) Vývojář → [IMPLEMENTACE] [composer-2.5] → K.V → [VERDIKT-V] [gpt-5.6-sol-high]
+3) Tester → [TESTY] [composer-2.5] → K.T → [VERDIKT-T] [gpt-5.5-high]
+4) Integrátor [composer-2.5] uzavře [PIPELINE] jen při gate/go na A+V+T
 
 Gate:
-- NO-GO = STOP; předchozí produkční role musí vyřešit seznam vad
-- po opravě znovu stejný kontrolor
+- NO-GO = STOP; oprav produkční issue dle verdikt issue; znovu verdikt
+- další issue až po label gate/go
 - kontrolor neimplementuje
-- uzavření jen při GO ze všech tří kontrolorů
+- uzavření [PIPELINE] jen při gate/go na A+V+T
 
 Hotovo když:
-- VERDIKT_A + VERDIKT_V + VERDIKT_T = GO
+- VERDIKT-A/V/T mají gate/go
 - ověření dle oblasti
-- záznam v docs/learning-log.md
+- záznam v docs/learning-log.md + zavřený [PIPELINE]
 ```
 
 ### Mini-template role (vlož do každého sub-agenta)
@@ -122,10 +123,10 @@ Hotovo když:
 ```text
 ROLE: <Analytik|Kontrolor analytika|Vývojář|Kontrolor vývojáře|Tester|Kontrolor testera>
 MODEL: <slug dle tabulky Modely>
-VSTUP: <artefakty / cíl / seznam vad při reworku>
-VÝSTUP: <ANALÝZA|VERDIKT_A|IMPLEMENTACE|VERDIKT_V|TESTY|VERDIKT_T>
+VSTUP_ISSUE: #<…>
+VÝSTUP_ISSUE: #<…>   # nebo „vytvoř ze šablony“
 GATE: <komu odevzdávám / kdy smím dál>
-PŘI NO-GO: <kdo opravuje; znovu který kontrolor>
+PŘI NO-GO: <kdo opravuje produkční issue; znovu který verdikt>
 ```
 
 ## Multi‑agent (rychlá 2er — implementace + review)

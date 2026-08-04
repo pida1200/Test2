@@ -1,0 +1,56 @@
+name: Multi-agent ANALÝZA
+description: Výstup Analytika (vstup pro Kontrolora analytika)
+title: "[ANALÝZA] "
+labels: ["multiagent", "multiagent/analyza", "gate/pending"]
+body:
+  - type: input
+    id: pipeline
+    attributes:
+      label: Pipeline issue
+      description: Číslo [PIPELINE] issue (např. 12)
+      placeholder: "12"
+    validations:
+      required: true
+  - type: input
+    id: goal
+    attributes:
+      label: Cíl (1 věta)
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope / mimo scope
+    validations:
+      required: true
+  - type: textarea
+    id: contract
+    attributes:
+      label: API nebo UI kontrakt
+      description: request/response, stavy, chyby/HTTP
+    validations:
+      required: true
+  - type: textarea
+    id: dod
+    attributes:
+      label: Kritéria hotovo (3–5)
+    validations:
+      required: true
+  - type: textarea
+    id: edges
+    attributes:
+      label: Edge cases + rizika
+    validations:
+      required: true
+  - type: textarea
+    id: verify
+    attributes:
+      label: Návrh ověření
+      placeholder: testy / lint / docker
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Verze artefaktu
+      value: "v1"

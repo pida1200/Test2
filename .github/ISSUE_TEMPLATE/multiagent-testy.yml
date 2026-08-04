@@ -1,0 +1,52 @@
+name: Multi-agent TESTY
+description: Výstup Testera (vstup pro Kontrolora testera)
+title: "[TESTY] "
+labels: ["multiagent", "multiagent/testy", "gate/pending"]
+body:
+  - type: input
+    id: pipeline
+    attributes:
+      label: Pipeline issue #
+    validations:
+      required: true
+  - type: input
+    id: analyza
+    attributes:
+      label: ANALÝZA issue #
+    validations:
+      required: true
+  - type: input
+    id: implementace
+    attributes:
+      label: IMPLEMENTACE issue # (gate/go)
+    validations:
+      required: true
+  - type: textarea
+    id: scenarios
+    attributes:
+      label: Checklist scénářů (mapované na DoD)
+    validations:
+      required: true
+  - type: textarea
+    id: files
+    attributes:
+      label: Soubory testů
+    validations:
+      required: true
+  - type: textarea
+    id: results
+    attributes:
+      label: Příkazy + výsledky
+    validations:
+      required: true
+  - type: textarea
+    id: problems
+    attributes:
+      label: Nalezené problémy
+      description: Při vadě produktu uveď ESKALACE_VÝVOJÁŘ
+      value: "Žádné"
+  - type: input
+    id: version
+    attributes:
+      label: Verze artefaktu
+      value: "v1"

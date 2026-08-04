@@ -13,11 +13,28 @@ Detailní I/O šablony: `docs/multi-agent-workflow.md`. Snippety: `docs/prompt-s
 
 | Produkce | Kontrola výstupu |
 |----------|------------------|
-| **Analytik** → artefakt ANALÝZA | **Kontrolor analytika** → VERDIKT_A |
-| **Vývojář** → artefakt IMPLEMENTACE | **Kontrolor vývojáře** → VERDIKT_V |
-| **Tester** → artefakt TESTY | **Kontrolor testera** → VERDIKT_T |
+| **Analytik** → issue `[ANALÝZA]` | **Kontrolor analytika** → `[VERDIKT-A]` |
+| **Vývojář** → issue `[IMPLEMENTACE]` | **Kontrolor vývojáře** → `[VERDIKT-V]` |
+| **Tester** → issue `[TESTY]` | **Kontrolor testera** → `[VERDIKT-T]` |
 
 **Integrátor**: orchestruje, konflikty, finální testy/lint, commit/merge/push (**bez PR**), learning-log.
+
+## GitHub Issues = I/O (závazné)
+
+Každý vstup/výstup role je **GitHub Issue** (šablony `.github/ISSUE_TEMPLATE/`).
+
+| Artefakt | Titulek |
+|----------|---------|
+| Epic | `[PIPELINE] …` |
+| Analytik | `[ANALÝZA] …` |
+| K. analytika | `[VERDIKT-A] …` |
+| Vývojář | `[IMPLEMENTACE] …` |
+| K. vývojáře | `[VERDIKT-V] …` |
+| Tester | `[TESTY] …` |
+| K. testera | `[VERDIKT-T] …` |
+
+Labely: `multiagent`, `multiagent/*`, `gate/pending|go|no-go`.  
+V zadání vždy `VSTUP_ISSUE:` / `VÝSTUP_ISSUE:`. Obsah do **body issue**, ne jen chat.
 
 ## Modely (default)
 
@@ -41,10 +58,10 @@ produkce → kontrolor → GO → další fáze
 - Další fáze **jen po GO**.
 - Kontrolor **neimplementuje** a neopravuje „za“ produkční roli.
 - Max. ~3 reworky na bránu, pak eskalace Integrátorovi / uživateli.
-- Uzavření jen když VERDIKT_A + VERDIKT_V + VERDIKT_T = GO.
+- Uzavření jen když VERDIKT_A + VERDIKT_V + VERDIKT_T = GO (`gate/go` na verdikt issues).
 - Vada produktu zjištěná ve fázi testů → návrat na **Vývojáře** (ne jen Tester).
 
-Každé zadání role musí mít: **VSTUP / VÝSTUP / GATE / PŘI NO-GO** (viz šablony v `docs/multi-agent-workflow.md`).
+Každé zadání role musí mít: **VSTUP_ISSUE / VÝSTUP_ISSUE / GATE / PŘI NO-GO** (+ MODEL).
 
 ## Kdy použít
 
@@ -55,7 +72,8 @@ Každé zadání role musí mít: **VSTUP / VÝSTUP / GATE / PŘI NO-GO** (viz �
 
 - scope (složky/soubory)
 - mimo scope
-- expected output (artefakt / verdikt GO|NO-GO)
+- `VSTUP_ISSUE` / `VÝSTUP_ISSUE`
+- expected output = aktualizované GitHub issue (+ `gate/go|no-go` u verdiktu)
 
 ## Ukončení (integrátor)
 

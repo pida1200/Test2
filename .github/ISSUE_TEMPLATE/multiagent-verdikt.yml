@@ -1,0 +1,49 @@
+name: Multi-agent VERDIKT
+description: Výstup kontrolora (GO/NO-GO) — použij pro VERDIKT-A/V/T
+title: "[VERDIKT-] "
+labels: ["multiagent", "multiagent/verdikt", "gate/pending"]
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Typ verdiktu
+      options:
+        - VERDIKT-A (analýza)
+        - VERDIKT-V (vývoj)
+        - VERDIKT-T (testy)
+    validations:
+      required: true
+  - type: dropdown
+    id: verdict
+    attributes:
+      label: Verdikt
+      options:
+        - GO
+        - NO-GO
+    validations:
+      required: true
+  - type: input
+    id: pipeline
+    attributes:
+      label: Pipeline issue #
+    validations:
+      required: true
+  - type: input
+    id: input_issue
+    attributes:
+      label: Vstupní produkční issue #
+      description: ANALÝZA / IMPLEMENTACE / TESTY
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Proč OK / seznam vad
+      description: Při NO-GO číslovaný seznam; při GO 2–4 body. ESKALACE_VÝVOJÁŘ pokud platí.
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        Po vytvoření nastav label **gate/go** nebo **gate/no-go** (a stejný na produkčním issue).
+        Titulek uprav na `[VERDIKT-A|V|T] <feature> — GO|NO-GO`.
