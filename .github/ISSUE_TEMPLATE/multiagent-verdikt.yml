@@ -26,6 +26,8 @@ body:
     id: pipeline
     attributes:
       label: Pipeline issue #
+      description: "Ve formátu #N"
+      placeholder: "#9"
     validations:
       required: true
   - type: input
@@ -33,6 +35,15 @@ body:
     attributes:
       label: Vstupní produkční issue #
       description: ANALÝZA / IMPLEMENTACE / TESTY
+      placeholder: "#8"
+    validations:
+      required: true
+  - type: input
+    id: rework_round
+    attributes:
+      label: Rework kolo (1–3)
+      description: Po 3. NO-GO nastav gate/blocked na pipeline
+      value: "1"
     validations:
       required: true
   - type: textarea
@@ -45,5 +56,8 @@ body:
   - type: markdown
     attributes:
       value: |
-        Po vytvoření nastav label **gate/go** nebo **gate/no-go** (a stejný na produkčním issue).
-        Titulek uprav na `[VERDIKT-A|V|T] <feature> — GO|NO-GO`.
+        **Titulek:** uprav na `[VERDIKT-A|V|T] <feature> — GO|NO-GO`.
+
+        **Labely (povinné):** nastav `gate/go` nebo `gate/no-go` na **tomto verdiktu i na produkčním issue** (# výše).
+
+        **Body** musí začínat řádkem `Verdikt: GO` nebo `Verdikt: NO-GO`.

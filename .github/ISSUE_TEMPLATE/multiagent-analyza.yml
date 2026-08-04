@@ -7,8 +7,8 @@ body:
     id: pipeline
     attributes:
       label: Pipeline issue
-      description: Číslo [PIPELINE] issue (např. 12)
-      placeholder: "12"
+      description: "Odkaz na [PIPELINE] issue ve formátu #N (musí mít label multiagent/pipeline)"
+      placeholder: "#9"
     validations:
       required: true
   - type: input
@@ -47,6 +47,16 @@ body:
     attributes:
       label: Návrh ověření
       placeholder: testy / lint / docker
+    validations:
+      required: true
+  - type: textarea
+    id: impl_steps
+    attributes:
+      label: Doporučené implementační kroky
+      description: Pořadí = doporučená posloupnost commitů pro Vývojáře
+      placeholder: |
+        1. soubor X — popis
+        2. soubor Y — popis
     validations:
       required: true
   - type: input

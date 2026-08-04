@@ -3,24 +3,40 @@ description: Výstup Vývojáře (vstup pro Kontrolora vývojáře)
 title: "[IMPLEMENTACE] "
 labels: ["multiagent", "multiagent/implementace", "gate/pending"]
 body:
+  - type: dropdown
+    id: mode
+    attributes:
+      label: "Režim"
+      description: "/m = plná 3+3; /m 2 = rychlá 2er (bez Analytika/Testera)"
+      options:
+        - "/m"
+        - "/m 2"
+    validations:
+      required: true
   - type: input
     id: pipeline
     attributes:
       label: Pipeline issue #
+      description: "Ve formátu #N"
+      placeholder: "#9"
     validations:
       required: true
   - type: input
     id: analyza
     attributes:
-      label: ANALÝZA issue # (musí mít gate/go)
+      label: ANALÝZA issue # (gate/go)
+      description: Nepovinné v režimu /m 2
+      placeholder: "#8"
     validations:
-      required: true
+      required: false
   - type: input
     id: verdikt_a
     attributes:
       label: VERDIKT-A issue # (gate/go)
+      description: Nepovinné v režimu /m 2
+      placeholder: "#10"
     validations:
-      required: true
+      required: false
   - type: textarea
     id: summary
     attributes:
