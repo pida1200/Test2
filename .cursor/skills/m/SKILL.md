@@ -21,6 +21,14 @@ Uživatel spustil slash `/m` s volitelnými argumenty.
 - **`2` bez `#` = režim**, ne issue.
 - Chybí pipeline u `/m 2` → zeptej: „Které pipeline? Použij `/m 2 #N`.“
 
+## Kde je celkový obraz
+
+**Čtení celé pipeline:** issue `[PIPELINE]` — sekce mezi markery `<!-- multiagent:prehled:start -->` … `<!-- multiagent:prehled:end -->` (udržuje `multiagent-pipeline-sync.yml`).
+
+**Zápis:** každá role edituje **své** artefakt issue (`[ANALÝZA]`, `[IMPLEMENTACE]`, …) přes `gh issue edit --body-file`. **Neupravuj** obsah uvnitř markerů v `[PIPELINE]` — bot ho přepíše.
+
+**Vazba na pipeline:** v body child issue musí být na **samostatném řádku** `Pipeline: #N` (CI čte anchored regex `^\s*Pipeline(?:\s+issue)?:\s*#?(\d+)\s*$`).
+
 ## Před akcí: `gh` write
 
 ```bash
@@ -32,8 +40,9 @@ Bez write scope → **degradace**: vypíš body/komentář/labely k ručnímu vl
 ## Určení fáze (7-issue model)
 
 1. Načti pipeline `#N`: `gh issue view N --json body,labels,title,number`
-2. Najdi child issues (body obsahuje `Pipeline: #N` nebo `#N` v sekci pipeline) — nebo je uživatel na konkrétním artefaktu.
-3. Fáze = label `multiagent/*` + `gate/*` na **aktuálním** artefaktu:
+2. **Celkový obraz** čti v `[PIPELINE]` (#N) — auto-přehled mezi markery `multiagent:prehled`.
+3. Najdi child issues (body obsahuje anchored řádek `Pipeline: #N`) — nebo je uživatel na konkrétním artefaktu.
+4. Fáze = label `multiagent/*` + `gate/*` na **aktuálním** artefaktu:
 
 | Label artefaktu | Gate | Role | Model |
 |-----------------|------|------|-------|

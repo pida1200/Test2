@@ -51,6 +51,8 @@ Každý vstup/výstup role je **GitHub Issue** (šablony `.github/ISSUE_TEMPLATE
 Labely: `multiagent`, `multiagent/*`, `gate/pending|go|no-go|blocked`.  
 V zadání vždy `VSTUP_ISSUE:` / `VÝSTUP_ISSUE:`. Obsah do **body issue**, ne jen chat.
 
+**Čtení = `[PIPELINE]`** (auto-přehled mezi markery `multiagent:prehled`); **zápis = per-artefakt** — labely nesou gate, historie verdiktů a CI validace vyžadují oddělené issues.
+
 Zápis body: `gh issue edit --body-file` (ne inline `--body`).
 
 ## Modely (verifikované slugy)
@@ -89,6 +91,7 @@ Vývojář v oddělených agent sessions **nic necommituje** (Integrátor commit
 
 - `.github/workflows/multiagent-next.yml` — komentuje další roli + `/m #N` při změně labelů.
 - `.github/workflows/multiagent-gate-check.yml` — validace verdiktů (komentář při chybě).
+- `.github/workflows/multiagent-pipeline-sync.yml` — auto-přehled fází v `[PIPELINE]` mezi markery.
 - Labely: `bash docs/scripts/create-multiagent-labels.sh`
 
 ## Kdy použít

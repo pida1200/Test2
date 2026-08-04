@@ -88,7 +88,19 @@ Každý **vstup i výstup** role je **GitHub Issue** (ne chat-only artefakt). Ch
 | `[TESTY] <feature>` | `multiagent/testy` | Tester | Kontrolor testera | Tester |
 | `[VERDIKT-T] <feature>` | `multiagent/verdikt` + `gate/go` \| `gate/no-go` | Kontrolor testera | Integrátor (GO) / Tester nebo Vývojář (NO-GO) | Kontrolor testera |
 
-Všechny issues jedné feature mají label `multiagent` a v body odkaz `Pipeline: #<PIPELINE>`.
+Všechny issues jedné feature mají label `multiagent` a v body **anchored** odkaz na samostatném řádku: `Pipeline: #<PIPELINE>`.
+
+## Jeden pohled na pipeline (varianta C — hybrid)
+
+Požadavek „vše v jednom issue“ (#13) byl znovu posouzen: **7-issue datový model zůstává** (gate labely, CI validace verdiktů, historie reworků, bez lost-update mezi rolemi). **Jeden pohled ke čtení** = issue `[PIPELINE]`:
+
+- Bot (`multiagent-pipeline-sync.yml`) udržuje sekci mezi `<!-- multiagent:prehled:start -->` a `<!-- multiagent:prehled:end -->`.
+- Tabulka 6 fází (issue, gate, open/closed), historie verdiktů včetně NO-GO kol, další krok + `/m #N`.
+- Bot mění **jen** obsah mezi markery; ruční text Integrátora mimo markery zůstává.
+- Chybí-li markery, workflow je připojí na konec body (nikdy celé body nepřepisuje).
+- Lokální náhled bez Actions: `bash docs/scripts/ma-pipeline-view.sh #N` (prefix `ma-` v názvu skriptu ≠ label `ma/*`).
+
+Single-issue model (varianta B) byl odmítnut — viz ANALÝZA #8, PR #3; varianta C nesouvisí s labely `ma/*`.
 
 ### Labely
 
@@ -330,8 +342,10 @@ Copy-paste šablony: `docs/prompt-snippets.md`.
 | Co | Kde | Co dělá |
 |----|-----|---------|
 | Slash `/m` | `.cursor/skills/m/SKILL.md` | routing fáze → role → model; zápis do issue přes `gh` |
-| Next-step bot | `.github/workflows/multiagent-next.yml` | při `opened`/`labeled` na issue s `multiagent` komentuje další roli + `/m #N`; dedupe |
+| Next-step bot | `.github/workflows/multiagent-next.yml` | při `opened`/`labeled` komentuje další roli + `/m #N`; marker `multiagent-next` + update |
+| Pipeline sync | `.github/workflows/multiagent-pipeline-sync.yml` | auto-přehled fází v `[PIPELINE]` mezi markery `multiagent:prehled` |
 | Gate check | `.github/workflows/multiagent-gate-check.yml` | validace verdiktů (formát body, labely, odkazy); komentář při chybě |
+| Lokální přehled | `docs/scripts/ma-pipeline-view.sh` | stejný přehled přes `gh` když Actions nejsou dostupné |
 | Labely | `docs/scripts/create-multiagent-labels.sh` | idempotentní vytvoření `multiagent/*` + `gate/*` |
 
 **Co zůstává ruční:** spuštění agenta v Cursoru, vytvoření child issues (pokud `gh` write není), finální commit/push (Integrátor). Auto-spuštění agentů z CI vyžaduje Cursor API key → follow-up.

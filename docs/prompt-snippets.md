@@ -104,7 +104,8 @@ Skill: `.cursor/skills/m/SKILL.md` · Command: `.cursor/commands/m.md`
 
 I/O vždy přes GitHub Issues (`VSTUP_ISSUE` / `VÝSTUP_ISSUE`). Integrátor při kickoffu: existující pipeline issue **doplní** (`[PIPELINE]` titulek + labely); nové vytvoří jen když žádné neexistuje.
 
-GH Action `multiagent-next.yml` komentuje další krok + `/m #N` po změně labelů.
+GH Action `multiagent-next.yml` komentuje další krok + `/m #N` po změně labelů.  
+Přehled celé pipeline: `[PIPELINE]` issue — sekce mezi markery `multiagent:prehled` (bot) nebo `bash docs/scripts/ma-pipeline-view.sh #N` lokálně.
 
 ## Multi‑agent role 3+3 — `/m` (I/O + gate + rework)
 
@@ -166,6 +167,22 @@ VSTUP_ISSUE: #<…>
 VÝSTUP_ISSUE: #<…>   # nebo „vytvoř ze šablony“
 GATE: <komu odevzdávám / kdy smím dál>
 PŘI NO-GO: <kdo opravuje produkční issue; znovu který verdikt>
+```
+
+### Snippet Integrátor — před uzavřením pipeline
+
+```text
+ROLE: Integrátor
+MODEL: composer-2.5-fast
+VSTUP_ISSUE: #<PIPELINE> + #<VERDIKT-A> + #<VERDIKT-V> + #<VERDIKT-T> (vše gate/go)
+
+Před close [PIPELINE]:
+1. Otevři #<PIPELINE> — zkontroluj auto-přehled mezi markery multiagent:prehled
+   (nebo lokálně: bash docs/scripts/ma-pipeline-view.sh #<PIPELINE>)
+2. Tabulka: všech 6 fází má issue + správný gate; historie verdiktů sedí s reworky
+3. Ruční checklist child issues doplň pokud bot ještě nesynchronizoval
+4. Commit/merge/push + docs/learning-log.md
+5. Zavři #<PIPELINE> jen při gate/go na A+V+T
 ```
 
 ## Multi‑agent rychlá 2er — `/m 2` (Vývojář + Kontrolor vývojáře)
