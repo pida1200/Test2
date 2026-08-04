@@ -49,11 +49,10 @@ function parsePipelineNum(body) {
   return m ? m[1] : null;
 }
 
-/** Immutable audit: NO-GO stays in body even if labels later change on a new issue. */
+/** Immutable audit: NO-GO stays in body (anchored first line, same as gate-check). */
 function isVerdictNoGo(body) {
-  const b = body || '';
-  const trimmed = b.trimStart();
-  return /^Verdikt:\s*NO-GO\b/.test(trimmed) || /\bVerdikt:\s*NO-GO\b/.test(b);
+  const trimmed = (body || '').trimStart();
+  return /^Verdikt:\s*NO-GO\b/.test(trimmed);
 }
 
 function isVerdictGo(body) {

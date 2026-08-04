@@ -214,7 +214,7 @@ na #<ANALÝZA> stejný gate label (+ gate/pending při NO-GO).
 
 GATE:
 - GO → Integrátor smí vytvořit/spustit #<IMPLEMENTACE>
-- NO-GO → STOP; Analytik musí opravit #<ANALÝZA> → nový/aktualizovaný verdikt
+- NO-GO → STOP; Analytik musí opravit #<ANALÝZA> → **nové** [VERDIKT-A] issue (nepřepisovat staré)
 
 NESMÍŠ: editovat body #<ANALÝZA> „za analytika“; kódovat; vytvořit #<IMPLEMENTACE> při NO-GO
 ```
@@ -250,13 +250,13 @@ NESMÍŠ: měnit kontrakt bez eskalace; git push; start Testera bez gate/go na V
 ROLE: Kontrolor vývojáře
 MODEL: gpt-5.6-sol-medium
 VSTUP_ISSUE: #<IMPLEMENTACE> + #<ANALÝZA>
-VÝSTUP_ISSUE: #<VERDIKT-V>
+VÝSTUP_ISSUE: #<VERDIKT-V>  (vždy **vytvoř nové** issue pro každé kolo; label multiagent/verdikt)
 
 Body: Verdikt GO|NO-GO, vady/OK, odkazy na vstupní issues.
 Labely gate/go|gate/no-go na verdikt + implementace.
 
-GATE: GO → Tester; NO-GO → Vývojář opraví #<IMPLEMENTACE>
-NESMÍŠ: implementovat fixy; posunout dál při NO-GO
+GATE: GO → Tester; NO-GO → Vývojář opraví #<IMPLEMENTACE> → **nové** [VERDIKT-V] issue
+NESMÍŠ: implementovat fixy; posunout dál při NO-GO; přepisovat existující NO-GO verdikt
 ```
 
 ---
@@ -289,13 +289,13 @@ NESMÍŠ: rozšiřovat feature mimo testy
 ROLE: Kontrolor testera
 MODEL: claude-sonnet-5-thinking-high
 VSTUP_ISSUE: #<TESTY> + #<ANALÝZA>
-VÝSTUP_ISSUE: #<VERDIKT-T>
+VÝSTUP_ISSUE: #<VERDIKT-T>  (vždy **vytvoř nové** issue pro každé kolo; label multiagent/verdikt)
 
 Body: Verdikt GO|NO-GO; případně ESKALACE_VÝVOJÁŘ.
 Labely gate/go|gate/no-go.
 
-GATE: GO → Integrátor smí uzavřít #<PIPELINE>; NO-GO → Tester nebo Vývojář dle typu vady
-NESMÍŠ: psát produkční kód; uzavírat pipeline při NO-GO
+GATE: GO → Integrátor smí uzavřít #<PIPELINE>; NO-GO → Tester nebo Vývojář dle typu vady → **nové** [VERDIKT-T] issue
+NESMÍŠ: psát produkční kód; uzavírat pipeline při NO-GO; přepisovat existující NO-GO verdikt
 ```
 
 ---
@@ -386,7 +386,7 @@ Modely (default — ověř dostupnost):
 - Vývojář / Tester / Integrátor: composer-2.5-fast
 - Kontrolor vývojáře: gpt-5.6-sol-medium
 - Kontrolor testera: claude-sonnet-5-thinking-high
-Pravidlo: NO-GO = STOP; předchozí role opraví produkční issue; nový/aktualizovaný verdikt
+Pravidlo: NO-GO = STOP; předchozí role opraví produkční issue; vždy nové VERDIKT issue každé kolo
 Ověření: <testy/lint/docker>
 Pravidla: .cursor/rules/ + repo-git (bez PR) + docs/learning-log.md
 ```

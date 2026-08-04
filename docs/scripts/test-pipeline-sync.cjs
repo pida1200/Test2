@@ -85,9 +85,28 @@ async function run() {
     assert.strictEqual(k1, k2);
   });
 
-  await test('isVerdictNoGo from body not label', () => {
+  await test('isVerdictNoGo anchored at body start only', () => {
     assert.strictEqual(lib.isVerdictNoGo('Verdikt: NO-GO\n\nVady...'), true);
     assert.strictEqual(lib.isVerdictNoGo('Verdikt: GO\n\nOK'), false);
+  });
+
+  await test('GO body citing Verdikt: NO-GO does not count as NO-GO', () => {
+    const goWithCitation = [
+      'Verdikt: GO',
+      '',
+      'Opraveno dle #20. Předchozí verdikt obsahoval: Verdikt: NO-GO',
+    ].join('\n');
+    assert.strictEqual(lib.isVerdictNoGo(goWithCitation), false);
+    assert.strictEqual(lib.isVerdictGo(goWithCitation), true);
+    const issues = [
+      { number: 20, body: 'Verdikt: NO-GO\n\nVady' },
+      { number: 22, body: goWithCitation },
+    ];
+    assert.strictEqual(lib.countNoGoRounds(issues), 1);
+    const line = lib.buildVerdictHistoryLine('VERDIKT-V', issues);
+    assert.ok(line.includes('#20 NO-GO'));
+    assert.ok(line.includes('#22 GO'));
+    assert.ok(line.includes('rework 1/3'));
   });
 
   await test('history counts NO-GO issues even if latest is GO', () => {
