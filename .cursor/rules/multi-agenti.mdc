@@ -7,47 +7,47 @@ alwaysApply: false
 
 **Použij jen když uživatel chce multi-agent / paralelní agenty / role analytik–vývojář–tester** — pro běžný úkol stačí jeden agent + mini checklist v `repo-kvalita.mdc`.
 
-Detailní šablony: `docs/multi-agent-workflow.md`, `docs/prompt-snippets.md`.
+Detailní I/O šablony: `docs/multi-agent-workflow.md`. Snippety: `docs/prompt-snippets.md`.
 
 ## Role
 
 | Produkce | Kontrola výstupu |
 |----------|------------------|
-| **Analytik** (kontrakt, DoD, edge cases) | **Kontrolor analytika** |
-| **Vývojář** (implementace + základní testy) | **Kontrolor vývojáře** |
-| **Tester** (edge/regresní testy, ověření) | **Kontrolor testera** |
+| **Analytik** → artefakt ANALÝZA | **Kontrolor analytika** → VERDIKT_A |
+| **Vývojář** → artefakt IMPLEMENTACE | **Kontrolor vývojáře** → VERDIKT_V |
+| **Tester** → artefakt TESTY | **Kontrolor testera** → VERDIKT_T |
 
-**Integrátor**: orchestruje pipeline, konflikty, finální testy/lint, commit/merge/push (**bez PR**, viz `repo-git.mdc`), learning-log.
+**Integrátor**: orchestruje, konflikty, finální testy/lint, commit/merge/push (**bez PR**), learning-log.
 
-## Pipeline (brány)
+## Gate + rework (závazné)
 
-1. Analytik → GO kontrolora analytika  
-2. Vývojář → GO kontrolora vývojáře  
-3. Tester → GO kontrolora testera  
-4. Integrátor uzavře  
+```text
+produkce → kontrolor → GO → další fáze
+                      → NO-GO → STOP → předchozí role opraví → znovu kontrolor
+```
 
-Další fáze **až po GO** (nebo po zapracování připomínek). Kontrolor **neimplementuje**.
+- Další fáze **jen po GO**.
+- Kontrolor **neimplementuje** a neopravuje „za“ produkční roli.
+- Max. ~3 reworky na bránu, pak eskalace Integrátorovi / uživateli.
+- Uzavření jen když VERDIKT_A + VERDIKT_V + VERDIKT_T = GO.
+- Vada produktu zjištěná ve fázi testů → návrat na **Vývojáře** (ne jen Tester).
+
+Každé zadání role musí mít: **VSTUP / VÝSTUP / GATE / PŘI NO-GO** (viz šablony v `docs/multi-agent-workflow.md`).
 
 ## Kdy použít
 
 - Větší úkol s analýzou + kódem + ověřením.
-- Nezávislé oblasti (backend + frontend) — max. 2 vývojáři se **stejným** schváleným kontraktem.
+- Max. 2 vývojáři se **stejným** schváleným kontraktem.
 
 ## Scope (povinné v zadání)
 
 - scope (složky/soubory)
-- co je mimo scope
-- expected output (shrnutí / soubory / verdikt GO|NO-GO)
-
-## Výstup sub-agenta
-
-- **Produkce:** co dodal (analýza / soubory / testy) + co ověřil
-- **Kontrolor:** GO nebo NO-GO + konkrétní připomínky
-- rizika / otevřené body
+- mimo scope
+- expected output (artefakt / verdikt GO|NO-GO)
 
 ## Ukončení (integrátor)
 
 - relevantní testy + lint
 - sebehodnocení dle `repo-kvalita.mdc`
-- zápis do `docs/learning-log.md` (u multi-agent běhu **povinně**)
-- review gate: připomínky ze **všech tří** kontrolorů zapracované nebo zdůvodněné před merge/push
+- `docs/learning-log.md` (**povinně**)
+- žádný otevřený NO-GO

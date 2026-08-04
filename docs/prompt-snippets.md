@@ -89,25 +89,42 @@ Hotovo když:
 Ověření: N/A
 ```
 
-## Multi‑agent role 3+3 (analytik / vývojář / tester + kontroloři)
+## Multi‑agent role 3+3 (I/O + gate + rework)
 
-Detail: [`multi-agent-workflow.md`](multi-agent-workflow.md). Rule: `.cursor/rules/multi-agenti.mdc`.
+Detail šablon VSTUP/VÝSTUP/GATE: [`multi-agent-workflow.md`](multi-agent-workflow.md).  
+Rule: `.cursor/rules/multi-agenti.mdc`.
 
 ```text
 Cíl: <1 věta>
 Scope: <složky/soubory>
 Mimo scope: <…>
 
-Pipeline (brány GO povinné):
-1) Analytik → Kontrolor analytika
-2) Vývojář → Kontrolor vývojáře
-3) Tester → Kontrolor testera
+Pipeline:
+1) Analytik (VÝSTUP: ANALÝZA) → Kontrolor analytika (GO|NO-GO)
+2) Vývojář (VÝSTUP: IMPLEMENTACE) → Kontrolor vývojáře (GO|NO-GO)
+3) Tester (VÝSTUP: TESTY) → Kontrolor testera (GO|NO-GO)
 4) Integrátor: testy+lint, commit, docs/learning-log.md
 
+Gate:
+- NO-GO = STOP; předchozí produkční role musí vyřešit seznam vad
+- po opravě znovu stejný kontrolor
+- kontrolor neimplementuje
+- uzavření jen při GO ze všech tří kontrolorů
+
 Hotovo když:
-- všechny tři kontroloři dali GO (nebo připomínky zapracované/zdůvodněné)
-- ověření dle oblasti (npm test/lint / npm run check)
+- VERDIKT_A + VERDIKT_V + VERDIKT_T = GO
+- ověření dle oblasti
 - záznam v docs/learning-log.md
+```
+
+### Mini-template role (vlož do každého sub-agenta)
+
+```text
+ROLE: <Analytik|Kontrolor analytika|Vývojář|Kontrolor vývojáře|Tester|Kontrolor testera>
+VSTUP: <artefakty / cíl / seznam vad při reworku>
+VÝSTUP: <ANALÝZA|VERDIKT_A|IMPLEMENTACE|VERDIKT_V|TESTY|VERDIKT_T>
+GATE: <komu odevzdávám / kdy smím dál>
+PŘI NO-GO: <kdo opravuje; znovu který kontrolor>
 ```
 
 ## Multi‑agent (rychlá 2er — implementace + review)

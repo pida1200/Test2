@@ -26,6 +26,13 @@ Pravidlo: `repo-kvalita.mdc`.
 
 ## Záznamy
 
+### 2026-08-04 – Multi-agent I/O šablony + rework při NO-GO
+
+- Výsledek: u každé role (vč. Integrátora) šablona VSTUP / VÝSTUP / GATE / PŘI NO-GO; NO-GO = STOP a předchozí produkční role musí vyřešit vady, pak znovu stejný kontrolor; eskalace z testů zpět na vývojáře.
+- Ověření: `docs/multi-agent-workflow.md`, `multi-agenti.mdc`, `prompt-snippets.md` sladěny.
+- Riziko: bez disciplíny Integrátora lze bránu přeskočit — rule to výslovně zakazuje.
+- Další krok: ostrý běh na konkrétní feature.
+
 ### 2026-08-04 – Multi-agent role 3+3 (analytik / vývojář / tester + kontroloři)
 
 - Výsledek: pipeline s bránami GO — Analytik→K. analytika→Vývojář→K. vývojáře→Tester→K. testera→Integrátor; aktualizováno `docs/multi-agent-workflow.md`, `.cursor/rules/multi-agenti.mdc`, `docs/prompt-snippets.md`.
