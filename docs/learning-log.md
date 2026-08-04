@@ -26,6 +26,13 @@ Pravidlo: `repo-kvalita.mdc`.
 
 ## Záznamy
 
+### 2026-08-04 – /m #13/#17: hybrid „jeden pohled“ (ne single-issue)
+
+- Výsledek: požadavek „vše v jednom issue“ → **varianta C**: 7 issues zůstává zápis/gate; `[PIPELINE]` dostane auto-přehled (`multiagent-pipeline-sync.yml` + markery `multiagent:prehled`). Oprava `multiagent-next.yml` (anchored Pipeline regex, marker dedupe). Single-issue (B) znovu odmítnuto (gate labely, lost update, historie, CI) — konzistentní s #8/PR #3.
+- Ověření: VERDIKT-A #18 GO; VERDIKT-V #20/#21 NO-GO → #22 GO; VERDIKT-T #24 GO; `test-pipeline-sync` 11/11; Tester #23 9/9.
+- Riziko: E2E Actions až po push; souběh řešen re-fetch/retry.
+- Další krok: po merge ověřit sync + next na živém issue.
+
 ### 2026-08-04 – /m #8–#9: automatizace multi-agent workflow (3+3)
 
 - Výsledek: doplněn spustitelný `/m` (`.cursor/commands/m.md` + `.cursor/skills/m/SKILL.md`), verifikované model slugy, `multiagent-next.yml` + `multiagent-gate-check.yml`, šablony ANALÝZA/IMPLEMENTACE/VERDIKT, `gate/blocked`, dry-run skript, poctivý `npm run check` wrapper. PR #3 zavřen bez merge (stale merge-base, `ma/*` odmítnuto; adoptovány jen skill/command/next přemapované na `multiagent/*`).
