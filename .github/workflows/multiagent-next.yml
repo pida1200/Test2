@@ -1,10 +1,11 @@
 name: Multi-agent next step
 
 # Při změně multiagent/* nebo gate/* labelu napíše do issue komentář s /m #N.
+# Gate: deterministická precedence go > no-go > blocked > pending (vždy z aktuálních labelů).
 
 on:
   issues:
-    types: [labeled, opened]
+    types: [labeled, unlabeled, opened]
 
 permissions:
   issues: write
@@ -27,34 +28,84 @@ jobs:
           script: |
             const issue = context.payload.issue;
             const labels = (issue.labels || []).map(l => l.name);
-            const artifact = labels.find(n => n.startsWith('multiagent/')) || 'multiagent/pipeline';
-            const gate = labels.find(n => n.startsWith('gate/')) || 'gate/pending';
+            const title = issue.title || '';
             const n = issue.number;
-
-            // Parse pipeline # from body
             const body = issue.body || '';
+
+            // Deterministic gate: go > no-go > blocked > pending
+            function resolveGate(labelList) {
+              const gates = labelList.filter(l => l.startsWith('gate/'));
+              const precedence = ['gate/go', 'gate/no-go', 'gate/blocked', 'gate/pending'];
+              for (const g of precedence) {
+                if (gates.includes(g)) return g;
+              }
+              return 'gate/pending';
+            }
+
+            function resolveArtifact(labelList) {
+              const arts = labelList.filter(l => l.startsWith('multiagent/'));
+              const order = [
+                'multiagent/verdikt',
+                'multiagent/analyza',
+                'multiagent/implementace',
+                'multiagent/testy',
+                'multiagent/pipeline',
+              ];
+              for (const a of order) {
+                if (arts.includes(a)) return a;
+              }
+              return arts[0] || 'multiagent/pipeline';
+            }
+
+            function verdictKind(t) {
+              if (/\[VERDIKT-A\]|VERDIKT-A/i.test(t)) return 'A';
+              if (/\[VERDIKT-V\]|VERDIKT-V/i.test(t)) return 'V';
+              if (/\[VERDIKT-T\]|VERDIKT-T/i.test(t)) return 'T';
+              return null;
+            }
+
+            const artifact = resolveArtifact(labels);
+            const gate = resolveGate(labels);
+            const vk = artifact === 'multiagent/verdikt' ? verdictKind(title) : null;
+
             const pipelineMatch = body.match(/(?:Pipeline(?:\s+issue)?(?:\s+#)?:?\s*)#?(\d+)/i);
-            const pipelineNum = pipelineMatch ? pipelineMatch[1] : (artifact === 'multiagent/pipeline' ? String(n) : null);
+            const pipelineNum = pipelineMatch
+              ? pipelineMatch[1]
+              : (artifact === 'multiagent/pipeline' ? String(n) : null);
+
+            const verdictRoutes = {
+              A: {
+                'gate/pending': { role: 'Kontrolor analytika', model: 'claude-opus-5-thinking-high', hint: 'Verdikt GO|NO-GO + sync gate na #ANALÝZA' },
+                'gate/go': { role: 'Vývojář', model: 'composer-2.5-fast', hint: 'VERDIKT-A GO — spusť Vývojáře → [IMPLEMENTACE]' },
+                'gate/no-go': { role: 'Analytik (rework)', model: 'claude-opus-5-thinking-high', hint: 'VERDIKT-A NO-GO — oprav [ANALÝZA], znovu review' },
+              },
+              V: {
+                'gate/pending': { role: 'Kontrolor vývojáře', model: 'gpt-5.6-sol-medium', hint: 'Verdikt GO|NO-GO + sync gate na #IMPLEMENTACE' },
+                'gate/go': { role: 'Tester', model: 'composer-2.5-fast', hint: 'VERDIKT-V GO — spusť Testera → [TESTY]' },
+                'gate/no-go': { role: 'Vývojář (rework)', model: 'composer-2.5-fast', hint: 'VERDIKT-V NO-GO — oprav [IMPLEMENTACE], znovu review' },
+              },
+              T: {
+                'gate/pending': { role: 'Kontrolor testera', model: 'claude-sonnet-5-thinking-high', hint: 'Verdikt GO|NO-GO + sync gate na #TESTY' },
+                'gate/go': { role: 'Integrátor', model: 'composer-2.5-fast', hint: 'VERDIKT-T GO — Integrátor uzavře [PIPELINE]' },
+                'gate/no-go': { role: 'Tester (rework)', model: 'composer-2.5-fast', hint: 'VERDIKT-T NO-GO — oprav [TESTY] nebo eskalace na Vývojáře' },
+              },
+            };
 
             const map = {
               'multiagent/pipeline': {
                 'gate/pending': { role: 'Integrátor → Analytik', model: 'composer-2.5-fast', hint: 'Kickoff: vytvoř [ANALÝZA] nebo spusť Analytika' },
                 'gate/blocked': { role: 'Eskalace', model: '—', hint: 'Vyřeš blokaci (≥3 reworky), sundat gate/blocked' },
+                'gate/go': { role: 'Integrátor', model: 'composer-2.5-fast', hint: 'Pipeline dokončena — uzavři issue' },
               },
               'multiagent/analyza': {
                 'gate/pending': { role: 'Analytik', model: 'claude-opus-5-thinking-high', hint: 'Doplň analýzu → Kontrolor A' },
                 'gate/no-go': { role: 'Analytik (rework)', model: 'claude-opus-5-thinking-high', hint: 'Oprav dle VERDIKT-A' },
-                'gate/go': { role: 'Kontrolor A / Vývojář', model: '—', hint: 'Analýza schválena — spusť Vývojáře po VERDIKT-A GO' },
-              },
-              'multiagent/verdikt': {
-                'gate/pending': { role: 'Kontrolor', model: 'claude-opus-5-thinking-high', hint: 'Verdikt GO|NO-GO + sync gate na produkční issue' },
-                'gate/go': { role: 'Další fáze', model: '—', hint: 'GO — spusť další produkční roli dle typu verdiktu' },
-                'gate/no-go': { role: 'Předchozí role', model: '—', hint: 'NO-GO — oprav produkční issue, znovu review' },
+                'gate/go': { role: 'Kontrolor A / Vývojář', model: 'claude-opus-5-thinking-high', hint: 'Analýza schválena — čeká VERDIKT-A nebo Vývojář' },
               },
               'multiagent/implementace': {
                 'gate/pending': { role: 'Vývojář', model: 'composer-2.5-fast', hint: 'Implementuj dle ANALÝZY; WIP commit OK' },
                 'gate/no-go': { role: 'Vývojář (rework)', model: 'composer-2.5-fast', hint: 'Oprav dle VERDIKT-V' },
-                'gate/go': { role: 'Tester', model: 'composer-2.5-fast', hint: 'Implementace schválena — spusť Testera' },
+                'gate/go': { role: 'Kontrolor V / Tester', model: 'gpt-5.6-sol-medium', hint: 'Implementace schválena — čeká VERDIKT-V nebo Tester' },
               },
               'multiagent/testy': {
                 'gate/pending': { role: 'Tester', model: 'composer-2.5-fast', hint: 'Testy + checklist → Kontrolor T' },
@@ -63,14 +114,20 @@ jobs:
               },
             };
 
-            const artifactMap = map[artifact] || map['multiagent/pipeline'];
-            const info = artifactMap[gate] || artifactMap['gate/pending'] || { role: '—', model: '—', hint: 'Zkontroluj labely' };
+            let info;
+            if (artifact === 'multiagent/verdikt' && vk && verdictRoutes[vk]) {
+              info = verdictRoutes[vk][gate] || verdictRoutes[vk]['gate/pending'];
+            } else {
+              const artifactMap = map[artifact] || map['multiagent/pipeline'];
+              info = artifactMap[gate] || artifactMap['gate/pending'] || { role: '—', model: '—', hint: 'Zkontroluj labely' };
+            }
 
             const prompt = pipelineNum ? `/m #${pipelineNum}` : `/m #${n}`;
+            const verdictTag = vk ? ` · Verdikt: **${vk}**` : '';
             const commentBody = [
               `### Multiagent — další krok`,
               ``,
-              `Artefakt: \`${artifact}\` · Gate: \`${gate}\` · Role: **${info.role}** · Model: \`${info.model}\``,
+              `Artefakt: \`${artifact}\` · Gate: \`${gate}\`${verdictTag} · Role: **${info.role}** · Model: \`${info.model}\``,
               ``,
               `V Cursoru (Agent chat):`,
               ``,

@@ -24,14 +24,14 @@ jobs:
             const issue = context.payload.issue;
             const labels = (issue.labels || []).map(l => l.name);
             const body = issue.body || '';
+            const title = issue.title || '';
             const errors = [];
 
-            // Body must start with Verdikt: GO|NO-GO
-            if (!/^Verdikt:\s*(GO|NO-GO)/im.test(body)) {
-              errors.push('Body musí začínat `Verdikt: GO` nebo `Verdikt: NO-GO`.');
+            // Body must START with Verdikt: GO|NO-GO (no multiline — ^ is start of string only)
+            if (!/^Verdikt:\s*(GO|NO-GO)/.test(body.trimStart())) {
+              errors.push('Body musí začínat `Verdikt: GO` nebo `Verdikt: NO-GO` (první ne-whitespace řádek).');
             }
 
-            // Exactly one of gate/go or gate/no-go
             const hasGo = labels.includes('gate/go');
             const hasNoGo = labels.includes('gate/no-go');
             if (hasGo && hasNoGo) {
@@ -40,9 +40,9 @@ jobs:
               errors.push('Chybí label `gate/go` nebo `gate/no-go`.');
             }
 
-            // Verdict in body must match gate label
-            const bodyGo = /^Verdikt:\s*GO/im.test(body);
-            const bodyNoGo = /^Verdikt:\s*NO-GO/im.test(body);
+            const bodyTrimmed = body.trimStart();
+            const bodyGo = /^Verdikt:\s*GO\b/.test(bodyTrimmed);
+            const bodyNoGo = /^Verdikt:\s*NO-GO\b/.test(bodyTrimmed);
             if (hasGo && bodyNoGo) {
               errors.push('Label `gate/go`, ale body říká NO-GO.');
             }
@@ -50,40 +50,61 @@ jobs:
               errors.push('Label `gate/no-go`, ale body říká GO.');
             }
 
-            // Pipeline reference
             const pipelineMatch = body.match(/(?:Pipeline(?:\s+issue)?(?:\s+#)?:?\s*)#?(\d+)/i);
             const inputMatch = body.match(/(?:Vstup(?:ní)?(?:\s+issue)?(?:\s+#)?:?\s*)#?(\d+)/i);
 
             if (!pipelineMatch) {
               errors.push('Body neobsahuje odkaz na pipeline (`Pipeline: #N`).');
             }
-
             if (!inputMatch) {
               errors.push('Body neobsahuje odkaz na produkční issue (`Vstup: #N`).');
             }
 
-            // Check referenced issues exist (best-effort)
-            async function issueExists(num) {
+            async function fetchIssue(num) {
               try {
-                await github.rest.issues.get({
+                const { data } = await github.rest.issues.get({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   issue_number: parseInt(num, 10),
                 });
-                return true;
+                return data;
               } catch {
-                return false;
+                return null;
               }
             }
 
+            function expectedProdLabel(t) {
+              if (/\[VERDIKT-A\]|VERDIKT-A/i.test(t)) return 'multiagent/analyza';
+              if (/\[VERDIKT-V\]|VERDIKT-V/i.test(t)) return 'multiagent/implementace';
+              if (/\[VERDIKT-T\]|VERDIKT-T/i.test(t)) return 'multiagent/testy';
+              return null;
+            }
+
             if (pipelineMatch) {
-              const ok = await issueExists(pipelineMatch[1]);
-              if (!ok) errors.push(`Pipeline issue #${pipelineMatch[1]} neexistuje.`);
+              const pipeline = await fetchIssue(pipelineMatch[1]);
+              if (!pipeline) {
+                errors.push(`Pipeline issue #${pipelineMatch[1]} neexistuje.`);
+              } else {
+                const pl = (pipeline.labels || []).map(l => l.name);
+                if (!pl.includes('multiagent/pipeline')) {
+                  errors.push(`Pipeline #${pipelineMatch[1]} nemá label \`multiagent/pipeline\`.`);
+                }
+              }
             }
 
             if (inputMatch) {
-              const ok = await issueExists(inputMatch[1]);
-              if (!ok) errors.push(`Produkční issue #${inputMatch[1]} neexistuje.`);
+              const prod = await fetchIssue(inputMatch[1]);
+              if (!prod) {
+                errors.push(`Produkční issue #${inputMatch[1]} neexistuje.`);
+              } else {
+                const expected = expectedProdLabel(title);
+                if (expected) {
+                  const pl = (prod.labels || []).map(l => l.name);
+                  if (!pl.includes(expected)) {
+                    errors.push(`Produkční #${inputMatch[1]} nemá očekávaný label \`${expected}\`.`);
+                  }
+                }
+              }
             }
 
             if (errors.length === 0) {

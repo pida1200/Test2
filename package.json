@@ -5,7 +5,7 @@
   "scripts": {
     "check": "npm run check:examples-backend && npm run check:docs",
     "check:all": "npm run check:examples-backend && npm run check:docs",
-    "check:examples-backend": "test -f examples/backend/package.json && (npm --prefix examples/backend test && npm --prefix examples/backend run lint) || echo \"[check] examples/backend not present - skipped\"",
+    "check:examples-backend": "bash docs/scripts/check-examples-backend.sh",
     "check:docs": "npx --yes markdownlint-cli2 \"docs/multi-agent-workflow.md\" \"docs/prompt-snippets.md\" \".cursor/rules/multi-agenti.mdc\" \".cursor/commands/m.md\" \".cursor/skills/m/SKILL.md\""
   }
 }

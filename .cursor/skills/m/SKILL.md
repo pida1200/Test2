@@ -17,7 +17,7 @@ Uživatel spustil slash `/m` s volitelnými argumenty.
 | `/m 2` | rychlá 2er | bez pipeline — zeptej se nebo vezmi z kontextu |
 | `/m 2 #N` | rychlá 2er | pipeline `#N` |
 
-- `#N` = číslo GitHub issue (s `#` nebo bez — normalizuj).
+- `#N` = číslo GitHub issue **vždy s `#`** (např. `/m #9`, `/m 2 #9`).
 - **`2` bez `#` = režim**, ne issue.
 - Chybí pipeline u `/m 2` → zeptej: „Které pipeline? Použij `/m 2 #N`.“
 
