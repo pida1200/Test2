@@ -19,6 +19,7 @@ concurrency:
 jobs:
   test-coverage-mujdum:
     name: Test coverage mujdum
+    if: hashFiles('mujdum/package-lock.json') != ''
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -52,6 +53,8 @@ jobs:
 
   test-coverage-ciselniky:
     name: Test coverage ciselniky
+    # Projekt ciselniky v tomto repu nemusí být přítomen (např. Test2).
+    if: hashFiles('ciselniky/package-lock.json') != ''
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -83,7 +86,7 @@ jobs:
 
   sonarcloud-mujdum:
     name: Scan mujdum
-    if: github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request' && hashFiles('mujdum/package-lock.json') != ''
     needs: test-coverage-mujdum
     runs-on: ubuntu-latest
     steps:
@@ -107,7 +110,7 @@ jobs:
 
   sonarcloud-ciselniky:
     name: Scan ciselniky
-    if: github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request' && hashFiles('ciselniky/package-lock.json') != ''
     needs: test-coverage-ciselniky
     runs-on: ubuntu-latest
     steps:

@@ -26,6 +26,13 @@ Pravidlo: `repo-kvalita.mdc`.
 
 ## Záznamy
 
+### 2026-08-04 – CI: SonarCloud ciselniky job při chybějícím projektu
+
+- Výsledek: `test-coverage-ciselniky` padal na `setup-node` cache (`ciselniky/package-lock.json` neexistuje). Jobi mujdum/ciselniky i scan mají `if: hashFiles('…/package-lock.json') != ''`.
+- Ověření: lokálně složka `ciselniky/` v Test2 chybí; po pushi CI má ciselniky skipnout.
+- Riziko: až se ciselniky znovu objeví v repu, job se automaticky zapne.
+- Další krok: počkat na zelený check na PR #1.
+
 ### 2026-08-04 – Multi-agent I/O přes GitHub Issues
 
 - Výsledek: vstupy/výstupy rolí = GitHub Issues (`[PIPELINE|ANALÝZA|VERDIKT-*|IMPLEMENTACE|TESTY]`); labely `multiagent/*` + `gate/go|no-go|pending`; šablony v `.github/ISSUE_TEMPLATE/`; I/O šablony rolí používají `VSTUP_ISSUE`/`VÝSTUP_ISSUE`.
