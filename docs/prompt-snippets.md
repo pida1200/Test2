@@ -99,11 +99,11 @@ Cíl: <1 věta>
 Scope: <složky/soubory>
 Mimo scope: <…>
 
-Pipeline:
-1) Analytik (VÝSTUP: ANALÝZA) → Kontrolor analytika (GO|NO-GO)
-2) Vývojář (VÝSTUP: IMPLEMENTACE) → Kontrolor vývojáře (GO|NO-GO)
-3) Tester (VÝSTUP: TESTY) → Kontrolor testera (GO|NO-GO)
-4) Integrátor: testy+lint, commit, docs/learning-log.md
+Pipeline + MODEL (viz docs/multi-agent-workflow.md → Modely):
+1) Analytik [claude-opus-4-8-thinking-high] → Kontrolor analytika [claude-opus-4-8-thinking-high]
+2) Vývojář [composer-2.5] → Kontrolor vývojáře [gpt-5.6-sol-high]
+3) Tester [composer-2.5] → Kontrolor testera [gpt-5.5-high]
+4) Integrátor [composer-2.5]: testy+lint, commit, docs/learning-log.md
 
 Gate:
 - NO-GO = STOP; předchozí produkční role musí vyřešit seznam vad
@@ -121,6 +121,7 @@ Hotovo když:
 
 ```text
 ROLE: <Analytik|Kontrolor analytika|Vývojář|Kontrolor vývojáře|Tester|Kontrolor testera>
+MODEL: <slug dle tabulky Modely>
 VSTUP: <artefakty / cíl / seznam vad při reworku>
 VÝSTUP: <ANALÝZA|VERDIKT_A|IMPLEMENTACE|VERDIKT_V|TESTY|VERDIKT_T>
 GATE: <komu odevzdávám / kdy smím dál>

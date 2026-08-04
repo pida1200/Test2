@@ -19,6 +19,18 @@ Detailní I/O šablony: `docs/multi-agent-workflow.md`. Snippety: `docs/prompt-s
 
 **Integrátor**: orchestruje, konflikty, finální testy/lint, commit/merge/push (**bez PR**), learning-log.
 
+## Modely (default)
+
+| Role | Model |
+|------|--------|
+| Analytik / K. analytika | `claude-opus-4-8-thinking-high` |
+| Vývojář / Tester / Integrátor | `composer-2.5` |
+| Kontrolor vývojáře | `gpt-5.6-sol-high` |
+| Kontrolor testera | `gpt-5.5-high` |
+
+Detail + alternativy: `docs/multi-agent-workflow.md` (sekce Modely).  
+V kickoffu uveď `MODEL:` u role; kontrolor ideálně **jiný** model než produkce.
+
 ## Gate + rework (závazné)
 
 ```text

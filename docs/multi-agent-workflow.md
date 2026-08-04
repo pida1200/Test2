@@ -16,6 +16,28 @@ Cíl: větší úkoly řešit jako **pipeline s bránami** — každá produkčn
 | **Kontrolor testera** | Kontrola pokrytí a kvality testů | Neimplementuje produkční kód |
 | **Integrátor** | Orchestruje pipeline, konflikty, finální testy/lint, commit, learning-log | — |
 
+## Modely (doporučené přiřazení)
+
+V Cursoru zvol model u každého chatu / sub-agenta podle tabulky. Slug = hodnota pro výběr modelu (Task / agent).  
+Uživatel může přepsat; Integrátor v kickoffu uvede `MODEL:` u každé role.
+
+| Role | Doporučený model | Alternativa (rychlejší / levnější) | Proč |
+|------|------------------|-------------------------------------|------|
+| **Analytik** | `claude-opus-4-8-thinking-high` | `gpt-5.6-sol-high` | silný reasoning nad kontraktem a DoD |
+| **Kontrolor analytika** | `claude-opus-4-8-thinking-high` | `gpt-5.6-sol-xhigh` | hledá mezery a rozpory (ideálně jiný „pohled“ než Analytik, pokud jde) |
+| **Vývojář** | `composer-2.5` | `claude-4.6-sonnet-high-thinking` | implementace ve scope + základní testy |
+| **Kontrolor vývojáře** | `gpt-5.6-sol-high` | `claude-opus-4-8-thinking-high` | code review oddělený od implementačního modelu |
+| **Tester** | `composer-2.5` | `claude-4.6-sonnet-high-thinking` | psaní/spouštění testů, edge cases |
+| **Kontrolor testera** | `gpt-5.5-high` | `claude-4.6-sonnet-high-thinking` | kontrola pokrytí; stačí střední/high reasoning |
+| **Integrátor** | `composer-2.5` | `composer-2.5-fast` | orchestrace, konflikty, lint/commit |
+
+### Pravidla výběru modelu
+
+1. **Kontrolor ≠ stejný model jako produkce**, pokud to jde (snižuje „self-review bias“) — aspoň u Vývojář vs Kontrolor vývojáře.
+2. Fast varianty (`*-fast`) jen u rutinního reworku / drobných oprav po jasném seznamu vad.
+3. Extra těžký reasoning (`*-xhigh`) jen u NO-GO smyčky na analýze nebo u riskantního review.
+4. V zadání každé role uveď řádek: `MODEL: <slug>`.
+
 ## Pipeline + rework smyčka
 
 ```text
@@ -89,6 +111,7 @@ NESMÍŠ: implementovat, spouštět další fázi, git push
 
 ```text
 ROLE: Kontrolor analytika
+MODEL: claude-opus-4-8-thinking-high
 VSTUP:
 - artefakt ANALÝZA (aktuální verze)
 - původní cíl uživatele (pro shodu)
@@ -248,6 +271,11 @@ PŘI BLOKACI (>3 reworky na bráně): eskaluj uživateli s výpisem vad
 Cíl: <1 věta>
 Kontext: <kde v repu + proč>
 Pipeline: 1→1✓→2→2✓→3→3✓→I
+Modely (default):
+- Analytik / K. analytika: claude-opus-4-8-thinking-high
+- Vývojář / Tester / Integrátor: composer-2.5
+- Kontrolor vývojáře: gpt-5.6-sol-high
+- Kontrolor testera: gpt-5.5-high
 Pravidlo: NO-GO = STOP; předchozí role opraví; kontrolor znovu rozhodne
 Kritéria hotovo (návrh): <…>
 Ověření: <testy/lint/docker>
