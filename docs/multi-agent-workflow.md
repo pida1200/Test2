@@ -34,9 +34,10 @@ Uživatel může přepsat; Integrátor v kickoffu uvede `MODEL:` u každé role.
 ### Pravidla výběru modelu
 
 1. **Kontrolor ≠ stejný model jako produkce**, pokud to jde (snižuje „self-review bias“) — aspoň u Vývojář vs Kontrolor vývojáře.
-2. Fast varianty (`*-fast`) jen u rutinního reworku / drobných oprav po jasném seznamu vad.
+2. Fast varianty (`*-fast`) jen u rutinního reworku / drobných oprav po jasném seznamu vad — **ne** jako výchozí fallback pro plnou implementaci.
 3. Extra těžký reasoning (`*-xhigh`) jen u NO-GO smyčky na analýze nebo u riskantního review.
 4. V zadání každé role uveď řádek: `MODEL: <slug>`.
+5. **Fallback:** pokud doporučený slug není v Cursor Task dostupný, použij slug ze sloupce **Alternativa** v tabulce (pokud je dostupný). Preferuj **ne-fast** variantu. `*-fast` jen když (a) v tabulce není jiná alternativa (např. Integrátor), nebo (b) jde o rutinní rework / drobnou opravu po jasném seznamu vad (pravidlo 2). Uveď skutečný slug v `MODEL:`.
 
 ## Pipeline + rework smyčka
 
@@ -86,7 +87,9 @@ Každý **vstup i výstup** role je **GitHub Issue** (ne chat-only artefakt). Ch
 
 Všechny issues jedné feature mají label `multiagent` a v body odkaz `Pipeline: #<PIPELINE>`.
 
-### Labely (vytvoř v repo)
+### Labely
+
+Labely jsou v repu (`gh label list --repo <owner/repo> | rg 'multiagent|gate/'`). Integrátor je **nevytváří znovu** — jen je přiřazuje issues.
 
 | Label | Účel |
 |-------|------|
@@ -289,7 +292,7 @@ VSTUP_ISSUE: #<PIPELINE> + #<VERDIKT-A> + #<VERDIKT-V> + #<VERDIKT-T> (vše gate
 VÝSTUP_ISSUE: #<PIPELINE> (update checklistu, pak close)
 
 Postup:
-1. Kickoff: vytvoř #<PIPELINE> ze šablony; odkaž v chatu
+1. Kickoff: pokud uživatel už má pipeline issue (např. bez `[PIPELINE]` titulku) → **doplní** titulek + labely; nové `[PIPELINE]` vytvoř **jen když žádné neexistuje**; odkaž v chatu
 2. Orchestruj vytvoření produkčních/verdikt issues dle pipeline
 3. Spoj kód, konflikty, finální testy/lint (Docker dle rules)
 4. Commit (+ push); bez PR (repo-git.mdc)
@@ -302,13 +305,28 @@ PŘI BLOKACI (>3 reworky): komentář do #<PIPELINE> + eskalace uživateli
 
 ---
 
+## Slash aliasy (rychlé spuštění)
+
+| Alias | Význam |
+|-------|--------|
+| **`/m`** | Plná pipeline 3+3 — viz kickoff níže a `docs/prompt-snippets.md` |
+| **`/m 2`** | Rychlá 2er: Vývojář + Kontrolor vývojáře; přeskočí Analytika/Testera; I/O stále přes Issues (`[IMPLEMENTACE]` → `[VERDIKT-V]`) |
+
+Copy-paste šablony: `docs/prompt-snippets.md`.
+
 ## Kickoff (Integrátor spouští pipeline)
+
+Uživatel často vytvoří issue **bez** prefixu `[PIPELINE]` v titulku a **bez** labelů `multiagent/*`. Integrátor při kickoffu:
+
+1. **Existuje už pipeline issue?** (uživatel ho vytvořil, např. #2) → **doplní** titulek `[PIPELINE] …`, labely `multiagent`, `multiagent/pipeline`, `gate/pending`.
+2. **Neexistuje** → vytvoří nové `[PIPELINE]` ze šablony.
+3. V obou případech vytvoří / propojí child issues dle tabulky výše.
 
 ```text
 Cíl: <1 věta>
 Kontext: <kde v repu + proč>
 I/O: GitHub Issues (šablony .github/ISSUE_TEMPLATE/)
-1) Vytvoř [PIPELINE] issue
+1) Doplň existující nebo vytvoř nové [PIPELINE] issue (titulek + labely)
 2) Analytik → [ANALÝZA] → Kontrolor → [VERDIKT-A]
 3) Vývojář → [IMPLEMENTACE] → Kontrolor → [VERDIKT-V]
 4) Tester → [TESTY] → Kontrolor → [VERDIKT-T]

@@ -79,7 +79,7 @@ Hotovo když:
 Ověření: npm run check
 ```
 
-## Docs‑only (rychlý PR)
+## Docs‑only (rychlá úprava)
 
 ```text
 Cíl: upravit dokumentaci <kde>.
@@ -89,7 +89,16 @@ Hotovo když:
 Ověření: N/A
 ```
 
-## Multi‑agent role 3+3 (I/O + gate + rework)
+## Multi‑agent: slash aliasy
+
+| Alias | Kdy použít |
+|-------|------------|
+| **`/m`** | Plná pipeline 3+3 — Analytik → Vývojář → Tester + kontroloři + Integrátor |
+| **`/m 2`** | Rychlá 2er: jen Vývojář + Kontrolor vývojáře (audit, docs, malý fix ve scope) |
+
+I/O vždy přes GitHub Issues (`VSTUP_ISSUE` / `VÝSTUP_ISSUE`). Integrátor při kickoffu: existující pipeline issue **doplní** (`[PIPELINE]` titulek + labely); nové vytvoří jen když žádné neexistuje.
+
+## Multi‑agent role 3+3 — `/m` (I/O + gate + rework)
 
 Detail šablon VSTUP/VÝSTUP/GATE: [`multi-agent-workflow.md`](multi-agent-workflow.md).  
 Rule: `.cursor/rules/multi-agenti.mdc`.
@@ -129,21 +138,39 @@ GATE: <komu odevzdávám / kdy smím dál>
 PŘI NO-GO: <kdo opravuje produkční issue; znovu který verdikt>
 ```
 
-## Multi‑agent (rychlá 2er — implementace + review)
+## Multi‑agent rychlá 2er — `/m 2` (Vývojář + Kontrolor vývojáře)
 
-Když nestačí plná 3+3, aspoň vývojář + kontrolor:
+Když nestačí plná 3+3, aspoň vývojář + kontrolor. I/O přes Issues (`[IMPLEMENTACE]` → `[VERDIKT-V]`).
 
 ```text
 Cíl: <1 věta>
 Scope: <složky/soubory>
-Rozdělení:
-- Vývojář (implementace): <scope>
-- Kontrolor vývojáře: čte diff a vrací GO/NO-GO + připomínky, nic neimplementuje
+Mimo scope: <…>
+
+I/O: GitHub Issues
+- Vývojář → [IMPLEMENTACE] (label multiagent/implementace, gate/pending)
+- Kontrolor vývojáře → [VERDIKT-V] (label multiagent/verdikt + gate/go|no-go)
+
+Vývojář:
+ROLE: Vývojář
+MODEL: composer-2.5   # fallback: claude-4.6-sonnet-high-thinking (ne-fast); *-fast jen když není dostupná ne-fast alternativa NEBO rutinní rework
+VSTUP_ISSUE: #<PIPELINE nebo zadání>
+VÝSTUP_ISSUE: #<IMPLEMENTACE>
+GATE: → Kontrolor vývojáře; nic necommituj (Integrátor commitne po GO)
+PŘI NO-GO: oprav dle #<VERDIKT-V>, bump verze v body, znovu review
+
+Kontrolor vývojáře:
+ROLE: Kontrolor vývojáře
+MODEL: gpt-5.6-sol-high   # fallback: claude-opus-4-8-thinking-high (ne-fast), pak gpt-5.6-sol-medium; *-fast jen když není dostupná ne-fast alternativa NEBO rutinní rework
+VSTUP_ISSUE: #<IMPLEMENTACE>
+VÝSTUP_ISSUE: #<VERDIKT-V>
+GATE: GO → Integrátor může commitnout; NO-GO → Vývojář opraví
+PŘI NO-GO: seznam vad v body verdiktu; neimplementuj fixy
 
 Hotovo když:
-- připomínky z review jsou zapracované (nebo zdůvodněné)
-- npm run check
-- záznam v docs/learning-log.md
+- [VERDIKT-V] má label gate/go
+- ověření dle oblasti
+- záznam v docs/learning-log.md (Integrátor)
 ```
 
 ## Scope‑first + 2 agenti (rychlá verze)

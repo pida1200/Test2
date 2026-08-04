@@ -22,7 +22,7 @@ Tento soubor je **trvalá paměť projektu** — načti ho po restartu Cursoru, 
 - `repo-git.mdc` — bez PR, feature větve, malé commity
 - `repo-kvalita.mdc` — testy, lint, DoD, learning-log / Obsidian
 - `repo-navrat.mdc` — návrat k projektu (tento checklist)
-- `multi-agenti.mdc` — role 3+3 (analytik/vývojář/tester + kontroloři), I/O = GitHub Issues, jen na žádost; detail `docs/multi-agent-workflow.md`
+- `multi-agenti.mdc` — role 3+3 (analytik/vývojář/tester + kontroloři), I/O = GitHub Issues, jen na žádost; kickoff aliasy **`/m`** (plná pipeline) a **`/m 2`** (Vývojář + Kontrolor); detail `docs/multi-agent-workflow.md`, snippety `docs/prompt-snippets.md`
 - `mujdum-docker.mdc` — **lokální** Docker po změně běhu; **vzdálený** `192.168.1.123` jen na explicitní žádost
 - `mujdum.mdc` + `mujdum-obsidian-workflow.mdc` — při práci v `mujdum/**`
 - `ciselniky.mdc` + `ciselniky-docker.mdc` — při práci v `ciselniky/**`

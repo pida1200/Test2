@@ -9,6 +9,15 @@ alwaysApply: false
 
 Detailní I/O šablony: `docs/multi-agent-workflow.md`. Snippety: `docs/prompt-snippets.md`.
 
+## Slash aliasy (copy-paste kickoff)
+
+| Alias | Význam |
+|-------|--------|
+| **`/m`** | Plná pipeline 3+3 (Analytik → Vývojář → Tester + kontroloři + Integrátor) |
+| **`/m 2`** | Rychlá 2er: **Vývojář** + **Kontrolor vývojáře** (bez Analytika/Testera); I/O stále přes GitHub Issues |
+
+Detail + šablony: `docs/prompt-snippets.md` (sekce Multi-agent).
+
 ## Role
 
 | Produkce | Kontrola výstupu |
@@ -17,7 +26,9 @@ Detailní I/O šablony: `docs/multi-agent-workflow.md`. Snippety: `docs/prompt-s
 | **Vývojář** → issue `[IMPLEMENTACE]` | **Kontrolor vývojáře** → `[VERDIKT-V]` |
 | **Tester** → issue `[TESTY]` | **Kontrolor testera** → `[VERDIKT-T]` |
 
-**Integrátor**: orchestruje, konflikty, finální testy/lint, commit/merge/push (**bez PR**), learning-log.
+**Integrátor**: orchestruje, kickoff (viz níže), konflikty, finální testy/lint, commit/merge/push (**bez PR**), learning-log.
+
+**Kickoff (Integrátor):** pokud uživatel už vytvořil pipeline issue (často bez `[PIPELINE]` titulku a labelů) → Integrátor ho **doplní**; nové `[PIPELINE]` vytváří **jen když žádné neexistuje**. Poté child issues dle šablon.
 
 ## GitHub Issues = I/O (závazné)
 
@@ -47,6 +58,8 @@ V zadání vždy `VSTUP_ISSUE:` / `VÝSTUP_ISSUE:`. Obsah do **body issue**, ne 
 
 Detail + alternativy: `docs/multi-agent-workflow.md` (sekce Modely).  
 V kickoffu uveď `MODEL:` u role; kontrolor ideálně **jiný** model než produkce.
+
+**Fallback:** pokud doporučený slug není v Cursor Task dostupný, použij slug ze sloupce **Alternativa** v tabulce Modely (preferuj **ne-fast**). `*-fast` jen když není jiná alternativa, nebo jde o rutinní rework po jasném seznamu vad — uveď skutečný slug v `MODEL:`.
 
 ## Gate + rework (závazné)
 

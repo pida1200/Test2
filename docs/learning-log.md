@@ -26,6 +26,13 @@ Pravidlo: `repo-kvalita.mdc`.
 
 ## Záznamy
 
+### 2026-08-04 – /m 2 ostrý běh: revize multiagent setup (#2)
+
+- Výsledek: audit + opravy docs/rules — slash aliasy `/m` a `/m 2`, kickoff Integrátora (doplnit existující vs vytvořit), fallback modelů (ne-fast Alternativa; `*-fast` jen bez alternativy nebo rework); labely `multiagent*`/`gate*` založeny. Pipeline #2 → IMPLEMENTACE #4 → NO-GO #5/#6 → GO #7 (2er).
+- Ověření: VERDIKT-V #7 `gate/go`; konzistence rule ↔ workflow ↔ prompt-snippets; `gh label list` 9 labelů.
+- Riziko: doporučené slugy (composer-2.5, gpt-5.6-sol-high) nemusí být v Cursor Task — fallback nutný; Kontrolor byl přísný na formulace (2× NO-GO).
+- Další krok: merge `feature/multiagent-setup-review` do main (bez PR dle domluvy) + případně ostrý `/m` 3+3 na runtime feature.
+
 ### 2026-08-04 – CI: SonarCloud ciselniky job při chybějícím projektu
 
 - Výsledek: `test-coverage-ciselniky` padal na `setup-node` cache (`ciselniky/package-lock.json` neexistuje). Jobi mujdum/ciselniky i scan mají `if: hashFiles('…/package-lock.json') != ''`.
