@@ -1,83 +1,48 @@
 ---
-description: Více agentů paralelně + role 3+3 s kontrolory — jen na explicitní žádost
+description: Multi-agent 1 issue + ma/* stav — jen na explicitní žádost nebo Multiagent #N
 alwaysApply: false
 ---
 
-# Multi-agent práce (role 3+3)
+# Multi-agent (jednoduchý)
 
-**Použij jen když uživatel chce multi-agent / paralelní agenty / role analytik–vývojář–tester** — pro běžný úkol stačí jeden agent + mini checklist v `repo-kvalita.mdc`.
+**Default:** 1 GitHub Issue, stav = label `ma/*`, prompt = `Multiagent #N`.  
+Detail: `docs/multi-agent-workflow.md`. Snippet: `docs/prompt-snippets.md`.
 
-Detailní I/O šablony: `docs/multi-agent-workflow.md`. Snippety: `docs/prompt-snippets.md`.
-
-## Role
-
-| Produkce | Kontrola výstupu |
-|----------|------------------|
-| **Analytik** → issue `[ANALÝZA]` | **Kontrolor analytika** → `[VERDIKT-A]` |
-| **Vývojář** → issue `[IMPLEMENTACE]` | **Kontrolor vývojáře** → `[VERDIKT-V]` |
-| **Tester** → issue `[TESTY]` | **Kontrolor testera** → `[VERDIKT-T]` |
-
-**Integrátor**: orchestruje, konflikty, finální testy/lint, commit/merge/push (**bez PR**), learning-log.
-
-## GitHub Issues = I/O (závazné)
-
-Každý vstup/výstup role je **GitHub Issue** (šablony `.github/ISSUE_TEMPLATE/`).
-
-| Artefakt | Titulek |
-|----------|---------|
-| Epic | `[PIPELINE] …` |
-| Analytik | `[ANALÝZA] …` |
-| K. analytika | `[VERDIKT-A] …` |
-| Vývojář | `[IMPLEMENTACE] …` |
-| K. vývojáře | `[VERDIKT-V] …` |
-| Tester | `[TESTY] …` |
-| K. testera | `[VERDIKT-T] …` |
-
-Labely: `multiagent`, `multiagent/*`, `gate/pending|go|no-go`.  
-V zadání vždy `VSTUP_ISSUE:` / `VÝSTUP_ISSUE:`. Obsah do **body issue**, ne jen chat.
-
-## Modely (default)
-
-| Role | Model |
-|------|--------|
-| Analytik / K. analytika | `claude-opus-4-8-thinking-high` |
-| Vývojář / Tester / Integrátor | `composer-2.5` |
-| Kontrolor vývojáře | `gpt-5.6-sol-high` |
-| Kontrolor testera | `gpt-5.5-high` |
-
-Detail + alternativy: `docs/multi-agent-workflow.md` (sekce Modely).  
-V kickoffu uveď `MODEL:` u role; kontrolor ideálně **jiný** model než produkce.
-
-## Gate + rework (závazné)
+## Spuštění
 
 ```text
-produkce → kontrolor → GO → další fáze
-                      → NO-GO → STOP → předchozí role opraví → znovu kontrolor
+Multiagent #N
 ```
 
-- Další fáze **jen po GO**.
-- Kontrolor **neimplementuje** a neopravuje „za“ produkční roli.
-- Max. ~3 reworky na bránu, pak eskalace Integrátorovi / uživateli.
-- Uzavření jen když VERDIKT_A + VERDIKT_V + VERDIKT_T = GO (`gate/go` na verdikt issues).
-- Vada produktu zjištěná ve fázi testů → návrat na **Vývojáře** (ne jen Tester).
+nebo kickoff:
 
-Každé zadání role musí mít: **VSTUP_ISSUE / VÝSTUP_ISSUE / GATE / PŘI NO-GO** (+ MODEL).
+```text
+Multiagent start
+Cíl: …
+Scope: …
+```
 
-## Kdy použít
+## Fáze → role → model
 
-- Větší úkol s analýzou + kódem + ověřením.
-- Max. 2 vývojáři se **stejným** schváleným kontraktem.
+| Label | Role | Model |
+|-------|------|--------|
+| `ma/analyza` | Analytik | `claude-opus-4-8-thinking-high` |
+| `ma/review-a` | Kontrolor A | `claude-opus-4-8-thinking-high` |
+| `ma/vyvoj` | Vývojář | `composer-2.5` |
+| `ma/review-v` | Kontrolor V | `gpt-5.6-sol-high` |
+| `ma/testy` | Tester | `composer-2.5` |
+| `ma/review-t` | Kontrolor T | `gpt-5.5-high` |
+| `ma/done` | Integrátor | `composer-2.5` |
 
-## Scope (povinné v zadání)
+## Povinnosti agenta při `Multiagent #N`
 
-- scope (složky/soubory)
-- mimo scope
-- `VSTUP_ISSUE` / `VÝSTUP_ISSUE`
-- expected output = aktualizované GitHub issue (+ `gate/go|no-go` u verdiktu)
+1. Načti issue (body + labely).
+2. Proveď jen aktuální fázi.
+3. Zapiš do body/komentáře; u review `Verdikt: GO|NO-GO`.
+4. Posuň `ma/*` label (NO-GO = zpět na produkční fázi).
+5. Kontrolor **neimplementuje**.
+6. Na `ma/done`: testy/lint, commit, `docs/learning-log.md`, zavři issue.
 
-## Ukončení (integrátor)
+## Gate
 
-- relevantní testy + lint
-- sebehodnocení dle `repo-kvalita.mdc`
-- `docs/learning-log.md` (**povinně**)
-- žádný otevřený NO-GO
+NO-GO → STOP → oprav → znovu review. Max ~3 reworky, pak `ma/blocked`.

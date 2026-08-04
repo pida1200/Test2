@@ -26,6 +26,13 @@ Pravidlo: `repo-kvalita.mdc`.
 
 ## Záznamy
 
+### 2026-08-04 – Multi-agent zjednodušen: 1 issue + ma/* + Multiagent #N
+
+- Výsledek: místo 7 issues a dlouhých promptů stačí šablona *Multi-agent feature* a opakovat `Multiagent #N`; stav = labely `ma/analyza|review-a|vyvoj|…|done`; GH Action `multiagent-next.yml` komentuje další krok.
+- Ověření: docs + rule + issue template + workflow v gitu; labely přes `docs/scripts/create-multiagent-labels.sh`.
+- Riziko: cloud agent bez práv na Issues nemůže sám posouvat stav — běží u uživatele / Desktop agenta.
+- Další krok: na existující #2 nastavit `ma/analyza` (nebo aktuální fázi) a spustit `Multiagent #2`.
+
 ### 2026-08-04 – CI: SonarCloud ciselniky job při chybějícím projektu
 
 - Výsledek: `test-coverage-ciselniky` padal na `setup-node` cache (`ciselniky/package-lock.json` neexistuje). Jobi mujdum/ciselniky i scan mají `if: hashFiles('…/package-lock.json') != ''`.

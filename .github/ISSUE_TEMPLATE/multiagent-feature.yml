@@ -1,0 +1,48 @@
+name: Multi-agent feature
+description: Jedna feature = jedno issue. Stav přes labely ma/*. V Cursoru pak Multiagent #N
+title: "[MA] "
+labels: ["multiagent", "ma/analyza"]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Cíl
+      description: 1 věta co se má udělat
+      placeholder: Přidat endpoint POST /echo s validací Zod
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope / mimo scope
+      value: |
+        Scope:
+        Mimo scope:
+    validations:
+      required: true
+  - type: textarea
+    id: analysis
+    attributes:
+      label: Analýza
+      description: Vyplní agent ve fázi ma/analyza
+      value: |
+        _(zatím prázdné — spusť v Cursoru: `Multiagent #<číslo>`)_
+  - type: textarea
+    id: impl
+    attributes:
+      label: Implementace
+      value: |
+        _(vyplní Vývojář)_
+  - type: textarea
+    id: tests
+    attributes:
+      label: Testy
+      value: |
+        _(vyplní Tester)_
+  - type: markdown
+    attributes:
+      value: |
+        ## Jak dál
+        1. Po vytvoření issue zkopíruj číslo.
+        2. V Cursoru Agent chat: `Multiagent #N`
+        3. Opakuj stejný prompt po každém posunu labelu (nebo použij komentář od bota).

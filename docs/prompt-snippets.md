@@ -89,45 +89,37 @@ Hotovo když:
 Ověření: N/A
 ```
 
-## Multi‑agent role 3+3 (I/O + gate + rework)
+## Multi‑agent (jednoduchý — používej toto)
 
-Detail šablon VSTUP/VÝSTUP/GATE: [`multi-agent-workflow.md`](multi-agent-workflow.md).  
-Rule: `.cursor/rules/multi-agenti.mdc`.
+Detail: [`multi-agent-workflow.md`](multi-agent-workflow.md). Rule: `.cursor/rules/multi-agenti.mdc`.
+
+**Start:** GitHub issue ze šablony *Multi-agent feature* (labely `multiagent` + `ma/analyza`).
+
+**V Cursoru pořád dokola:**
 
 ```text
+Multiagent #N
+```
+
+Agent podle labelu `ma/*` udělá správnou roli, zapíše do issue, posune stav.  
+Bot (GH Action) po změně labelu komentuje stejný prompt.
+
+**Kickoff včetně vytvoření issue:**
+
+```text
+Multiagent start
 Cíl: <1 věta>
-Scope: <složky/soubory>
+Scope: <složky>
 Mimo scope: <…>
-
-I/O: GitHub Issues (`.github/ISSUE_TEMPLATE/`)
-Pipeline + MODEL:
-1) [PIPELINE] → Analytik → [ANALÝZA] → K.A → [VERDIKT-A] [claude-opus-4-8-thinking-high]
-2) Vývojář → [IMPLEMENTACE] [composer-2.5] → K.V → [VERDIKT-V] [gpt-5.6-sol-high]
-3) Tester → [TESTY] [composer-2.5] → K.T → [VERDIKT-T] [gpt-5.5-high]
-4) Integrátor [composer-2.5] uzavře [PIPELINE] jen při gate/go na A+V+T
-
-Gate:
-- NO-GO = STOP; oprav produkční issue dle verdikt issue; znovu verdikt
-- další issue až po label gate/go
-- kontrolor neimplementuje
-- uzavření [PIPELINE] jen při gate/go na A+V+T
-
-Hotovo když:
-- VERDIKT-A/V/T mají gate/go
-- ověření dle oblasti
-- záznam v docs/learning-log.md + zavřený [PIPELINE]
 ```
 
-### Mini-template role (vlož do každého sub-agenta)
+### Fáze (labely)
 
-```text
-ROLE: <Analytik|Kontrolor analytika|Vývojář|Kontrolor vývojáře|Tester|Kontrolor testera>
-MODEL: <slug dle tabulky Modely>
-VSTUP_ISSUE: #<…>
-VÝSTUP_ISSUE: #<…>   # nebo „vytvoř ze šablony“
-GATE: <komu odevzdávám / kdy smím dál>
-PŘI NO-GO: <kdo opravuje produkční issue; znovu který verdikt>
-```
+`ma/analyza` → `ma/review-a` → `ma/vyvoj` → `ma/review-v` → `ma/testy` → `ma/review-t` → `ma/done`
+
+## Multi‑agent (legacy 7 issues — nepoužívat defaultně)
+
+Starší model s `[ANALÝZA]` / `[VERDIKT-*]` issues zůstává ve starších šablonách; preferuj `Multiagent #N`.
 
 ## Multi‑agent (rychlá 2er — implementace + review)
 
