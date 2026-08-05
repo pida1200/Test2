@@ -6,6 +6,10 @@
 #        [--issue <N>] [--model <slug>] [--write] [--dry-run] [--print-prompt] [--help]
 # Exit: 0 OK/--dry-run/--help/--print-prompt · 2 usage · 3 CLI chybí (vytiskne prompt) · 4 CLI selhalo.
 # Portable: bash 3.2+ (bez asociativních polí; indexová pole OK).
+#
+# E10 (dlouhý/visící běh CLI): skript NEZAVÁDÍ vlastní timeout — "${CURSOR_AGENT_BIN}" se spustí
+# na popředí a skript čeká na jeho konec. Přerušení (Ctrl-C / kill) řeší volající (Integrátor,
+# skill, terminál), ne tento skript. Detail: docs/multi-agent-workflow.md (sekce "Token budget rolí").
 
 set -euo pipefail
 
@@ -36,6 +40,9 @@ Exit kódy:
   2  chybný vstup (neznámá role, chybí --pipeline nebo --model)
   3  Cursor Agent CLI nenalezeno v PATH — vytiskne hotový prompt pro Task fallback
   4  CLI nalezeno, ale skončilo nenulovým exit kódem
+
+Poznámka (E10): skript nemá vlastní timeout pro dlouhý/visící běh CLI — přerušení
+(Ctrl-C / kill) je na volajícím (Integrátor / terminál), ne na tomto skriptu.
 
 Env:
   CURSOR_AGENT_BIN     přepis binárky (default: cursor-agent)

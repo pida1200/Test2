@@ -414,6 +414,7 @@ bash docs/scripts/ma-run-role.sh --role <role> --pipeline <N> \
 - Exit `0` OK/`--dry-run`/`--help`/`--print-prompt` · `2` usage · `3` CLI chybí → **vytiskne hotový prompt**, vlož do Cursor Task beze změny · `4` CLI selhalo (např. model nedostupný → použij Alternativu ze sloupce výše).
 - `--dry-run` funguje **i bez** instalovaného `cursor-agent` (offline, testováno v `check:ma`).
 - Role, které nesmí zapisovat (Analytik, kontroloři), běží bez `--write` (skript nepředá `--force`).
+- **Dlouhý/visící běh CLI (E10):** skript **nemá** vlastní timeout — čeká na `cursor-agent` na popředí. Přerušení (Ctrl-C / kill procesu) řeší volající (Integrátor / terminál), ne skript.
 - Detail kontraktu: `bash docs/scripts/ma-run-role.sh --help`.
 
 ## Automatizace

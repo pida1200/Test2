@@ -109,4 +109,26 @@ out="$(CURSOR_AGENT_BIN=/nonexistent assert_exit 0 "pipeline s # prefixem" \
   --role integrator --pipeline "#83" --model composer-2.5-fast --dry-run)"
 assert_contains "${out}" "PIPELINE: #83" "pipeline # prefix normalized"
 
+# 12) CLI NALEZENO (dočasná falešná binárka), ale skončí nenulově → exit 4,
+#     stdout/stderr fake CLI zachovaný beze zásahu (E5 z ANALÝZY #85 §5).
+FAKE_CLI_DIR="$(mktemp -d)"
+trap 'rm -rf "${FAKE_CLI_DIR}"' EXIT
+FAKE_CLI="${FAKE_CLI_DIR}/fake-cursor-agent.sh"
+cat > "${FAKE_CLI}" <<'FAKEEOF'
+#!/usr/bin/env bash
+echo "FAKE_CLI_STDOUT: castecny vystup pred padem"
+echo "FAKE_CLI_STDERR: simulovana chyba CLI" >&2
+exit 1
+FAKEEOF
+chmod +x "${FAKE_CLI}"
+
+out="$(CURSOR_AGENT_BIN="${FAKE_CLI}" assert_exit 4 "CLI nalezeno, selhalo nenulove (fake binarka)" \
+  --role tester --pipeline 83 --model composer-2.5-fast)"
+assert_contains "${out}" "FAKE_CLI_STDOUT: castecny vystup pred padem" "exit 4 zachovava stdout fake CLI"
+assert_contains "${out}" "FAKE_CLI_STDERR: simulovana chyba CLI" "exit 4 zachovava stderr fake CLI"
+assert_contains "${out}" "CLI_FAIL:" "exit 4 obsahuje CLI_FAIL hlasku"
+
+rm -rf "${FAKE_CLI_DIR}"
+trap - EXIT
+
 echo "ma-run-role.sh testy passed."
