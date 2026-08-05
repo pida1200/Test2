@@ -26,6 +26,13 @@ Pravidlo: `repo-kvalita.mdc`.
 
 ## Záznamy
 
+### 2026-08-05 – Zadání MA varianty C (hybrid) v docs/multiagent-zadani.md
+
+- Výsledek: formální zadání — 1× `[PIPELINE]` jako požadavek, child issues jako artefakty, `gate/*` stav, `/m #N`, kritéria hotovo + copy-paste šablona PIPELINE.
+- Ověření: odkaz z `docs/multi-agent-workflow.md` a `AGENTS.md`.
+- Riziko: duplicita s workflow.md — zadání je shrnutí pro kickoff, detail zůstává ve workflow.
+- Další krok: vytvořit `[PIPELINE]` z šablony a spustit `/m #N`.
+
 ### 2026-08-05 – /m #25: nálezy testera → [BUG] issues
 
 - Výsledek: kontrakt „ve scope + blokující = ESKALACE_VÝVOJÁŘ (bez nového issue); mimo scope / odloženo = `[BUG]`“ s labely `bug`+`multiagent`+`multiagent/bug` (bez gate/*). Šablona `multiagent-bug.yml`, routing v `multiagent-next.yml`, docs/rules/skill/snippets.

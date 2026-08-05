@@ -1,5 +1,7 @@
 # Multi‑agent workflow (Cursor) – role 3+3
 
+> **Zadání / architektura (varianta C hybrid):** [`multiagent-zadani.md`](multiagent-zadani.md)
+
 Cíl: větší úkoly řešit jako **pipeline s bránami** — každá produkční role má **kontrolora**.  
 **NO-GO = krok se neposune**: předchozí role musí problém vyřešit a znovu odevzdat; kontrolor znovu rozhodne.  
 **1 integrátor** drží celek, testy/lint a uzavření (**commit / merge / push bez PR**).
