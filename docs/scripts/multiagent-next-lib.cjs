@@ -76,7 +76,7 @@ const verdictRoutes = {
     'gate/go': {
       role: 'Integrátor',
       model: MODELS.integrator,
-      hint: 'VERDIKT-T GO — Integrátor uzavře [PIPELINE]',
+      hint: 'VERDIKT-T GO — Integrátor: handoff MERGE-PENDING (merge do main = člověk)',
     },
     'gate/no-go': {
       role: 'Tester (rework)',
@@ -101,7 +101,7 @@ const artifactMap = {
     'gate/go': {
       role: 'Integrátor',
       model: MODELS.integrator,
-      hint: 'Pipeline dokončena — uzavři issue',
+      hint: 'MERGE-PENDING — čeká na ruční merge do main (bez akce agenta)',
     },
   },
   'multiagent/analyza': {
@@ -152,7 +152,7 @@ const artifactMap = {
     'gate/go': {
       role: 'Integrátor',
       model: MODELS.integrator,
-      hint: 'Testy OK — Integrátor uzavře pipeline',
+      hint: 'Testy OK — Integrátor: MERGE-PENDING handoff (ne merge do main)',
     },
   },
   'multiagent/bug': {

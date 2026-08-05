@@ -37,7 +37,7 @@ Uživatel spustil slash `/m` s volitelnými argumenty.
 2. `gate/blocked` na pipeline
 3. Chybí `gh` write → degradace + STOP (text k ručnímu vložení)
 4. Uživatel zadal `once`
-5. `[PIPELINE]` uzavřen Integrátorem (A+V+T GO)
+5. Integrátor předal k ručnímu merge (`MERGE-PENDING` na `[PIPELINE]`, A+V+T GO)
 
 **Nesmíš:** přeskočit Kontrolora; sloučit GO bez nového verdikt issue; pokračovat po NO-GO.
 
@@ -78,7 +78,7 @@ Bez write → degradace; v orchestraci **STOP**.
 | `multiagent/testy` | `gate/pending` | Tester | viz workflow §Modely |
 | `multiagent/verdikt` (VERDIKT-T) | `gate/pending` | Kontrolor testera | viz workflow §Modely |
 | `multiagent/bug` | (bez gate) | Vývojář | viz workflow §Modely |
-| všechny verdikty A+V+T | `gate/go` | Integrátor | viz workflow §Modely |
+| všechny verdikty A+V+T | `gate/go` | Integrátor → handoff `MERGE-PENDING` (ne merge do `main`) | viz workflow §Modely |
 
 Po dokončení fáze (orchestrace): znovu načti labely / přehled → další řádek tabulky, dokud STOP.
 
@@ -95,7 +95,7 @@ Jen Vývojář → Kontrolor V. Orchestrace default; `once` = jeden krok.
 5. Sync `gate/*` na verdikt **i** produkční issue.
 6. Kontrolor **neimplementuje**.
 7. **NO-GO → STOP** orchestrace.
-8. Vývojář: WIP commit na feature větvi OK; **NE push** bez Integrátora.
+8. Vývojář: WIP commit na feature větvi OK; **NE push** bez Integrátora. Integrátor pushuje **feature větev**, ne `main`.
 9. Wiki: `docs/wiki/` + `zmeny/`; `Wiki: <cesta>`.
 10. Chat: shrnutí + issue + fáze.
 11. Tester: ve scope → `ESKALACE_VÝVOJÁŘ`; mimo scope → `[BUG]`.

@@ -155,13 +155,13 @@ Pipeline + MODEL: viz `docs/multi-agent-workflow.md` (sekce Modely) — uveď `M
 1) [PIPELINE] → Analytik → [ANALÝZA] → K.A → [VERDIKT-A]
 2) Vývojář → [IMPLEMENTACE] → K.V → [VERDIKT-V]
 3) Tester → [TESTY] → K.T → [VERDIKT-T]
-4) Integrátor uzavře [PIPELINE] jen při gate/go na A+V+T
+4) Integrátor: MERGE-PENDING (feature větev); merge do main = člověk
 
 Gate:
 - NO-GO = STOP; oprav produkční issue dle verdikt issue; znovu verdikt
 - další issue až po label gate/go
 - kontrolor neimplementuje
-- uzavření [PIPELINE] jen při gate/go na A+V+T
+- close [PIPELINE] až po ručním merge (nebo explicitním pokynu)
 
 Hotovo když:
 - VERDIKT-A/V/T mají gate/go
@@ -203,21 +203,21 @@ GATE: <komu odevzdávám / kdy smím dál>
 PŘI NO-GO: <kdo opravuje produkční issue; znovu který verdikt>
 ```
 
-### Snippet Integrátor — před uzavřením pipeline
+### Snippet Integrátor — handoff MERGE-PENDING
 
 ```text
 ROLE: Integrátor
 MODEL: composer-2.5-fast
 VSTUP_ISSUE: #<PIPELINE> + #<VERDIKT-A> + #<VERDIKT-V> + #<VERDIKT-T> (vše gate/go)
 
-Před close [PIPELINE]:
+Před handoffem:
 1. Otevři #<PIPELINE> — zkontroluj auto-přehled mezi markery multiagent:prehled
    (nebo lokálně: bash docs/scripts/ma-pipeline-view.sh #<PIPELINE>)
 2. Tabulka: všech 6 fází má issue + správný gate; historie verdiktů sedí s reworky
 3. Ruční checklist child issues doplň pokud bot ještě nesynchronizoval
 4. Wiki: bash docs/scripts/check-wiki-seed.sh; u změny chování záznam docs/wiki/zmeny-… + řádek v zmeny-index.md
-5. Commit/merge/push + docs/learning-log.md
-6. Zavři #<PIPELINE> jen při gate/go na A+V+T
+5. Commit + push **feature větve** + docs/learning-log.md (ne merge do main)
+6. Komentář MERGE-PENDING do #<PIPELINE>; issue nech OPEN s gate/go
 ```
 
 ## Multi‑agent rychlá 2er — `/m 2` (Vývojář + Kontrolor vývojáře)
@@ -246,7 +246,7 @@ ROLE: Kontrolor vývojáře
 MODEL: gpt-5.6-sol-medium   # alt: claude-opus-5-thinking-high
 VSTUP_ISSUE: #<IMPLEMENTACE>
 VÝSTUP_ISSUE: #<VERDIKT-V>
-GATE: GO → Integrátor může commitnout; NO-GO → Vývojář opraví
+GATE: GO → Integrátor commitne feature větev + MERGE-PENDING; NO-GO → Vývojář opraví
 PŘI NO-GO: seznam vad v body verdiktu; neimplementuj fixy
 
 Hotovo když:

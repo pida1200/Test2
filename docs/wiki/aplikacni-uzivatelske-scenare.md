@@ -7,7 +7,7 @@
 1. Vytvoř / doplň `[PIPELINE]` (šablona nebo Integrátor).
 2. V Cursoru: **`/m #N`** — **orchestrace** (Analytik → … → Integrátor) v jednom chatu.
 3. Jen jeden krok: **`/m #N once`**.
-4. Po GO na A+V+T Integrátor uzavře pipeline + learning-log + případně `zmeny-*`.
+4. Po GO na A+V+T Integrátor: learning-log + push feature větve + komentář `MERGE-PENDING`; **merge do `main` dělá člověk**, teprve pak se zavře `[PIPELINE]`.
 
 CI bot komentuje oba příkazy; **nespouští** Cursor sám.
 

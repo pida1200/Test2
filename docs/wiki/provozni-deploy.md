@@ -11,7 +11,7 @@ bash docs/scripts/sync-wiki-to-github.sh
 # DRY_RUN=1 bash docs/scripts/sync-wiki-to-github.sh
 ```
 
-CI: workflow `wiki-sync.yml` při pushi `docs/wiki/**` na `main` (vyžaduje bootstrap Wiki UI jednou — Create the first page).
+CI: workflow `wiki-sync.yml` při pushi `docs/wiki/**` na `main` (až po **ručním** merge feature větve). Seed v gitu je SoT i před syncem UI.
 
 Publikační URL: [pida1200/Test2/wiki](https://github.com/pida1200/Test2/wiki)
 
