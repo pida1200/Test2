@@ -26,6 +26,14 @@ Pravidlo: `repo-kvalita.mdc`.
 
 ## Záznamy
 
+### 2026-08-05 – /m #83 IMPLEMENTACE: MA CLI first + token budget
+
+- Výsledek: nový `docs/scripts/ma-run-role.sh` (CLI first přes `cursor-agent`, Task fallback při exitu 3, exit kódy 0/2/3/4, `--dry-run`/`--print-prompt` bez binárky); skill/rule/command aktualizované na CLI first + tenký Integrátor + mini-plán jen Analytik/Vývojář; `docs/multi-agent-workflow.md` má novou sekci „Token budget rolí“; wiki `provozni-konfigurace` + nový `zmeny-2026-08-05-pipeline-83-ma-cli-tokeny` + index; `prompt-snippets.md` sladěn na `MERGE-PENDING` (#74).
+- Ověření: `npm run check` zelené (`check:examples-backend` + `check:docs` + `check:wiki` + `check:ma` vč. nového `test-ma-run-role.sh`, 17 offline případů); `cursor-agent` **není** v PATH tohoto stroje — ověřeno degradací na exit 3 s vytištěným promptem, ne skutečným CLI během.
+- Riziko: přesnost CLI flagů (`-p --output-format text --model … [--force]`) není ověřena proti reálné instalaci `cursor-agent` — až bude dostupná, ověřit `cursor-agent --help` a případnou odchylku zapsat sem.
+- Další krok: Kontrolor vývojáře → `[VERDIKT-V]`; poté Tester.
+- Stav: čeká na review (VERDIKT-V), pak testy; handoff `MERGE-PENDING` až po A+V+T GO.
+
 ### 2026-08-05 – archiv větve cursor/multiagent-role-gates-187d
 
 - Výsledek: remote větev smazána; tip `11294bb` uložen jako tag `archive/cursor-multiagent-role-gates-187d` (raný MA / 1-issue model, mimo main).
