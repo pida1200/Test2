@@ -244,6 +244,7 @@ function routeNextStep(opts) {
   }
 
   const prompt = pipelineNum ? `/m #${pipelineNum}` : `/m #${n}`;
+  const promptOnce = `${prompt} once`;
   const verdictTag = vk ? ` · Verdikt: **${vk}**` : '';
   const marker = '<!-- multiagent-next -->';
   const commentBody = [
@@ -255,17 +256,18 @@ function routeNextStep(opts) {
     `V Cursoru (Agent chat):`,
     ``,
     '```text',
-    prompt,
+    `${prompt}           # orchestrace do STOP (default)`,
+    `${promptOnce}      # jen jeden krok`,
     '```',
     ``,
-    `_(skill: \`.cursor/skills/m/SKILL.md\`)_`,
+    `_(skill: \`.cursor/skills/m/SKILL.md\` — CI nespouští Cursor)_`,
     ``,
     `_${info.hint}_`,
     ``,
     `Docs: \`docs/multi-agent-workflow.md\``,
   ].join('\n');
 
-  return { artifact, gate, vk, pipelineNum, info, prompt, commentBody, marker };
+  return { artifact, gate, vk, pipelineNum, info, prompt, promptOnce, commentBody, marker };
 }
 
 function modelForPhase(phaseKey) {

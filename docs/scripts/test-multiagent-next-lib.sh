@@ -22,6 +22,7 @@ const r = next.routeNextStep({
   issueNumber: 40,
 });
 assert.strictEqual(r.prompt, '/m #34');
+assert.ok(r.commentBody.includes('/m #34 once'));
 assert.strictEqual(r.info.role, 'Vývojář');
 assert.ok(r.commentBody.includes('<!-- multiagent-next -->'));
 

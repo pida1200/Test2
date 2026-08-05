@@ -375,13 +375,16 @@ Skill: `.cursor/skills/m/SKILL.md` · Command: `.cursor/commands/m.md`
 
 | Vstup | Význam |
 |-------|--------|
-| **`/m`** | Plná pipeline 3+3; Integrátor doplní/vytvoří `[PIPELINE]` |
-| **`/m #N`** | Pokračuj v pipeline `#N`; fázi odvoď z labelů child issues |
-| **`/m 2`** | Rychlá 2er: Vývojář + Kontrolor vývojáře |
-| **`/m 2 #N`** | Rychlá 2er nad pipeline `#N` |
+| **`/m`** | Kickoff + **orchestrace** celé pipeline 3+3 |
+| **`/m #N`** | **Orchestrace** od aktuální fáze do STOP |
+| **`/m #N once`** | Jen **jeden** krok (aktuální fáze) |
+| **`/m 2`** / **`/m 2 #N`** | Rychlá 2er (orchestrace; `once` = jeden krok) |
+| **`/m #<bug>`** | Issue s `multiagent/bug` — Vývojář |
 
 Číslo issue **vždy s `#`**. Bez `#` je `2` režim, ne issue.  
 Labely `ma/*` **nezavádět** — používej `multiagent/*` + `gate/*`.
+
+**Orchestrace:** jeden chat / jeden kick; preferuj Task per role. **STOP:** NO-GO, `gate/blocked`, chybí `gh` write, `once`, close PIPELINE.
 
 Copy-paste šablony: `docs/prompt-snippets.md`.
 
@@ -389,8 +392,8 @@ Copy-paste šablony: `docs/prompt-snippets.md`.
 
 | Co | Kde | Co dělá |
 |----|-----|---------|
-| Slash `/m` | `.cursor/skills/m/SKILL.md` | routing fáze → role → model; zápis do issue přes `gh` |
-| Next-step bot | `.github/workflows/multiagent-next.yml` + `docs/scripts/multiagent-next-lib.cjs` | při `opened`/`labeled` komentuje další roli + `/m #N`; marker `multiagent-next` + update |
+| Slash `/m` | `.cursor/skills/m/SKILL.md` | orchestrace fází (default) nebo `once`; routing + zápis Issues |
+| Next-step bot | `.github/workflows/multiagent-next.yml` + `docs/scripts/multiagent-next-lib.cjs` | komentář role + `/m #N` i `/m #N once` |
 | Pipeline sync | `.github/workflows/multiagent-pipeline-sync.yml` | auto-přehled fází v `[PIPELINE]` mezi markery `multiagent:prehled` (modely z next-lib) |
 | Gate check | `.github/workflows/multiagent-gate-check.yml` | validace verdiktů (anchored `Verdikt:`/`Pipeline:`/`Vstup:`); komentář při chybě |
 | Wiki sync | `.github/workflows/wiki-sync.yml` | push `docs/wiki/**` na `main` → `sync-wiki-to-github.sh` |
@@ -398,7 +401,7 @@ Copy-paste šablony: `docs/prompt-snippets.md`.
 | Labely | `docs/scripts/create-multiagent-labels.sh` | idempotentní vytvoření `multiagent/*` + `gate/*` |
 | MA check | `npm run check:ma` | pipeline-sync + regex + wiki-seed + next-lib + dry-run |
 
-**Co zůstává ruční:** spuštění agenta v Cursoru, vytvoření child issues (pokud `gh` write není), finální commit/push (Integrátor). Auto-spuštění agentů z CI vyžaduje Cursor API key → follow-up.
+**Co zůstává ruční:** první kick `/m` / `/m #N` v Cursoru (CI agenta nespouští). Child issues pokud chybí `gh` write. Finální push = Integrátor. **Plně unattended z Actions** (Cursor API) = follow-up mimo scope.
 
 ## Předávání kódu mezi rolemi
 

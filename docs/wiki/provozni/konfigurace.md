@@ -34,8 +34,18 @@ Issue formuláře mají textarea „CI kontrakt“ s těmito řádky předvypln�
 ## Cursor
 
 - Skill `/m`: `.cursor/skills/m/SKILL.md` (`disable-model-invocation` — jen na slash)
+- **Orchestrace (default):** `/m #N` projede fáze v jednom chatu do STOP
+- **Jeden krok:** `/m #N once`
 - Rule: `.cursor/rules/multi-agenti.mdc` (requestable)
 - Modely: jedna tabulka v `docs/multi-agent-workflow.md` (sekce Modely)
+
+## Orchestrace vs CI
+
+| Vrstva | Co dělá |
+|--------|---------|
+| Cursor `/m #N` | spouští role (preferuj Task) |
+| `multiagent-next.yml` | jen komentář s `/m #N` a `/m #N once` |
+| Actions | **nespouští** Cursor agenty (API = follow-up) |
 
 ## Degradace
 

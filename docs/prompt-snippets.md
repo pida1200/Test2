@@ -95,19 +95,21 @@ Skill: `.cursor/skills/m/SKILL.md` · Command: `.cursor/commands/m.md`
 
 | Vstup | Kdy použít |
 |-------|------------|
-| **`/m`** | Plná pipeline 3+3 — Integrátor kickoff |
-| **`/m #N`** | Pokračuj v pipeline `#N` (fáze z labelů) |
-| **`/m 2`** | Rychlá 2er: Vývojář + Kontrolor vývojáře |
-| **`/m 2 #N`** | Rychlá 2er nad pipeline `#N` |
-| **`/m #<bug>`** | Issue s `multiagent/bug` — Vývojář (oprava / povýšení) |
+| **`/m`** | Kickoff + orchestrace celé pipeline 3+3 |
+| **`/m #N`** | Orchestrace od aktuální fáze do STOP |
+| **`/m #N once`** | Jen jeden krok (aktuální fáze) |
+| **`/m 2`** / **`/m 2 #N`** | Rychlá 2er (orchestrace; `once` = jeden krok) |
+| **`/m #<bug>`** | Issue s `multiagent/bug` — Vývojář |
 
 Číslo issue **vždy s `#`**. Labely `ma/*` nezavádět.
 
 **Modely:** kanonická tabulka v [`multi-agent-workflow.md`](multi-agent-workflow.md) (sekce Modely) — sem nekopíruj.
 
+**STOP orchestrace:** NO-GO, `gate/blocked`, chybí `gh` write, `once`, close PIPELINE.
+
 I/O vždy přes GitHub Issues (`VSTUP_ISSUE` / `VÝSTUP_ISSUE`). Integrátor při kickoffu: existující pipeline issue **doplní** (`[PIPELINE]` titulek + labely); nové vytvoří jen když žádné neexistuje.
 
-GH Action `multiagent-next.yml` komentuje další krok + `/m #N` po změně labelů.
+GH Action `multiagent-next.yml` komentuje `/m #N` (orchestrace) i `/m #N once` (jeden krok).
 Přehled celé pipeline: `[PIPELINE]` issue — sekce mezi markery `multiagent:prehled` (bot) nebo `bash docs/scripts/ma-pipeline-view.sh #N` lokálně.
 
 ### Snippet — nález testera → `[BUG]`
