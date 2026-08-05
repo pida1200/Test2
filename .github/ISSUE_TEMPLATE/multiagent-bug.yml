@@ -1,0 +1,79 @@
+name: Multi-agent BUG
+description: Samostatný nález mimo scope nebo odložená vada (Tester / Integrátor)
+title: "[BUG] "
+labels: ["bug", "multiagent", "multiagent/bug"]
+body:
+  - type: input
+    id: pipeline
+    attributes:
+      label: Pipeline issue #
+      description: "Jen číslo (#N); do body doplň samostatný řádek `Pipeline: #N` — vynech, pokud nález vznikl mimo pipeline"
+      placeholder: "#25"
+    validations:
+      required: false
+  - type: markdown
+    attributes:
+      value: |
+        **Volitelný řádek v body** (samostatně): `Pipeline: #<číslo>` — jen když nález vznikl v běžící pipeline.
+  - type: input
+    id: source
+    attributes:
+      label: Zdroj (TESTY issue #)
+      description: Issue, kde nález vznikl — nebo „mimo pipeline“
+      placeholder: "#27"
+    validations:
+      required: true
+  - type: input
+    id: related
+    attributes:
+      label: Souvisí s (IMPLEMENTACE issue #)
+      description: Volitelné
+      placeholder: "#28"
+    validations:
+      required: false
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Závažnost
+      options:
+        - blocker
+        - major
+        - minor
+    validations:
+      required: true
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Rozsah
+      options:
+        - mimo scope pipeline
+        - ve scope – odloženo
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reprodukce
+      description: Kroky nebo příkaz. **Žádné secrety** (tokeny, hesla z `.env`).
+    validations:
+      required: true
+  - type: textarea
+    id: expected_actual
+    attributes:
+      label: Očekávané / skutečné chování
+    validations:
+      required: true
+  - type: dropdown
+    id: next_step
+    attributes:
+      label: Návrh dalšího kroku
+      options:
+        - samostatný úkol
+        - /m #N (povýšit na pipeline)
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Verze artefaktu
+      value: "v1"
