@@ -1,12 +1,12 @@
-# Session YYYY-MM-DD — mujdum
+# Session YYYY-MM-DD — &lt;projekt&gt;
 
-> Kopie do Obsidianu: `projekty/mujdum/session-YYYY-MM-DD.md` (ze `session-template.md` v trezoru).
+> Kopie do Obsidianu: `projekty/<projekt>/session-YYYY-MM-DD.md`.
 
 ## Meta
 
 - **Větev:**
 - **Poslední commit:**
-- **Prostředí:** lokál Docker / vzdálený 123 / jen kód
+- **Prostředí:** lokál / CI / jen docs
 
 ## Cíl session
 
@@ -26,9 +26,8 @@
 
 ## Ověření
 
-- [ ] backend test + lint
-- [ ] frontend test + lint
-- [ ] lokální Docker (pokud běh)
+- [ ] `npm run check` (nebo relevantní subset)
+- [ ] wiki seed / MA checks (pokud relevantní)
 
 ## Follow-up
 
@@ -36,6 +35,6 @@
 
 ## Odkazy
 
-- Repo: `cursor/mujdum/`
-- Spec: `mujdum/docs/...`
+- Spec / docs: `docs/…`
 - Průvodce agenta: `AGENTS.md`
+- Pipeline: `#…`

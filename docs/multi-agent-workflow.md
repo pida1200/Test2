@@ -13,7 +13,7 @@ Cíl: větší úkoly řešit jako **pipeline s bránami** — každá produkčn
 |-------|-----|
 | Požadavek, stav, gate, krátký kontrakt / verdikt | **GitHub Issues** (child artefakty) |
 | Delší analýza, rozhodnutí, popis řešení, changelog | **Wiki seed** [`docs/wiki/`](wiki/Home.md) |
-| Technická spec, kód | **git** (`docs/`, `mujdum/docs/`, větev) |
+| Technická spec, kód | **git** (`docs/`, `examples/`, větev) |
 | Session / „proč“ | **Obsidian** |
 
 **Pravidlo:** delší text → `docs/wiki/`; v issue jen shrnutí + volitelný řádek `Wiki: <cesta-bez-.md>`.  

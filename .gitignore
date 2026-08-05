@@ -11,13 +11,6 @@ build/
 !.env.example
 !**/.env.example
 
-# mujdum (monorepo)
-mujdum/node_modules/
-mujdum/**/node_modules/
-
-# ciselniky — samostatné repo https://github.com/pida1200/ciselniky
-ciselniky/
-
 # Cursor MCP — lokální tokeny necommituj; šablona v repu: .cursor/mcp.json.example
 .cursor/mcp.json
 .cursor/mcp-secrets.env
@@ -27,8 +20,3 @@ ciselniky/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-
-# Lokální Paperclip stack (upstream klon + secrets)
-infra/paperclip/vendor/
-infra/paperclip/paperclip.env
-

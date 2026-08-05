@@ -6,7 +6,7 @@ alwaysApply: false
 
 # Architektura (examples)
 
-Cvičební kód v `examples/backend/` — stejné principy jako produkční mujdum:
+Cvičební kód v `examples/backend/` — třívrstvá konvence:
 
 - Business logika na backendu; frontend (pokud přibude) je thin client.
 - Endpointy: jasný kontrakt, validace vstupů.

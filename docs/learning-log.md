@@ -10,7 +10,7 @@ Krátké záznamy po významnějších krocích. Slouží jako:
 
 **Ano:** změny v `.cursor/rules/`, multi-agent běh, větší refaktor, incident (infra/produkce), učení v `examples/`.
 
-**Ne (stačí odpověď v chatu):** drobný bugfix v `mujdum/` — větší úlohy v mujdum raději do Obsidianu (`projekty/mujdum/session-…`).
+**Ne (stačí odpověď v chatu):** drobný bugfix / typo. Větší úlohy raději do Obsidianu (`projekty/<projekt>/session-…`) nebo learning-logu.
 
 Pravidlo: `repo-kvalita.mdc`.
 
@@ -25,6 +25,13 @@ Pravidlo: `repo-kvalita.mdc`.
 ```
 
 ## Záznamy
+
+### 2026-08-05 – /m #66 uzavřeno: šablona jen multi-agent
+
+- Výsledek: z HEAD odstraněny produktové stromy a rules + SonarCloud; AGENTS/README/docs/wiki generické; `package.json` = `multiagent-template`.
+- Ověření: VERDIKT-A #68 / V #71 (po reworku #70) / T #73 GO; `npm run check`; sweep mimo learning-log prázdný.
+- Riziko: blobs zůstávají v git historii (BFG mimo scope); pravidlo mimo repo `Programovani/.cursor/rules/ciselniky-docker.mdc` může dál vnucovat kontext; staré `feature/*` větve mohou při merge vzkřísit soubory.
+- Další krok: volitelně GitHub „Template repository“; uzavřít/rebase staré feature větve.
 
 ### 2026-08-05 – /m #51 uzavřeno: wiki flat slugy + link checks
 

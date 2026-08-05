@@ -4,6 +4,7 @@ Chronologie změn řešení. Každá větší pipeline doplní řádek + stránk
 
 | Datum | Pipeline | Stránka | Shrnutí |
 |-------|----------|---------|---------|
+| 2026-08-05 | #66 | [pipeline-66-sablona-ma](zmeny-2026-08-05-pipeline-66-sablona-ma) | Šablona jen MA — odstraněny produktové stromy a odkazy |
 | 2026-08-05 | #51 | [pipeline-51-wiki-odkazy](zmeny-2026-08-05-pipeline-51-wiki-odkazy) | Ploché wiki slugy; oprava sidebar 404; check odkazů |
 | 2026-08-05 | #52 | [pipeline-52-ma-auto](zmeny-2026-08-05-pipeline-52-ma-auto) | `/m #N` orchestrace + `once`; CI nespouští Cursor |
 | 2026-08-05 | #44 | [pipeline-44-wiki-komplet](zmeny-2026-08-05-pipeline-44-wiki-komplet) | Kompletní MA wiki (aplikacni + provozni) + revize tooling |

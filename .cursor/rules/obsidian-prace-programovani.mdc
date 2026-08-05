@@ -10,23 +10,23 @@ Trezor je **doplňková znalostní báze** k repu: rozhodnutí, research, meetin
 ## Default: používej Obsidian MCP (nečekej na výzvu)
 
 - **Nový chat / návrat:** nejdřív `AGENTS.md` + git; pak Obsidian hub + poslední session (`docs/navrat-k-projektu.md`).
-- **Na začátku** úkolu s kontextem v trezoru (projekt, integrace, minulá rozhodnutí): krátký lookup ve vaultu **před** implementací.
+- **Na začátku** úkolu s kontextem v trezoru: krátký lookup ve vaultu **před** implementací.
 - **Na konci** větší úlohy: stručný zápis do vaultu (session / follow-up) — **bez ptaní**, pokud uživatel neřekl „bez Obsidianu“.
 - Uživatel nemusí říct „zapiš do Obsidianu“ — to je součást DoD u větších změn.
 
 ## Kdy číst
 
-- Neznámý kontext projektu, integrace (HA, deploy), „proč to tak je“.
+- Neznámý kontext projektu, „proč to tak je“.
 - Odkaz na minulé poznámky, schůzky, rozhodnutí.
-- Před refaktorem nebo změnou mapování entit / architektury.
+- Před větším refaktorem nebo změnou architektury.
 
 Postup: `obsidian_simple_search` / `obsidian_complex_search` nebo `obsidian_list_files_in_dir` → konkrétní soubor přes `obsidian_get_file_contents` (ne celý vault).
 
 ## Kdy zapisovat
 
-- Nová funkce, změna architektury, deploy, série commitů.
+- Nová funkce, změna architektury, série commitů.
 - Nové **rozhodnutí** (varianta A/B, důsledky).
-- Otevřené follow-upy (co zbývá, co ověřit v produkci).
+- Otevřené follow-upy.
 
 Nástroje: `obsidian_append_content`, `obsidian_patch_content` (nejdřív schéma MCP).
 
@@ -34,10 +34,8 @@ Nástroje: `obsidian_append_content`, `obsidian_patch_content` (nejdřív schém
 
 | Obsah | Kde |
 |--------|-----|
-| Kód, API, chování | git (`docs/`, `mujdum/docs/`) |
-| Proč, domluvy, session, follow-up | Obsidian + odkazy na git |
-
-U **mujdum** platí navíc `mujdum-obsidian-workflow.mdc` (`globs: mujdum/**`) — přísnější checklist.
+| Kód, API, chování | git (`docs/`, `examples/`) |
+| Proč, domluvy, session, follow-up | Obsidian `projekty/<projekt>/` + odkazy na git |
 
 ## Bezpečnost
 

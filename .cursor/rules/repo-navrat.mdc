@@ -10,10 +10,10 @@ Agent **nemá** paměť minulé konverzace. Před implementací (nebo když uži
 1. Přečti **`AGENTS.md`** — sekce „Návrat k projektu“.
 2. **Git:** `git status`, `git branch -vv`, `git log -5 --oneline`.
 3. **`docs/learning-log.md`** — poslední záznamy.
-4. U **`mujdum/**`:** Obsidian `projekty/mujdum/hub.md` + nejnovější `session-*.md`; spec v `mujdum/docs/` dle úkolu.
-5. U **`ciselniky/**`:** `ciselniky/AGENTS.md` + `ciselniky/docs/README.md`; Obsidian `projekty/ciselniky/hub.md` + nejnovější `session-*.md`; spec dle tabulky v AGENTS.md — ne celé `zadani.md`.
+4. U **MA / Wiki úkolu:** otevřené `[PIPELINE]` issue; případně `docs/wiki/` dle rozsahu.
+5. U **Obsidianu** (pokud trezor používáš): `projekty/<projekt>/hub.md` + nejnovější `session-*.md`.
 6. V odpovědi **jedna věta**, co z kontextu ovlivnilo postup.
 
-Po úkolu: zápis dle `repo-kvalita.mdc` (Obsidian session / learning-log) + aktualizace stavu v příslušném doc (`mujdum/docs/*.md`, `ciselniky/docs/README.md`), pokud se feature posunula.
+Po úkolu: zápis dle `repo-kvalita.mdc` (Obsidian session / learning-log) + aktualizace wiki/docs, pokud se feature posunula.
 
 Šablona promptu pro uživatele: **`docs/navrat-k-projektu.md`**.

@@ -27,12 +27,4 @@ bash docs/scripts/create-multiagent-labels.sh   # jednorázově / idempotentně
 
 Žádný Docker stack jen pro MA — stačí `gh` + Cursor.
 
-## Produkt (orientačně)
-
-```bash
-# mujdum — jen při změně běhu aplikace
-cd mujdum && docker compose up -d --build frontend backend
-
-# číselníky
-cd ciselniky && npm run deploy && npm run check
-```
+Ukázka kódu v šabloně: `examples/backend` (`npm run check:examples-backend`).
