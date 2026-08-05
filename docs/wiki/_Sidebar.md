@@ -1,13 +1,13 @@
 # Test2 Wiki
 
 - [Home](Home)
-- **Aplikační**
+- **Aplikační (MA funkční)**
   - [Přehled](aplikacni/prehled)
-  - [Moduly](aplikacni/moduly)
-  - [Scénáře](aplikacni/uzivatelske-scenare)
-- **Provozní**
+  - [Moduly / role](aplikacni/moduly)
+  - [Scénáře `/m`](aplikacni/uzivatelske-scenare)
+- **Provozní (MA tooling)**
   - [Přehled](provozni/prehled)
-  - [Deploy](provozni/deploy)
+  - [Deploy / Wiki sync](provozni/deploy)
   - [Konfigurace](provozni/konfigurace)
   - [Monitoring](provozni/monitoring)
 - **Změny**
