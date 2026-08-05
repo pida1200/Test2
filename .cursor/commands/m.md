@@ -16,6 +16,8 @@ Spusť multi-agent dle `.cursor/skills/m/SKILL.md`.
 
 Číslo issue **vždy s `#`**. Bez `#` je `2` režim, ne issue.
 
+**CLI first:** role spouštěj přes `docs/scripts/ma-run-role.sh` (`cursor-agent`); chybí-li CLI (exit 3), fallback = Cursor Task s vytištěným promptem.
+
 **STOP orchestrace:** NO-GO, `gate/blocked`, chybí `gh` write, `once`, `MERGE-PENDING` (ruční merge).
 
 **Modely:** `docs/multi-agent-workflow.md` (sekce Modely).  

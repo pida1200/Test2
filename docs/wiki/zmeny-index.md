@@ -4,6 +4,7 @@ Chronologie změn řešení. Každá větší pipeline doplní řádek + stránk
 
 | Datum | Pipeline | Stránka | Shrnutí |
 |-------|----------|---------|---------|
+| 2026-08-05 | #83 | [pipeline-83-ma-cli-tokeny](zmeny-2026-08-05-pipeline-83-ma-cli-tokeny) | MA role CLI first (`ma-run-role.sh`), Task fallback, tenký Integrátor, mini-plán jen A+V |
 | 2026-08-05 | #74 | [pipeline-74-merge-clovek](zmeny-2026-08-05-pipeline-74-merge-clovek) | Merge do main jen člověk; MERGE-PENDING handoff |
 | 2026-08-05 | #66 | [pipeline-66-sablona-ma](zmeny-2026-08-05-pipeline-66-sablona-ma) | Šablona jen MA — odstraněny produktové stromy a odkazy |
 | 2026-08-05 | #51 | [pipeline-51-wiki-odkazy](zmeny-2026-08-05-pipeline-51-wiki-odkazy) | Ploché wiki slugy; oprava sidebar 404; check odkazů |

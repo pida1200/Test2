@@ -105,7 +105,9 @@ Skill: `.cursor/skills/m/SKILL.md` · Command: `.cursor/commands/m.md`
 
 **Modely:** kanonická tabulka v [`multi-agent-workflow.md`](multi-agent-workflow.md) (sekce Modely) — sem nekopíruj.
 
-**STOP orchestrace:** NO-GO, `gate/blocked`, chybí `gh` write, `once`, close PIPELINE.
+**STOP orchestrace:** NO-GO, `gate/blocked`, chybí `gh` write, `once`, `MERGE-PENDING` (ruční merge).
+
+**CLI first, Task fallback:** role spouštěj přes `docs/scripts/ma-run-role.sh` (exit 3 = CLI chybí → vlož vytištěný prompt do Task).
 
 I/O vždy přes GitHub Issues (`VSTUP_ISSUE` / `VÝSTUP_ISSUE`). Integrátor při kickoffu: existující pipeline issue **doplní** (`[PIPELINE]` titulek + labely); nové vytvoří jen když žádné neexistuje.
 
@@ -166,7 +168,7 @@ Gate:
 Hotovo když:
 - VERDIKT-A/V/T mají gate/go
 - ověření dle oblasti
-- záznam v docs/learning-log.md + zavřený [PIPELINE]
+- záznam v docs/learning-log.md + MERGE-PENDING na [PIPELINE] (merge do main = člověk)
 ```
 
 ### Snippet ANALÝZA (Analytik → body issue)
@@ -178,6 +180,7 @@ VSTUP_ISSUE: #<PIPELINE>
 VÝSTUP_ISSUE: #<ANALÝZA>
 
 Do body VÝSTUP_ISSUE:
+0. Mini-plán (1–3 věty) — cíl, dotčené soubory/scope, jak ověříš
 1. Cíl (1 věta)
 2. Scope / mimo scope
 3. API nebo UI kontrakt
@@ -238,6 +241,7 @@ ROLE: Vývojář
 MODEL: composer-2.5-fast   # alt: claude-sonnet-5-thinking-high; *-fast OK když ne-fast není dostupná
 VSTUP_ISSUE: #<PIPELINE nebo zadání>
 VÝSTUP_ISSUE: #<IMPLEMENTACE>
+Na začátek body: mini-plán (1–3 věty) — cíl, dotčené soubory, jak ověříš
 GATE: → Kontrolor vývojáře; WIP commit(y) na feature větvi OK, NE push
 PŘI NO-GO: oprav dle #<VERDIKT-V>, bump verze v body, znovu review
 

@@ -29,7 +29,11 @@ Uživatel spustil slash `/m` s volitelnými argumenty.
 
 **Default (`/m #N`):** v **jednom chatu** proveď po sobě fáze pipeline (Integrátor řídí smyčku), dokud nenastane STOP.
 
-**Preferuj Cursor Task/subagent** pro každou roli s `MODEL:` z `docs/multi-agent-workflow.md` (sekce Modely). Kontrolor ideálně **jiný** model než produkce. Issues = zdroj pravdy (ne spoléhej jen na chat historii).
+**CLI first, Task = fallback:** pro každou roli nejdřív zkus `bash docs/scripts/ma-run-role.sh --role <role> --pipeline #N --model <slug>` (detekuje `cursor-agent` v PATH). Exit `3` = CLI chybí → skript vytiskne hotový prompt, vlož ho do Cursor Task **beze změny**. `MODEL:` vždy z `docs/multi-agent-workflow.md` (sekce Modely). Kontrolor ideálně **jiný** model než produkce. Issues = zdroj pravdy (ne spoléhej jen na chat historii) — neopakuj v promptu obsah workflow, jen odkaz (token budget níže).
+
+**Mini-plán (1–3 věty) jen Analytik a Vývojář** — do body `[ANALÝZA]` / na začátek `[IMPLEMENTACE]`. Kontrolor, Tester, Integrátor plán nepíšou.
+
+**Tenký Integrátor:** routing (`gh`), sync `gate/*`, STOP/MERGE-PENDING, commit + push feature větve. **Ne** duplicitní full `npm run check`, pokud Tester už doložil zelené v `[TESTY]` (výjimka: konflikt / merge / pochybnost).
 
 **STOP orchestrace:**
 
@@ -106,3 +110,7 @@ Max ~3 reworky. Po 3. NO-GO → `gate/blocked`.
 **Nové** `[VERDIKT-*]` každé kolo — nepřepisuj NO-GO na GO.
 
 Nežádej dlouhé ROLE/VSTUP prompty — stačí `/m #N` nebo `/m #N once`.
+
+## Token budget rolí
+
+Kanonická tabulka (mini-plán, co role čte, co nesmí): `docs/multi-agent-workflow.md` (sekce „Token budget rolí“). Skript `docs/scripts/ma-run-role.sh --help` shrnuje kontrakt CLI/fallback.

@@ -23,7 +23,7 @@ Skill: `.cursor/skills/m/SKILL.md` · Command: `.cursor/commands/m.md`
 Číslo issue **vždy s `#`**. Bez `#` je `2` režim, ne issue.  
 Labely `ma/*` z PR #3 **nezavádět** — používej `multiagent/*` + `gate/*`.
 
-**Orchestrace (default):** v jednom chatu postupně role (preferuj Task + model z workflow) dokud NO-GO / `blocked` / `MERGE-PENDING` handoff / `once`. CI **nespouští** Cursor — bot jen komentuje `/m #N`. Detail: skill `.cursor/skills/m/SKILL.md`.
+**Orchestrace (default):** v jednom chatu postupně role — **CLI first** (`docs/scripts/ma-run-role.sh --role … --model <slug z workflow>`), **Task = fallback** při exitu 3 (CLI chybí) — dokud NO-GO / `blocked` / `MERGE-PENDING` handoff / `once`. Mini-plán 1–3 věty jen Analytik + Vývojář. CI **nespouští** Cursor — bot jen komentuje `/m #N`. Detail: skill `.cursor/skills/m/SKILL.md`, token budget: `docs/multi-agent-workflow.md`.
 
 ## Role
 
@@ -33,7 +33,7 @@ Labely `ma/*` z PR #3 **nezavádět** — používej `multiagent/*` + `gate/*`.
 | **Vývojář** → issue `[IMPLEMENTACE]` | **Kontrolor vývojáře** → `[VERDIKT-V]` |
 | **Tester** → issue `[TESTY]` | **Kontrolor testera** → `[VERDIKT-T]` |
 
-**Integrátor**: orchestruje, kickoff (viz níže), konflikty, finální testy/lint, commit + push **feature větve**, learning-log, handoff `MERGE-PENDING` (**nesloučí do `main`** — to dělá člověk; bez PR).
+**Integrátor** (tenký): orchestruje, kickoff (viz níže), konflikty, commit + push **feature větve**, learning-log, handoff `MERGE-PENDING` (**nesloučí do `main`** — to dělá člověk; bez PR). **Ne** duplicitní full `npm run check`, pokud Tester už doložil zelené v `[TESTY]` (výjimka: konflikt / merge / pochybnost).
 
 **Kickoff (Integrátor):** pokud uživatel už vytvořil pipeline issue (často bez `[PIPELINE]` titulku a labelů) → Integrátor ho **doplní**; nové `[PIPELINE]` vytváří **jen když žádné neexistuje**. Poté child issues dle šablon.
 

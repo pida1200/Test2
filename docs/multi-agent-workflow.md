@@ -385,9 +385,37 @@ Skill: `.cursor/skills/m/SKILL.md` · Command: `.cursor/commands/m.md`
 Číslo issue **vždy s `#`**. Bez `#` je `2` režim, ne issue.  
 Labely `ma/*` **nezavádět** — používej `multiagent/*` + `gate/*`.
 
-**Orchestrace:** jeden chat / jeden kick; preferuj Task per role. **STOP:** NO-GO, `gate/blocked`, chybí `gh` write, `once`, `MERGE-PENDING`.
+**Orchestrace:** jeden chat / jeden kick; **CLI first** (`docs/scripts/ma-run-role.sh`), **Task = fallback** při exitu 3. **STOP:** NO-GO, `gate/blocked`, chybí `gh` write, `once`, `MERGE-PENDING`.
 
 Copy-paste šablony: `docs/prompt-snippets.md`.
+
+## Token budget rolí
+
+Cíl: méně tokenů v parent chatu — role se spouští **CLI first** (`docs/scripts/ma-run-role.sh`), Task jen jako fallback (exit `3`, CLI chybí). Mini-plán píší **jen** Analytik a Vývojář; ostatní role rovnou artefakt. Integrátor je **tenký** — routing + `gh` + STOP/MERGE-PENDING, ne duplicitní full check.
+
+| Role | Mini-plán | Čte (max) | Nesmí |
+|------|-----------|-----------|-------|
+| Analytik | **ano** (1–3 věty v `[ANALÝZA]`) | `[PIPELINE]` + soubory ve scope + relevantní pravidla | historii `git log`, celý repo sweep |
+| Kontrolor analytika | ne | `[ANALÝZA]` + `[PIPELINE]` | reimplementace, znovu-analýza scope |
+| Vývojář | **ano** (1–3 věty na začátku `[IMPLEMENTACE]`) | `[ANALÝZA]` + `[VERDIKT-A]` + soubory ve scope | opakovat analýzu, číst mimo scope |
+| Kontrolor vývojáře | ne | `[IMPLEMENTACE]` + `[ANALÝZA]` + `git diff` scope | spouštět full `npm run check`, opravovat kód |
+| Tester | ne | DoD z `[ANALÝZA]` + `[IMPLEMENTACE]` + cílené příkazy | psát feature kód |
+| Kontrolor testera | ne | `[TESTY]` + DoD | produkční kód |
+| Integrátor | ne | labely + `gh issue view --json` vybraná pole | full `npm run check`, když Tester doložil zelené (výjimka: konflikt / merge) |
+
+### Spuštění role přes skript
+
+```bash
+bash docs/scripts/ma-run-role.sh --role <role> --pipeline <N> \
+     [--issue <N>] --model <slug-z-teto-sekce-Modely> [--write] [--dry-run] [--print-prompt]
+```
+
+- Detekce CLI jen přes `command -v cursor-agent` (env `CURSOR_AGENT_BIN` pro přepis binárky).
+- Exit `0` OK/`--dry-run`/`--help`/`--print-prompt` · `2` usage · `3` CLI chybí → **vytiskne hotový prompt**, vlož do Cursor Task beze změny · `4` CLI selhalo (např. model nedostupný → použij Alternativu ze sloupce výše).
+- `--dry-run` funguje **i bez** instalovaného `cursor-agent` (offline, testováno v `check:ma`).
+- Role, které nesmí zapisovat (Analytik, kontroloři), běží bez `--write` (skript nepředá `--force`).
+- **Dlouhý/visící běh CLI (E10):** skript **nemá** vlastní timeout — čeká na `cursor-agent` na popředí. Přerušení (Ctrl-C / kill procesu) řeší volající (Integrátor / terminál), ne skript.
+- Detail kontraktu: `bash docs/scripts/ma-run-role.sh --help`.
 
 ## Automatizace
 
@@ -399,8 +427,9 @@ Copy-paste šablony: `docs/prompt-snippets.md`.
 | Gate check | `.github/workflows/multiagent-gate-check.yml` | validace verdiktů (anchored `Verdikt:`/`Pipeline:`/`Vstup:`); komentář při chybě |
 | Wiki sync | `.github/workflows/wiki-sync.yml` | push `docs/wiki/**` na `main` → `sync-wiki-to-github.sh` |
 | Lokální přehled | `docs/scripts/ma-pipeline-view.sh` | stejný přehled přes `gh` když Actions nejsou dostupné |
+| Spuštění role | `docs/scripts/ma-run-role.sh` | CLI first (`cursor-agent`) / Task fallback (exit 3); token budget výše |
 | Labely | `docs/scripts/create-multiagent-labels.sh` | idempotentní vytvoření `multiagent/*` + `gate/*` |
-| MA check | `npm run check:ma` | pipeline-sync + regex + wiki-seed + next-lib + dry-run |
+| MA check | `npm run check:ma` | pipeline-sync + regex + wiki-seed + next-lib + dry-run + ma-run-role (offline) |
 
 **Co zůstává ruční:** první kick `/m` / `/m #N` v Cursoru (CI agenta nespouští). Child issues pokud chybí `gh` write. **Merge do `main` = člověk** (Integrátor jen feature větev + `MERGE-PENDING`). Wiki UI sync až po pushi na `main`. **Plně unattended z Actions** (Cursor API) = follow-up mimo scope.
 

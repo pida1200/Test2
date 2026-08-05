@@ -26,6 +26,30 @@ Pravidlo: `repo-kvalita.mdc`.
 
 ## Záznamy
 
+### 2026-08-05 – /m #83 IMPLEMENTACE: MA CLI first + token budget
+
+- Výsledek: nový `docs/scripts/ma-run-role.sh` (CLI first přes `cursor-agent`, Task fallback při exitu 3, exit kódy 0/2/3/4, `--dry-run`/`--print-prompt` bez binárky); skill/rule/command aktualizované na CLI first + tenký Integrátor + mini-plán jen Analytik/Vývojář; `docs/multi-agent-workflow.md` má novou sekci „Token budget rolí“; wiki `provozni-konfigurace` + nový `zmeny-2026-08-05-pipeline-83-ma-cli-tokeny` + index; `prompt-snippets.md` sladěn na `MERGE-PENDING` (#74).
+- Ověření: `npm run check` zelené (`check:examples-backend` + `check:docs` + `check:wiki` + `check:ma` vč. nového `test-ma-run-role.sh`, 17 offline případů); `cursor-agent` **není** v PATH tohoto stroje — ověřeno degradací na exit 3 s vytištěným promptem, ne skutečným CLI během.
+- Riziko: přesnost CLI flagů (`-p --output-format text --model … [--force]`) není ověřena proti reálné instalaci `cursor-agent` — až bude dostupná, ověřit `cursor-agent --help` a případnou odchylku zapsat sem.
+- Další krok: Kontrolor vývojáře → `[VERDIKT-V]`; poté Tester.
+- Stav: čeká na review (VERDIKT-V), pak testy; handoff `MERGE-PENDING` až po A+V+T GO.
+
+### 2026-08-05 – /m #83 IMPLEMENTACE rework 1/3 dle VERDIKT-V NO-GO #88
+
+- Výsledek: doplněny dva chybějící body z #88 beze změny kontraktu #85 — nový offline test v `test-ma-run-role.sh` (dočasná falešná binárka přes `mktemp -d`, exit 1 + stdout/stderr) ověřující `ma-run-role.sh` → exit `4` a beze zásahu zachovaný výstup CLI (17→20 offline případů); stručná dokumentace E10 (dlouhý/visící CLI běh nemá interní timeout, přerušení řeší volající) v hlavičce/`usage()` `ma-run-role.sh`, `docs/multi-agent-workflow.md` a wiki `provozni-konfigurace.md` (sekce Degradace).
+- Ověření: `npm run check` zelené vč. `check:ma` / `test-ma-run-role.sh` (20/20).
+- Riziko: beze změny oproti #87 — CLI flagy stále neověřené proti reálné instalaci `cursor-agent`.
+- Další krok: nový Kontrolor vývojáře (VERDIKT-V) přes `/m #83`.
+- Stav: commit `a8b85bc` na `feature/pipeline-83-ma-cli-tokeny`, pushnuto; #87 label `gate/no-go` → `gate/pending`.
+
+### 2026-08-05 – /m #83 TESTY rework dle VERDIKT-T NO-GO #91
+
+- Výsledek: opravena nepřesná evidence v #90 — tvrzení „21/21“ nahrazeno ověřitelným popisem (12 testovacích scénářů → 20 viditelných `OK` řádků na stdout, exit 0); produkční kód beze změny.
+- Ověření: opakovaný běh `bash docs/scripts/test-ma-run-role.sh` → 20× `OK`, `ma-run-role.sh testy passed.`, exit 0; konzistentní s předchozím záznamem výše („20/20“).
+- Riziko: beze změny — CLI flagy stále neověřené proti reálné instalaci `cursor-agent`.
+- Další krok: nový Kontrolor testera (VERDIKT-T) přes `/m #83`.
+- Stav: #90 label `gate/no-go` → `gate/pending`; žádný commit produkčního kódu, žádný merge.
+
 ### 2026-08-05 – archiv větve cursor/multiagent-role-gates-187d
 
 - Výsledek: remote větev smazána; tip `11294bb` uložen jako tag `archive/cursor-multiagent-role-gates-187d` (raný MA / 1-issue model, mimo main).
