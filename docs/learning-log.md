@@ -26,6 +26,13 @@ Pravidlo: `repo-kvalita.mdc`.
 
 ## Záznamy
 
+### 2026-08-05 – archiv větve cursor/multiagent-role-gates-187d
+
+- Výsledek: remote větev smazána; tip `11294bb` uložen jako tag `archive/cursor-multiagent-role-gates-187d` (raný MA / 1-issue model, mimo main).
+- Ověření: `git ls-remote` — branch pryč, tag na origin.
+- Riziko: žádné — obsah supersedován 7-issue modelem na main.
+- Další krok: volitelně smazat i sloučené `feature/*` remote refs (úklid).
+
 ### 2026-08-05 – /m #74 MERGE-PENDING: merge do main jen člověk
 
 - Výsledek: Integrátor končí push feature větve + komentář `MERGE-PENDING`; agent nesloučí do `main` (výjimka: explicitní „mergni a pushni“).
