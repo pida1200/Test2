@@ -15,6 +15,10 @@ CI: workflow `wiki-sync.yml` při pushi `docs/wiki/**` na `main` (vyžaduje boot
 
 Publikační URL: [pida1200/Test2/wiki](https://github.com/pida1200/Test2/wiki)
 
+### Konvence stránek (GitHub Wiki)
+
+GitHub Wiki odvozuje slug z **basename** souboru (podadresáře ignoruje). Seed je proto **plochý**: unikátní názvy `aplikacni-prehled.md`, `provozni-deploy.md`, … Interní odkazy = holý slug bez `/`, `../` a `.md` (např. `[Přehled](aplikacni-prehled)`). Kontrola: `npm run check:wiki`.
+
 ## Multi-agent „deploy“ = labely + skripty
 
 ```bash

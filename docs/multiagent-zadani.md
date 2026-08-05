@@ -50,9 +50,9 @@ Varianta B (`ma/*`) zůstává odmítnutá.
     ├── [BUG]…         ← volitelně (multiagent/bug)
     │
     └── Wiki (docs/wiki/ → GitHub Wiki)
-            ├── aplikacni/     ← co systém dělá
-            ├── provozni/      ← jak běží / deploy / provisioning
-            └── zmeny/         ← changelog podle pipeline / data
+            ├── aplikacni-*.md   ← co systém dělá
+            ├── provozni-*.md    ← jak běží / deploy / provisioning
+            └── zmeny-*.md       ← changelog podle pipeline / data
 ```
 
 ### Kde co patří
@@ -61,7 +61,7 @@ Varianta B (`ma/*`) zůstává odmítnutá.
 |-------|-----|
 | Cíl, kontext, DoD návrh, přehled fází | `[PIPELINE]` |
 | Krátký kontrakt, verdikt, odkaz na Wiki stránku | **child issue** |
-| Delší analýza, rozhodnutí, popis řešení | **Wiki** (`aplikacni/` / `provozni/` / `zmeny/`) |
+| Delší analýza, rozhodnutí, popis řešení | **Wiki** (`aplikacni-*` / `provozni-*` / `zmeny-*`) |
 | Verdikt GO/NO-GO | **nové** `[VERDIKT-*]` issue |
 | Kód, unit testy | **git** (větev + commit) |
 | Technická API/spec v PR | **`docs/` / `mujdum/docs/`** (git) |
@@ -79,14 +79,14 @@ Pipeline: #N
 Odkaz na Wiki (pokud artefakt není jen v issue):
 
 ```text
-Wiki: <cesta stránky, např. zmeny/2026-08-05-pipeline-34>
+Wiki: <slug stránky, např. zmeny-2026-08-05-pipeline-34>
 ```
 
 ### Vazba Wiki ↔ git seed
 
 - **Zdroj pravdy** = `docs/wiki/` v gitu (reviewovatelné v PR, strojově ověřitelné).
 - **GitHub Wiki** = publikační pohled se stejnou hierarchií; sync skriptem (viz §4.6).
-- **Při uzavření pipeline:** Vývojář/Integrátor aktualizuje seed v gitu (`docs/wiki/`, včetně `zmeny/`); sync do Wiki UI (`bash docs/scripts/sync-wiki-to-github.sh`) je doporučený, ale **ne povinný** DoD běžné pipeline.
+- **Při uzavření pipeline:** Vývojář/Integrátor aktualizuje seed v gitu (`docs/wiki/`, včetně `zmeny-*`); sync do Wiki UI (`bash docs/scripts/sync-wiki-to-github.sh`) je doporučený, ale **ne povinný** DoD běžné pipeline.
 - Wiki **nenahrazuje** `gate/*` ani CI.
 
 ---
@@ -102,35 +102,35 @@ Součást DoD této pipeline (a trvalé konvence): **existuje jasná wiki strukt
 | `Home` | rozcestník — odkaz na aplikační / provozní / změny |
 | `_Sidebar` | navigace ve Wiki UI (REQUIRED v `check-wiki-seed.sh`) |
 
-### 4.2 Aplikační dokumentace (`aplikacni/`)
+### 4.2 Aplikační dokumentace (`aplikacni-*`)
 
 Popis **co produkt dělá** (pro uživatele i vývojáře):
 
 | Stránka (návrh) | Obsah |
 |-----------------|--------|
-| `aplikacni/prehled` | účel produktu, hlavní entity, hranice systému |
-| `aplikacni/moduly` | FE / BE / DB / integrace (stručně) |
-| `aplikacni/uzivatelske-scenare` | klíčové use-cases |
+| `aplikacni-prehled` | účel produktu, hlavní entity, hranice systému |
+| `aplikacni-moduly` | FE / BE / DB / integrace (stručně) |
+| `aplikacni-uzivatelske-scenare` | klíčové use-cases |
 
-### 4.3 Provozní / provisioning dokumentace (`provozni/`)
+### 4.3 Provozní / provisioning dokumentace (`provozni-*`)
 
 Popis **jak to běží a nasazuje se**:
 
 | Stránka (návrh) | Obsah |
 |-----------------|--------|
-| `provozni/prehled` | prostředí (lokál / Docker / server), porty |
-| `provozni/deploy` | lokální compose, vzdálený deploy **jen na žádost** |
-| `provozni/konfigurace` | env proměnné (bez secretů), závislosti |
-| `provozni/monitoring` | health endpointy, logy, typické incidenty |
+| `provozni-prehled` | prostředí (lokál / Docker / server), porty |
+| `provozni-deploy` | lokální compose, vzdálený deploy **jen na žádost** |
+| `provozni-konfigurace` | env proměnné (bez secretů), závislosti |
+| `provozni-monitoring` | health endpointy, logy, typické incidenty |
 
-### 4.4 Jednotlivé změny (`zmeny/`)
+### 4.4 Jednotlivé změny (`zmeny-*`)
 
 Chronologický / podle pipeline záznam **co se změnilo**:
 
 | Stránka (návrh) | Obsah |
 |-----------------|--------|
-| `zmeny/index` | seznam změn (odkaz na stránky + `#PIPELINE`) |
-| `zmeny/YYYY-MM-DD-<slug>` | jedna změna: cíl, dopad, odkaz na `#PIPELINE`, commit, rizika |
+| `zmeny-index` | seznam změn (odkaz na stránky + `#PIPELINE`) |
+| `zmeny-YYYY-MM-DD-<slug>` | jedna změna: cíl, dopad, odkaz na `#PIPELINE`, commit, rizika |
 
 Šablona stránky změny:
 
@@ -159,20 +159,20 @@ Požadovaná výchozí struktura (soubory):
 ```text
 docs/wiki/
   Home.md
-  aplikacni/
-    prehled.md
-    moduly.md
-    uzivatelske-scenare.md
-  provozni/
-    prehled.md
-    deploy.md
-    konfigurace.md
-    monitoring.md
-  zmeny/
-    index.md
-    _sablona-zmeny.md
+  _Sidebar.md
+  aplikacni-prehled.md
+  aplikacni-moduly.md
+  aplikacni-uzivatelske-scenare.md
+  provozni-prehled.md
+  provozni-deploy.md
+  provozni-konfigurace.md
+  provozni-monitoring.md
+  zmeny-index.md
+  zmeny-sablona.md
+  zmeny-YYYY-MM-DD-….md
 ```
 
+> GitHub Wiki odvozuje slug z **basename** — seed musí být **plochý** (žádné podadresáře), unikátní názvy, interní odkazy bez `/` a `.md`.
 Agent (Integrátor / Analytik) **nesmí** nechat strukturu prázdnou bez `Home` a indexů — minimálně stub s 2–3 větami + „TODO“.
 
 ### 4.6 Inicializace a sync GitHub Wiki
@@ -249,9 +249,9 @@ Bot `multiagent-next.yml` komentuje `/m #N` i `/m #N once`. CI **nespouští** C
 
 | Role | Wiki povinnost |
 |------|----------------|
-| Analytik | odkaz na cílovou Wiki stránku / návrh aktualizace `aplikacni/` nebo `provozni/` |
-| Vývojář | po změně chování aktualizovat `docs/wiki/` (+ `zmeny/…`) |
-| Integrátor | ověřit seed strukturu; doplnit `zmeny/index`; sync poznámka do PIPELINE |
+| Analytik | odkaz na cílovou Wiki stránku / návrh aktualizace `aplikacni-*` nebo `provozni-*` |
+| Vývojář | po změně chování aktualizovat `docs/wiki/` (+ `zmeny-…`) |
+| Integrátor | ověřit seed strukturu; doplnit `zmeny-index`; sync poznámka do PIPELINE |
 
 ---
 
@@ -264,8 +264,8 @@ Bot `multiagent-next.yml` komentuje `/m #N` i `/m #N once`. CI **nespouští** C
 - [ ] NO-GO vytvoří nový verdikt; produkční issue jde do reworku
 - [ ] Tester může eskalovat ve scope bez `[BUG]`; mimo scope → `[BUG]`
 - [ ] Integrátor uzavře pipeline jen při GO na A+V+T
-- [ ] **Existuje `docs/wiki/` se strukturou Home + `aplikacni/` + `provozni/` + `zmeny/`**
-- [ ] **Každá uzavřená větší změna má záznam v `zmeny/` + odkaz z PIPELINE**
+- [ ] **Existuje `docs/wiki/` se strukturou Home + ploché `aplikacni-*` / `provozni-*` / `zmeny-*`**
+- [ ] **Každá uzavřená větší změna má záznam `zmeny-*` + odkaz z PIPELINE**
 - [ ] Záznam v `docs/learning-log.md` po větším běhu
 
 ---
@@ -285,7 +285,7 @@ Bot `multiagent-next.yml` komentuje `/m #N` i `/m #N once`. CI **nespouští** C
 ```bash
 gh label list | rg 'multiagent|gate/'
 bash docs/scripts/ma-pipeline-view.sh #<PIPELINE>
-ls docs/wiki/Home.md docs/wiki/aplikacni docs/wiki/provozni docs/wiki/zmeny
+ls docs/wiki/Home.md docs/wiki/aplikacni-prehled.md docs/wiki/provozni-prehled.md docs/wiki/zmeny-index.md
 bash docs/scripts/check-wiki-seed.sh
 bash docs/scripts/sync-wiki-to-github.sh   # po bootstrapu Wiki UI
 # v Cursoru: /m #<PIPELINE>
@@ -308,7 +308,7 @@ Wiki / docs: dle docs/multiagent-zadani.md (Issues = stav, Wiki = KB)
 ### Kritéria hotovo (návrh)
 
 - [ ] …
-- [ ] docs/wiki struktura + záznam ve zmeny/ (pokud mění chování)
+- [ ] docs/wiki struktura + záznam `zmeny-*` (pokud mění chování)
 
 ### Ověření
 

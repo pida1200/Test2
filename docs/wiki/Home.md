@@ -4,11 +4,11 @@ Zdroj pravdy v gitu (`docs/wiki/`). GitHub Wiki UI = publikační mirror.
 
 ## Oblasti
 
-| Oblast | Cesta | Účel |
-|--------|-------|------|
-| **Aplikační** | [aplikacni/prehled](aplikacni/prehled) | co MA proces dělá (role, gate, `/m`) |
-| **Provozní** | [provozni/prehled](provozni/prehled) | labely, Actions, skripty, Wiki sync |
-| **Změny** | [zmeny/index](zmeny/index) | chronologie pipeline |
+| Oblast | Stránka | Účel |
+|--------|---------|------|
+| **Aplikační** | [aplikacni-prehled](aplikacni-prehled) | co MA proces dělá (role, gate, `/m`) |
+| **Provozní** | [provozni-prehled](provozni-prehled) | labely, Actions, skripty, Wiki sync |
+| **Změny** | [zmeny-index](zmeny-index) | chronologie pipeline |
 
 ## Multi-agent (rychle)
 
@@ -18,6 +18,6 @@ Zdroj pravdy v gitu (`docs/wiki/`). GitHub Wiki UI = publikační mirror.
 
 ## Rychlé odkazy
 
-- Aplikace: [moduly (role)](aplikacni/moduly) · [scénáře `/m`](aplikacni/uzivatelske-scenare)
-- Provoz: [deploy / sync](provozni/deploy) · [konfigurace](provozni/konfigurace) · [monitoring](provozni/monitoring)
-- Šablona změny: [zmeny/_sablona-zmeny](zmeny/_sablona-zmeny)
+- Aplikace: [moduly (role)](aplikacni-moduly) · [scénáře `/m`](aplikacni-uzivatelske-scenare)
+- Provoz: [deploy / sync](provozni-deploy) · [konfigurace](provozni-konfigurace) · [monitoring](provozni-monitoring)
+- Šablona změny: [zmeny-sablona](zmeny-sablona)

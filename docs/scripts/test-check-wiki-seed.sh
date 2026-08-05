@@ -15,6 +15,13 @@ cleanup() {
   if [[ -n "${empty_backup:-}" && -f "${empty_backup}" ]]; then
     mv -f "${empty_backup}" "${empty_target}"
   fi
+  if [[ -n "${inject_file:-}" && -f "${inject_file}" ]]; then
+    rm -f "${inject_file}"
+  fi
+  if [[ -n "${sidebar_backup:-}" && -f "${sidebar_backup}" ]]; then
+    mv -f "${sidebar_backup}" "${WIKI}/_Sidebar.md"
+  fi
+  rm -rf "${WIKI}/_dup_a" "${WIKI}/_dup_b" 2>/dev/null || true
 }
 trap cleanup EXIT
 
@@ -64,13 +71,50 @@ mv "${backup}" "${TARGET}"
 backup=""
 
 # 3) EMPTY — dočasně prázdný soubor bez nadpisu
-empty_target="${WIKI}/zmeny/index.md"
+empty_target="${WIKI}/zmeny-index.md"
 empty_backup="$(mktemp)"
 cp "${empty_target}" "${empty_backup}"
 : > "${empty_target}"
-out="$(assert_exit 1 "EMPTY zmeny/index.md")"
-assert_contains "${out}" "EMPTY: docs/wiki/zmeny/index.md" "EMPTY message"
+out="$(assert_exit 1 "EMPTY zmeny-index.md")"
+assert_contains "${out}" "EMPTY: docs/wiki/zmeny-index.md" "EMPTY message"
 mv "${empty_backup}" "${empty_target}"
 empty_backup=""
+
+# 4) BROKEN LINK
+sidebar_backup="$(mktemp)"
+cp "${WIKI}/_Sidebar.md" "${sidebar_backup}"
+printf '\n- [Ghost](neexistuje-stranka)\n' >> "${WIKI}/_Sidebar.md"
+out="$(assert_exit 1 "BROKEN LINK")"
+assert_contains "${out}" "BROKEN LINK:" "BROKEN LINK message"
+mv "${sidebar_backup}" "${WIKI}/_Sidebar.md"
+sidebar_backup=""
+
+# 5) BAD LINK FORM (slash)
+sidebar_backup="$(mktemp)"
+cp "${WIKI}/_Sidebar.md" "${sidebar_backup}"
+printf '\n- [Bad](aplikacni/prehled)\n' >> "${WIKI}/_Sidebar.md"
+out="$(assert_exit 1 "BAD LINK FORM slash")"
+assert_contains "${out}" "BAD LINK FORM:" "BAD LINK FORM message"
+mv "${sidebar_backup}" "${WIKI}/_Sidebar.md"
+sidebar_backup=""
+
+# 6) DUPLICATE PAGE — stejný basename ve dvou nested cestách (macOS FS je case-insensitive)
+nested_dir="${WIKI}/_dup_a"
+mkdir -p "${WIKI}/_dup_a" "${WIKI}/_dup_b"
+printf '# A\n' > "${WIKI}/_dup_a/collide.md"
+printf '# B\n' > "${WIKI}/_dup_b/collide.md"
+out="$(assert_exit 1 "DUPLICATE PAGE")"
+assert_contains "${out}" "DUPLICATE PAGE:" "DUPLICATE PAGE message"
+assert_contains "${out}" "NESTED PAGE:" "NESTED also reported"
+rm -rf "${WIKI}/_dup_a" "${WIKI}/_dup_b"
+nested_dir=""
+
+# 7) ORPHAN
+inject_file="${WIKI}/orphan-test-page.md"
+printf '# Orphan test\n\nText.\n' > "${inject_file}"
+out="$(assert_exit 1 "ORPHAN")"
+assert_contains "${out}" "ORPHAN: docs/wiki/orphan-test-page.md" "ORPHAN message"
+rm -f "${inject_file}"
+inject_file=""
 
 echo "check-wiki-seed negative tests passed."

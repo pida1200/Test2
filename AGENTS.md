@@ -16,7 +16,7 @@ Tento soubor je **trvalá paměť projektu** — načti ho po restartu Cursoru, 
 | `.cursor/rules/` | Závazná pravidla pro agenta |
 | `docs/` | Návody, learning-log, šablony promptů |
 | `docs/multiagent-zadani.md` | Zadání MA — hybrid (1× PIPELINE + child artefakty) |
-| `docs/wiki/` | Seed GitHub Wiki — `aplikacni/` / `provozni/` / `zmeny/` (ASCII cesty) |
+| `docs/wiki/` | Seed GitHub Wiki — ploché unikátní stránky (`aplikacni-*.md`, `provozni-*.md`, `zmeny-*.md`) |
 | Obsidian `projekty/mujdum/` | Session, proč, follow-up (MCP) |
 
 ## Pravidla (vždy respektovat)

@@ -29,4 +29,4 @@ npm run check:wiki
 bash docs/scripts/sync-wiki-to-github.sh
 ```
 
-Detail konfigurace a deploy: [konfigurace](konfigurace) · [deploy](deploy) · [monitoring](monitoring).
+Detail konfigurace a deploy: [konfigurace](provozni-konfigurace) · [deploy](provozni-deploy) · [monitoring](provozni-monitoring).
