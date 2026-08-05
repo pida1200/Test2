@@ -13,7 +13,7 @@ Jeden požadavek = jedno `[PIPELINE]` issue. Role (Analytik → Kontrolor → �
 | `[PIPELINE]` | požadavek + dashboard (auto-přehled mezi markery) |
 | Child issues | `[ANALÝZA]`, `[VERDIKT-*]`, `[IMPLEMENTACE]`, `[TESTY]`, `[BUG]` |
 | `gate/*` | `pending` → `go` / `no-go` / `blocked` |
-| Wiki seed | `docs/wiki/{aplikacni,provozni,zmeny}/` |
+| Wiki seed | `docs/wiki/` (ploché slugy `aplikacni-*`, `provozni-*`, `zmeny-*`) |
 | Slash `/m` | v Cursoru: `/m #N` = orchestrace fází do STOP; `/m #N once` = jeden krok |
 
 ## Hranice systému

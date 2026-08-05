@@ -72,8 +72,8 @@ body:
     id: wiki
     attributes:
       label: Wiki stránka
-      description: "Volitelně — cesta v docs/wiki/ bez .md, např. zmeny/2026-08-05-slug"
-      placeholder: zmeny/2026-08-05-slug
+      description: "Volitelně — slug v docs/wiki/ bez .md, např. zmeny-2026-08-05-slug"
+      placeholder: zmeny-2026-08-05-slug
     validations:
       required: false
   - type: input

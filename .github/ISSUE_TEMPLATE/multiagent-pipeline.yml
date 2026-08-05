@@ -44,7 +44,7 @@ body:
       label: Kritéria hotovo (návrh)
       placeholder: |
         3–5 bodů
-        - [ ] docs/wiki struktura + záznam ve zmeny/ (pokud mění chování)
+        - [ ] docs/wiki struktura + záznam zmeny-* (pokud mění chování)
   - type: textarea
     id: verify
     attributes:

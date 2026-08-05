@@ -24,5 +24,5 @@ Uzavřít mezery kolem Wiki KB pro hybridní multi-agent model (varianta C): ASC
 ## Odkazy
 
 - Issues: [#34 PIPELINE](https://github.com/pida1200/Test2/issues/34), [#36 ANALÝZA](https://github.com/pida1200/Test2/issues/36), [#37 VERDIKT-A](https://github.com/pida1200/Test2/issues/37), [#38 IMPLEMENTACE](https://github.com/pida1200/Test2/issues/38)
-- Wiki: [Home](../Home.md), [aplikacni/prehled](../aplikacni/prehled.md), [provozni/prehled](../provozni/prehled.md)
-- Spec: [docs/multiagent-zadani.md](../../multiagent-zadani.md)
+- Wiki: [Home](Home) · [aplikacni-prehled](aplikacni-prehled) · [provozni-prehled](provozni-prehled)
+- Spec: [multiagent-zadani.md](https://github.com/pida1200/Test2/blob/main/docs/multiagent-zadani.md)

@@ -215,7 +215,7 @@ Před close [PIPELINE]:
    (nebo lokálně: bash docs/scripts/ma-pipeline-view.sh #<PIPELINE>)
 2. Tabulka: všech 6 fází má issue + správný gate; historie verdiktů sedí s reworky
 3. Ruční checklist child issues doplň pokud bot ještě nesynchronizoval
-4. Wiki: bash docs/scripts/check-wiki-seed.sh; u změny chování záznam v docs/wiki/zmeny/ + řádek v index.md
+4. Wiki: bash docs/scripts/check-wiki-seed.sh; u změny chování záznam docs/wiki/zmeny-… + řádek v zmeny-index.md
 5. Commit/merge/push + docs/learning-log.md
 6. Zavři #<PIPELINE> jen při gate/go na A+V+T
 ```

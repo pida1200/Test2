@@ -53,7 +53,7 @@ cd "${TMP}/wiki"
 
 # Replace wiki content with seed (preserve .git)
 find . -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
-# Copy seed; keep directory structure (aplikacni/, provozni/, zmeny/)
+# Copy seed; flat page files (basename = GitHub Wiki slug)
 cp -R "${SEED}/." .
 
 # Fix link that only makes sense in monorepo (already absolute in seed Home.md)
