@@ -3,9 +3,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "check": "npm run check:examples-backend && npm run check:docs",
-    "check:all": "npm run check:examples-backend && npm run check:docs",
+    "check": "npm run check:examples-backend && npm run check:docs && npm run check:wiki",
+    "check:all": "npm run check:examples-backend && npm run check:docs && npm run check:wiki",
     "check:examples-backend": "bash docs/scripts/check-examples-backend.sh",
-    "check:docs": "npx --yes markdownlint-cli2 \"docs/multi-agent-workflow.md\" \"docs/prompt-snippets.md\" \".cursor/rules/multi-agenti.mdc\" \".cursor/commands/m.md\" \".cursor/skills/m/SKILL.md\""
+    "check:docs": "npx --yes markdownlint-cli2 \"docs/multi-agent-workflow.md\" \"docs/multiagent-zadani.md\" \"docs/prompt-snippets.md\" \"docs/wiki/**/*.md\" \".cursor/rules/multi-agenti.mdc\" \".cursor/commands/m.md\" \".cursor/skills/m/SKILL.md\"",
+    "check:wiki": "bash docs/scripts/check-wiki-seed.sh"
   }
 }
