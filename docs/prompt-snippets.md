@@ -107,6 +107,34 @@ I/O vždy přes GitHub Issues (`VSTUP_ISSUE` / `VÝSTUP_ISSUE`). Integrátor př
 GH Action `multiagent-next.yml` komentuje další krok + `/m #N` po změně labelů.
 Přehled celé pipeline: `[PIPELINE]` issue — sekce mezi markery `multiagent:prehled` (bot) nebo `bash docs/scripts/ma-pipeline-view.sh #N` lokálně.
 
+### Snippet — nález testera → `[BUG]`
+
+Použij **jen** když nález je mimo scope pipeline nebo Integrátor vědomě odkládá vadu ve scope. Ve scope a blokující → `ESKALACE_VÝVOJÁŘ` v `[TESTY]`, ne nové issue.
+
+```text
+ROLE: Tester
+MODEL: composer-2.5-fast
+VSTUP_ISSUE: #<TESTY> + #<ANALÝZA> (scope)
+
+Nález mimo scope / odložený → vytvoř [BUG]:
+gh issue create --title "[BUG] <stručný projev>" \
+  --label "bug,multiagent,multiagent/bug" \
+  --body-file /tmp/bug-body.md
+
+Do /tmp/bug-body.md (v1):
+Pipeline: #<PIPELINE>     # volitelně — jen když nález vznikl v pipeline
+Zdroj: #<TESTY>
+Závažnost: blocker | major | minor
+Rozsah: mimo scope pipeline | ve scope – odloženo
+Reprodukce: <kroky>       # žádné secrety z .env
+Očekávané / skutečné: …
+Návrh dalšího kroku: samostatný úkol | /m #<bug>
+Verze: v1
+
+Do [TESTY] doplň #<BUG> do pole „Založené bug issues“.
+Kontrolor testera bug nezakládá — chybějící bug reklamuje v VERDIKT-T NO-GO.
+```
+
 ## Multi‑agent role 3+3 — `/m` (I/O + gate + rework)
 
 Detail šablon VSTUP/VÝSTUP/GATE: [`multi-agent-workflow.md`](multi-agent-workflow.md).  

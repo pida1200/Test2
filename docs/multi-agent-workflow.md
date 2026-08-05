@@ -88,8 +88,9 @@ Každý **vstup i výstup** role je **GitHub Issue** (ne chat-only artefakt). Ch
 | `[VERDIKT-V] <feature>` | `multiagent/verdikt` + `gate/go` \| `gate/no-go` | Kontrolor vývojáře | Tester (GO) / Vývojář (NO-GO) | Kontrolor vývojáře |
 | `[TESTY] <feature>` | `multiagent/testy` | Tester | Kontrolor testera | Tester |
 | `[VERDIKT-T] <feature>` | `multiagent/verdikt` + `gate/go` \| `gate/no-go` | Kontrolor testera | Integrátor (GO) / Tester nebo Vývojář (NO-GO) | Kontrolor testera |
+| `[BUG] <projev vady>` | `bug` + `multiagent` + `multiagent/bug` (bez `gate/*`) | Tester / Integrátor | Vývojář (mimo pipeline) / Integrátor (uzavření) | Tester / Integrátor |
 
-Všechny issues jedné feature mají label `multiagent` a v body **anchored** odkaz na samostatném řádku: `Pipeline: #<PIPELINE>`.
+Všechny issues jedné feature mají label `multiagent` a v body **anchored** odkaz na samostatném řádku: `Pipeline: #<PIPELINE>` (u `[BUG]` volitelné — jen když nález vznikl v pipeline).
 
 ## Jeden pohled na pipeline (varianta C — hybrid)
 
@@ -115,6 +116,7 @@ Labely jsou v repu (`gh label list --repo <owner/repo> | rg 'multiagent|gate/'`)
 | `multiagent/implementace` | výstup vývojáře |
 | `multiagent/testy` | výstup testera |
 | `multiagent/verdikt` | výstup kontrolora |
+| `multiagent/bug` | nález mimo pipeline nebo odložená vada (bez `gate/*`) |
 | `gate/pending` | čeká na review / rework |
 | `gate/go` | brána otevřená |
 | `gate/no-go` | brána zavřená — předchozí role musí opravit |
@@ -150,6 +152,29 @@ gh issue create --title "[VERDIKT-A] <feature> — NO-GO" --label "multiagent,mu
 ```
 
 Pokud `gh` write není dostupný v prostředí agenta, Integrátor / uživatel vytvoří issues ručně ze šablon v GitHub UI; agent do nich doplní body přes odkaz.
+
+---
+
+## Nálezy Testera → bug issues
+
+Princip: **ve scope a blokující = rework přes existující smyčku (žádné nové issue); mimo scope nebo odložené = `[BUG]` issue.**
+
+| Typ nálezu Testera | `ESKALACE_VÝVOJÁŘ` v `[TESTY]` | `[VERDIKT-T]` | Nové `[BUG]` issue | Kdo opravuje |
+|---|---|---|---|---|
+| Vada testu / chybějící scénář (produkt je OK) | ne | NO-GO | **ne** | Tester — rework `[TESTY]` |
+| Vada produktu **ve scope** pipeline (porušuje DoD z `[ANALÝZA]`) | **ano** | NO-GO + `ESKALACE_VÝVOJÁŘ` | **ne** | Vývojář — rework `[IMPLEMENTACE]` → nový `[VERDIKT-V]` → znovu Tester |
+| Vada **mimo scope** (nesouvisející část, starší chyba, produkční nález) | ne | může být GO | **ano** | mimo tuto pipeline (samostatný úkol nebo nová pipeline) |
+| Vada ve scope, kterou uživatel/Integrátor **vědomě odkládá** | ano | GO se zdůvodněním v `[PIPELINE]` | **ano** (known issue) | Integrátor naplánuje |
+
+**Kdo zakládá:** Tester (má reprodukci) — odkaz do `[TESTY]` pole „Založené bug issues“. Kontrolor testera bug **nezakládá** — chybějící bug reklamuje v `[VERDIKT-T]` NO-GO. Integrátor zakládá bug u nálezů mimo pipeline a rozhoduje o odložení vady ve scope.
+
+**Labely `[BUG]`:** titulek `[BUG] <stručný projev>`, labely `bug` + `multiagent` + `multiagent/bug`, **žádný `gate/*`**. Bug není fáze pipeline — `multiagent-pipeline-sync.yml` ho do 6fázové tabulky nezařadí.
+
+**Uzavření:** Integrátor po ověření opravy (`Fixes #<bug>` nebo potvrzení Testera). Otevřený `[BUG]` se `Závažnost: blocker` + `Rozsah: ve scope` **brání** uzavření `[PIPELINE]`; ostatní ne — Integrátor je vypíše jako known issues mimo markery `multiagent:prehled`.
+
+**Mimo běžící pipeline:** `[BUG]` je backlog — drobný bugfix jedním agentem dle `repo-kvalita.mdc`, nebo `/m #<bug>` (Integrátor bug povýší na `[PIPELINE]` a odebere `multiagent/bug`).
+
+Šablona: `.github/ISSUE_TEMPLATE/multiagent-bug.yml`. Filtrování: `gh issue list --label bug --label multiagent/bug`.
 
 ---
 
@@ -273,12 +298,13 @@ Do body:
 1. Checklist scénářů mapovaný na DoD z #<ANALÝZA>
 2. Soubory testů
 3. Příkazy + výsledky
-4. Nalezené problémy (vada produktu → ESKALACE_VÝVOJÁŘ + odkaz na #<IMPLEMENTACE>)
+4. Nalezené problémy — vada produktu **ve scope** → `ESKALACE_VÝVOJÁŘ` + odkaz na #<IMPLEMENTACE>; **mimo scope** nebo odložená vada → založ `[BUG]` issue (šablona multiagent-bug) a uveď # do pole „Založené bug issues“
+5. Založené bug issues (#N nebo „Žádné“)
 
 GATE: → Kontrolor testera
 PŘI NO-GO (testy): oprav #<TESTY>
 PŘI ESKALACI: Integrátor vrátí na Vývojáře (#<IMPLEMENTACE>) → znovu 2✓ → Tester
-NESMÍŠ: rozšiřovat feature mimo testy
+NESMÍŠ: rozšiřovat feature mimo testy; zakládat bug pro každý drobný nález ve scope (rework místo issue)
 ```
 
 ---
@@ -291,11 +317,11 @@ MODEL: claude-sonnet-5-thinking-high
 VSTUP_ISSUE: #<TESTY> + #<ANALÝZA>
 VÝSTUP_ISSUE: #<VERDIKT-T>  (vždy **vytvoř nové** issue pro každé kolo; label multiagent/verdikt)
 
-Body: Verdikt GO|NO-GO; případně ESKALACE_VÝVOJÁŘ.
+Body: Verdikt GO|NO-GO; případně ESKALACE_VÝVOJÁŘ (odkaz na #<IMPLEMENTACE>) nebo odkaz na odložený `[BUG]`.
 Labely gate/go|gate/no-go.
 
 GATE: GO → Integrátor smí uzavřít #<PIPELINE>; NO-GO → Tester nebo Vývojář dle typu vady → **nové** [VERDIKT-T] issue
-NESMÍŠ: psát produkční kód; uzavírat pipeline při NO-GO; přepisovat existující NO-GO verdikt
+NESMÍŠ: psát produkční kód; uzavírat pipeline při NO-GO; přepisovat existující NO-GO verdikt; **zakládat [BUG] issue** (reklamuj chybějící bug v NO-GO)
 ```
 
 ---
@@ -315,8 +341,9 @@ Postup:
 4. Commit (+ push); bez PR (repo-git.mdc)
 5. Do #<PIPELINE> zapiš odkazy na commity + learning-log; zavři issue
 6. docs/learning-log.md (povinně)
+7. **Bug issues:** zavírá Integrátor po ověření opravy. Otevřený `[BUG]` blocker ve scope brání close `[PIPELINE]`; ostatní bugy vypiš jako known issues mimo markery `multiagent:prehled`
 
-GATE: uzavři #<PIPELINE> jen při gate/go na A+V+T
+GATE: uzavři #<PIPELINE> jen při gate/go na A+V+T a bez otevřeného blocker-bugu ve scope
 PŘI BLOKACI (>3 reworky): komentář do #<PIPELINE> + eskalace uživateli
 ```
 

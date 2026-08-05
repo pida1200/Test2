@@ -47,8 +47,9 @@ Každý vstup/výstup role je **GitHub Issue** (šablony `.github/ISSUE_TEMPLATE
 | K. vývojáře | `[VERDIKT-V] …` |
 | Tester | `[TESTY] …` |
 | K. testera | `[VERDIKT-T] …` |
+| Bug (mimo pipeline) | `[BUG] …` |
 
-Labely: `multiagent`, `multiagent/*`, `gate/pending|go|no-go|blocked`.  
+Labely: `multiagent`, `multiagent/*`, `gate/pending|go|no-go|blocked`. Bug: `bug` + `multiagent` + `multiagent/bug` (bez `gate/*`).  
 V zadání vždy `VSTUP_ISSUE:` / `VÝSTUP_ISSUE:`. Obsah do **body issue**, ne jen chat.
 
 **Čtení = `[PIPELINE]`** (auto-přehled mezi markery `multiagent:prehled`); **zápis = per-artefakt** — labely nesou gate, historie verdiktů a CI validace vyžadují oddělené issues.
@@ -82,7 +83,8 @@ produkce → kontrolor → GO → další fáze
 - Max. ~3 reworky na bránu; po 3. NO-GO → label `gate/blocked` na pipeline + eskalace.
 - **Verdikt = nové issue každé kolo** (NO-GO body neměnit; sync počítá z audit trail).
 - Uzavření jen když VERDIKT_A + VERDIKT_V + VERDIKT_T = GO (`gate/go` na verdikt issues).
-- Vada produktu zjištěná ve fázi testů → návrat na **Vývojáře**.
+- Vada produktu zjištěná ve fázi testů → návrat na **Vývojáře** (rework, ne nové issue).
+- **Nález mimo scope nebo odložený** → Tester založí `[BUG]` (`bug` + `multiagent` + `multiagent/bug`, bez `gate/*`); Kontrolor testera bug nezakládá; uzavírá Integrátor. Detail: `docs/multi-agent-workflow.md` (sekce „Nálezy Testera → bug issues“).
 
 ## Předávání kódu mezi rolemi
 

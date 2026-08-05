@@ -55,6 +55,7 @@ Bez write scope → **degradace**: vypíš body/komentář/labely k ručnímu vl
 | `multiagent/verdikt` (VERDIKT-V) | `gate/pending` | Kontrolor vývojáře | `gpt-5.6-sol-medium` |
 | `multiagent/testy` | `gate/pending` | Tester | `composer-2.5-fast` |
 | `multiagent/verdikt` (VERDIKT-T) | `gate/pending` | Kontrolor testera | `claude-sonnet-5-thinking-high` |
+| `multiagent/bug` | (bez gate) | Vývojář | `composer-2.5-fast` |
 | všechny verdikty A+V+T | `gate/go` | Integrátor | `composer-2.5-fast` |
 
 Alternativy: viz tabulka Modely v `docs/multi-agent-workflow.md`.  
@@ -84,6 +85,7 @@ Artefakty: `[IMPLEMENTACE]` → `[VERDIKT-V]`. Pole ANALÝZA/VERDIKT-A v šablon
 7. **NO-GO → STOP** — nepostupuj na další fázi.
 8. Vývojář: WIP commit(y) na feature větvi povoleny (Integrátor squashne); **NE push** bez domluvy.
 9. V chatu: shrnutí + odkaz na issue + aktuální fáze.
+10. **Tester:** vada ve scope → `ESKALACE_VÝVOJÁŘ` v `[TESTY]` (rework, ne bug issue). Nález mimo scope nebo odložený → založ `[BUG]` a uveď # v poli „Založené bug issues“.
 
 ## Rework
 
