@@ -9,6 +9,7 @@ WIKI="${ROOT}/docs/wiki"
 
 REQUIRED=(
   "Home.md"
+  "_Sidebar.md"
   "aplikacni/prehled.md"
   "aplikacni/moduly.md"
   "aplikacni/uzivatelske-scenare.md"

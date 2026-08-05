@@ -18,6 +18,7 @@ Skill: `.cursor/skills/m/SKILL.md` · Command: `.cursor/commands/m.md`
 | **`/m #N`** | Pokračuj v pipeline `#N`; fázi odvoď z labelů child issues |
 | **`/m 2`** | Rychlá 2er: Vývojář + Kontrolor vývojáře |
 | **`/m 2 #N`** | Rychlá 2er nad pipeline `#N` |
+| **`/m #<bug>`** | Issue s `multiagent/bug` — Vývojář (oprava / povýšení) |
 
 Číslo issue **vždy s `#`**. Bez `#` je `2` režim, ne issue.  
 Labely `ma/*` z PR #3 **nezavádět** — používej `multiagent/*` + `gate/*`.
@@ -59,21 +60,15 @@ Zápis body: `gh issue edit --body-file` (ne inline `--body`).
 ## Wiki vs Issues
 
 - **Issues** = stav pipeline, gate, krátký kontrakt / verdikt.
-- **Wiki** (`docs/wiki/`) = delší artefakty a rostoucí KB (`aplikacni/`, `provozni/`, `zmeny/`).
+- **Wiki seed** (`docs/wiki/`) = delší artefakty a rostoucí KB (`aplikacni/`, `provozni/`, `zmeny/`) — SoT v gitu.
+- **GitHub Wiki UI** = publikační mirror (`bash docs/scripts/sync-wiki-to-github.sh`).
 - Volitelný řádek v child issue: `Wiki: <cesta-bez-.md>` (nepovinný, neblokuje gate).
 - **Změna chování** → Vývojář aktualizuje `docs/wiki/` + záznam v `zmeny/`; Integrátor před close ověří seed (`bash docs/scripts/check-wiki-seed.sh`) a index.
 - Detail: `docs/multiagent-zadani.md` §3–§5.
 
-## Modely (verifikované slugy)
+## Modely
 
-| Role | Doporučený model | Alternativa |
-|------|------------------|-------------|
-| Analytik / K. analytika | `claude-opus-5-thinking-high` | `claude-4.5-opus-high-thinking` |
-| Vývojář / Tester / Integrátor | `composer-2.5-fast` | `claude-sonnet-5-thinking-high` |
-| Kontrolor vývojáře | `gpt-5.6-sol-medium` | `claude-opus-5-thinking-high` |
-| Kontrolor testera | `claude-sonnet-5-thinking-high` | `gpt-5.6-terra-medium` |
-
-Detail: `docs/multi-agent-workflow.md` (sekce Modely).  
+**Kanonická tabulka:** `docs/multi-agent-workflow.md` (sekce Modely).  
 V kickoffu uveď `MODEL:` u role; kontrolor ideálně **jiný** model než produkce.
 
 **Fallback:** pokud doporučený slug není v Cursor Task dostupný, použij alternativu ze sloupce Alternativa. **`*-fast` je legitimní**, když ne-fast alternativa neexistuje (dnes Vývojář/Tester/Integrátor) — uveď skutečný slug v `MODEL:`.
@@ -96,14 +91,16 @@ produkce → kontrolor → GO → další fáze
 
 ## Předávání kódu mezi rolemi
 
-Vývojář v oddělených agent sessions **nic necommituje** (Integrátor commitne po GO), ale **WIP commit(y) na feature větvi jsou povoleny**, aby Tester/Kontrolor viděli diff. Integrátor pak squashne. Alternativa: stejný working tree.
+**WIP commit(y) na feature větvi ano** (Vývojář), aby Tester/Kontrolor viděli diff. **Finální squash/push = Integrátor** po GO (bez PR). Alternativa: stejný working tree bez WIP.
 
 ## Automatizace
 
-- `.github/workflows/multiagent-next.yml` — komentuje další roli + `/m #N` při změně labelů.
+- `.github/workflows/multiagent-next.yml` — komentuje další roli + `/m #N` (logika: `docs/scripts/multiagent-next-lib.cjs`).
 - `.github/workflows/multiagent-gate-check.yml` — validace verdiktů (komentář při chybě).
 - `.github/workflows/multiagent-pipeline-sync.yml` — auto-přehled fází v `[PIPELINE]` mezi markery.
+- `.github/workflows/wiki-sync.yml` — sync `docs/wiki/` → GitHub Wiki UI při pushi na `main`.
 - Labely: `bash docs/scripts/create-multiagent-labels.sh`
+- Ověření: `npm run check:ma`
 
 ## Kdy použít
 

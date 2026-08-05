@@ -16,8 +16,9 @@ Uživatel spustil slash `/m` s volitelnými argumenty.
 | `/m #N` | plná 3+3 | pipeline issue `#N` |
 | `/m 2` | rychlá 2er | bez pipeline — zeptej se nebo vezmi z kontextu |
 | `/m 2 #N` | rychlá 2er | pipeline `#N` |
+| `/m #<bug>` | bug cesta | issue s `multiagent/bug` — Vývojář (povýšení / oprava); viz workflow |
 
-- `#N` = číslo GitHub issue **vždy s `#`** (např. `/m #9`, `/m 2 #9`).
+- `#N` = číslo GitHub issue **vždy s `#`** (např. `/m #9`, `/m 2 #9`, `/m #25` u bugu).
 - **`2` bez `#` = režim**, ne issue.
 - Chybí pipeline u `/m 2` → zeptej: „Které pipeline? Použij `/m 2 #N`.“
 
@@ -44,22 +45,21 @@ Bez write scope → **degradace**: vypíš body/komentář/labely k ručnímu vl
 3. Najdi child issues (body obsahuje anchored řádek `Pipeline: #N`) — nebo je uživatel na konkrétním artefaktu.
 4. Fáze = label `multiagent/*` + `gate/*` na **aktuálním** artefaktu:
 
-| Label artefaktu | Gate | Role | Model |
-|-----------------|------|------|-------|
-| `multiagent/pipeline` | `gate/pending` | Integrátor kickoff → Analytik | `composer-2.5-fast` |
-| `multiagent/analyza` | `gate/pending` | Analytik | `claude-opus-5-thinking-high` |
-| `multiagent/analyza` | `gate/no-go` | Analytik (rework) | `claude-opus-5-thinking-high` |
-| `multiagent/verdikt` (VERDIKT-A) | `gate/pending` | Kontrolor analytika | `claude-opus-5-thinking-high` |
-| `multiagent/implementace` | `gate/pending` | Vývojář | `composer-2.5-fast` |
-| `multiagent/implementace` | `gate/no-go` | Vývojář (rework) | `composer-2.5-fast` |
-| `multiagent/verdikt` (VERDIKT-V) | `gate/pending` | Kontrolor vývojáře | `gpt-5.6-sol-medium` |
-| `multiagent/testy` | `gate/pending` | Tester | `composer-2.5-fast` |
-| `multiagent/verdikt` (VERDIKT-T) | `gate/pending` | Kontrolor testera | `claude-sonnet-5-thinking-high` |
-| `multiagent/bug` | (bez gate) | Vývojář | `composer-2.5-fast` |
-| všechny verdikty A+V+T | `gate/go` | Integrátor | `composer-2.5-fast` |
+| Label artefaktu | Gate | Role | Model (default) |
+|-----------------|------|------|-----------------|
+| `multiagent/pipeline` | `gate/pending` | Integrátor kickoff → Analytik | viz workflow §Modely |
+| `multiagent/analyza` | `gate/pending` | Analytik | viz workflow §Modely |
+| `multiagent/analyza` | `gate/no-go` | Analytik (rework) | viz workflow §Modely |
+| `multiagent/verdikt` (VERDIKT-A) | `gate/pending` | Kontrolor analytika | viz workflow §Modely |
+| `multiagent/implementace` | `gate/pending` | Vývojář | viz workflow §Modely |
+| `multiagent/implementace` | `gate/no-go` | Vývojář (rework) | viz workflow §Modely |
+| `multiagent/verdikt` (VERDIKT-V) | `gate/pending` | Kontrolor vývojáře | viz workflow §Modely |
+| `multiagent/testy` | `gate/pending` | Tester | viz workflow §Modely |
+| `multiagent/verdikt` (VERDIKT-T) | `gate/pending` | Kontrolor testera | viz workflow §Modely |
+| `multiagent/bug` | (bez gate) | Vývojář | viz workflow §Modely |
+| všechny verdikty A+V+T | `gate/go` | Integrátor | viz workflow §Modely |
 
-Alternativy: viz tabulka Modely v `docs/multi-agent-workflow.md`.  
-**`*-fast` je legitimní**, když ne-fast alternativa není dostupná (dnes Vývojář/Tester/Integrátor).
+**Modely:** kanonická tabulka + fallback v `docs/multi-agent-workflow.md` (sekce Modely). Uveď skutečný slug v `MODEL:`.
 
 ### Režim `/m 2`
 
@@ -79,7 +79,7 @@ Artefakty: `[IMPLEMENTACE]` → `[VERDIKT-V]`. Pole ANALÝZA/VERDIKT-A v šablon
    ```
 
    **Nikdy** `gh issue edit --body "..."` inline — přepisuje celé body.
-4. U verdiktu: body začíná `Verdikt: GO` nebo `Verdikt: NO-GO`.
+4. U verdiktu: samostatný řádek `Verdikt: GO` nebo `Verdikt: NO-GO` (line-anchored; může být po form `###` nadpisech).
 5. Labely gate na verdikt **i** produkční issue (stejný `gate/go` nebo `gate/no-go`).
 6. Kontrolor **neimplementuje**.
 7. **NO-GO → STOP** — nepostupuj na další fázi.
@@ -93,16 +93,5 @@ Artefakty: `[IMPLEMENTACE]` → `[VERDIKT-V]`. Pole ANALÝZA/VERDIKT-A v šablon
 Max ~3 reworky na bránu. Po 3. NO-GO → label `gate/blocked` na pipeline + eskalace Integrátorovi.
 
 **Verdikt issue = 1 kolo (audit trail):** Kontrolor pro každé kolo review vytvoří **nové** `[VERDIKT-A|V|T]` issue. **Nepřepisuj** existující NO-GO verdikt na GO — staré issue zůstává s `Verdikt: NO-GO` v body (sync počítá NO-GO z body všech verdikt child issues, open i closed). Po opravě produkčního artefaktu → nový verdikt issue → znovu review.
-
-## Modely — ověř dostupnost
-
-Před spuštěním ověř slug v Cursor Task. Uveď skutečný slug v odpovědi (`MODEL:`).
-
-| Role | Doporučený | Alternativa |
-|------|------------|-------------|
-| Analytik / K.A | `claude-opus-5-thinking-high` | `claude-4.5-opus-high-thinking` |
-| Vývojář / Tester / Integrátor | `composer-2.5-fast` | `claude-sonnet-5-thinking-high` |
-| K.V | `gpt-5.6-sol-medium` | `claude-opus-5-thinking-high` |
-| K.T | `claude-sonnet-5-thinking-high` | `gpt-5.6-terra-medium` |
 
 Nežádej dlouhé ROLE/VSTUP prompty — stačí `/m #N`.

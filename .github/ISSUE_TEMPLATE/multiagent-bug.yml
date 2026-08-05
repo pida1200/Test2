@@ -3,18 +3,23 @@ description: Samostatný nález mimo scope nebo odložená vada (Tester / Integr
 title: "[BUG] "
 labels: ["bug", "multiagent", "multiagent/bug"]
 body:
+  - type: textarea
+    id: ci_pipeline
+    attributes:
+      label: "CI řádek Pipeline (volitelný — neměň formát)"
+      description: "Jen když nález vznikl v pipeline — jinak smaž obsah pole"
+      value: |
+        Pipeline: #
+    validations:
+      required: false
   - type: input
     id: pipeline
     attributes:
-      label: Pipeline issue #
-      description: "Jen číslo (#N); do body doplň samostatný řádek `Pipeline: #N` — vynech, pokud nález vznikl mimo pipeline"
+      label: Pipeline issue # (kopie)
+      description: "Vynech, pokud nález vznikl mimo pipeline"
       placeholder: "#25"
     validations:
       required: false
-  - type: markdown
-    attributes:
-      value: |
-        **Volitelný řádek v body** (samostatně): `Pipeline: #<číslo>` — jen když nález vznikl v běžící pipeline.
   - type: input
     id: source
     attributes:

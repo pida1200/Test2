@@ -49,15 +49,15 @@ function parsePipelineNum(body) {
   return m ? m[1] : null;
 }
 
-/** Immutable audit: NO-GO stays in body (anchored first line, same as gate-check). */
+/** Immutable audit: NO-GO stays in body (line-anchored; may follow form ### headings). */
 function isVerdictNoGo(body) {
-  const trimmed = (body || '').trimStart();
-  return /^Verdikt:\s*NO-GO\b/.test(trimmed);
+  return /^\s*Verdikt:\s*NO-GO\b/m.test(body || '');
 }
 
 function isVerdictGo(body) {
-  const trimmed = (body || '').trimStart();
-  return /^Verdikt:\s*GO\b/.test(trimmed);
+  // Prefer explicit NO-GO over bare GO (NO-GO must not count as GO)
+  if (isVerdictNoGo(body)) return false;
+  return /^\s*Verdikt:\s*GO\b/m.test(body || '');
 }
 
 function countNoGoRounds(verdictIssues) {

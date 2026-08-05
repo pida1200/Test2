@@ -3,18 +3,23 @@ description: Výstup Analytika (vstup pro Kontrolora analytika)
 title: "[ANALÝZA] "
 labels: ["multiagent", "multiagent/analyza", "gate/pending"]
 body:
+  - type: textarea
+    id: ci_pipeline
+    attributes:
+      label: "CI řádek Pipeline (neměň formát)"
+      description: "Samostatný řádek pro anchored regex v CI — doplň číslo za #"
+      value: |
+        Pipeline: #
+    validations:
+      required: true
   - type: input
     id: pipeline
     attributes:
-      label: Pipeline issue
-      description: "Jen číslo (#N); do body issue doplň samostatný řádek `Pipeline: #N` (anchored regex v CI)"
+      label: Pipeline issue (kopie pro přehled)
+      description: "Stejné číslo jako v CI řádku výše"
       placeholder: "#9"
     validations:
       required: true
-  - type: markdown
-    attributes:
-      value: |
-        **Povinný řádek v body** (samostatně, mimo tabulky): `Pipeline: #<číslo z pole výše>`
   - type: input
     id: goal
     attributes:

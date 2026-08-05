@@ -51,11 +51,13 @@ Uživatel může přepsat; Integrátor v kickoffu uvede `MODEL:` u každé role.
 
 ### Pravidla výběru modelu
 
-1. **Kontrolor ≠ stejný model jako produkce**, pokud to jde (snižuje „self-review bias“) — aspoň u Vývojář vs Kontrolor vývojáře.
+1. **Kontrolor ≠ stejný model jako produkce**, pokud to jde (snižuje „self-review bias“) — aspoň u Vývojář vs Kontrolor vývojáře. U **Kontrolor analytika** preferuj alternativu ze sloupce Alternativa, když Analytik běží na doporučeném slugů (oba defaultně sdílejí stejný doporučený model).
 2. **`*-fast` je legitimní**, když ne-fast alternativa neexistuje (dnes Vývojář/Tester/Integrátor). U ostatních rolí preferuj ne-fast alternativu ze sloupce Alternativa.
 3. Extra těžký reasoning jen u NO-GO smyčky na analýze nebo u riskantního review.
 4. V zadání každé role uveď řádek: `MODEL: <slug>`.
 5. **Fallback:** pokud doporučený slug není dostupný, použij alternativu ze sloupce Alternativa. Uveď skutečný slug v `MODEL:`.
+
+> **Kanonická tabulka modelů** = tato sekce. Rule / skill / snippets / zadání jen odkazují sem — nekopíruj slugy jinam.
 
 ## Pipeline + rework smyčka
 
@@ -388,11 +390,13 @@ Copy-paste šablony: `docs/prompt-snippets.md`.
 | Co | Kde | Co dělá |
 |----|-----|---------|
 | Slash `/m` | `.cursor/skills/m/SKILL.md` | routing fáze → role → model; zápis do issue přes `gh` |
-| Next-step bot | `.github/workflows/multiagent-next.yml` | při `opened`/`labeled` komentuje další roli + `/m #N`; marker `multiagent-next` + update |
-| Pipeline sync | `.github/workflows/multiagent-pipeline-sync.yml` | auto-přehled fází v `[PIPELINE]` mezi markery `multiagent:prehled` |
-| Gate check | `.github/workflows/multiagent-gate-check.yml` | validace verdiktů (formát body, labely, odkazy); komentář při chybě |
+| Next-step bot | `.github/workflows/multiagent-next.yml` + `docs/scripts/multiagent-next-lib.cjs` | při `opened`/`labeled` komentuje další roli + `/m #N`; marker `multiagent-next` + update |
+| Pipeline sync | `.github/workflows/multiagent-pipeline-sync.yml` | auto-přehled fází v `[PIPELINE]` mezi markery `multiagent:prehled` (modely z next-lib) |
+| Gate check | `.github/workflows/multiagent-gate-check.yml` | validace verdiktů (anchored `Verdikt:`/`Pipeline:`/`Vstup:`); komentář při chybě |
+| Wiki sync | `.github/workflows/wiki-sync.yml` | push `docs/wiki/**` na `main` → `sync-wiki-to-github.sh` |
 | Lokální přehled | `docs/scripts/ma-pipeline-view.sh` | stejný přehled přes `gh` když Actions nejsou dostupné |
 | Labely | `docs/scripts/create-multiagent-labels.sh` | idempotentní vytvoření `multiagent/*` + `gate/*` |
+| MA check | `npm run check:ma` | pipeline-sync + regex + wiki-seed + next-lib + dry-run |
 
 **Co zůstává ruční:** spuštění agenta v Cursoru, vytvoření child issues (pokud `gh` write není), finální commit/push (Integrátor). Auto-spuštění agentů z CI vyžaduje Cursor API key → follow-up.
 

@@ -56,6 +56,7 @@ Proveď **před implementací**, pokud je nový chat, shrnutí konverzace, nebo 
 | Jak agent má pracovat | `.cursor/rules/` |
 | Proč, session, follow-up [ ] | Obsidian `projekty/mujdum/session-*.md` nebo `projekty/ciselniky/session-*.md` |
 | Změna rules / multi-agent / incident | `docs/learning-log.md` |
+| Delší MA KB / changelog pipeline | `docs/wiki/` (seed = SoT); sync UI: `bash docs/scripts/sync-wiki-to-github.sh` |
 | Stav větší feature (fáze ✅/⬜) | `mujdum/docs/*.md` nebo `ciselniky/docs/README.md` + `implementation-plan.md` |
 
 Šablona session (git): `docs/session-template.md` — stejná struktura jako v Obsidianu `projekty/mujdum/session-template.md`.
