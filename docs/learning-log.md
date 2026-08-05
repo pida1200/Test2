@@ -26,6 +26,13 @@ Pravidlo: `repo-kvalita.mdc`.
 
 ## Záznamy
 
+### 2026-08-05 – /m #44 uzavřeno: kompletní wiki MA (funkční + provozní)
+
+- Výsledek: vyplněn wiki seed (`aplikacni/` + `provozni/` + Home/`_Sidebar` + `zmeny/…#44`); na `main` i MA revize A–C (next-lib, `check:ma`, `wiki-sync.yml`, dedupe modelů). Wiki UI syncnuta.
+- Ověření: VERDIKT-A #46 / V #48 / T #50 GO; `npm run check` zelený; Tester #49.
+- Riziko: větev byla merge bez squash (2 commity) — historie čitelná.
+- Další krok: ověřit CI `wiki-sync.yml` po pushi `docs/wiki/**` na main.
+
 ### 2026-08-05 – Revize MA setup (optimalizace A–C)
 
 - Výsledek: dokumentační pravda (Wiki UI + AGENTS mapa + terminologie seed vs UI); jedna kanonická tabulka modelů; next-lib + unify Pipeline RE; `check:ma`; template body kontrakt; `_Sidebar` REQUIRED; `wiki-sync.yml`.
