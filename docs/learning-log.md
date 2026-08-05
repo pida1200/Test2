@@ -26,6 +26,14 @@ Pravidlo: `repo-kvalita.mdc`.
 
 ## Záznamy
 
+### 2026-08-05 – /m #74 MERGE-PENDING: merge do main jen člověk
+
+- Výsledek: Integrátor končí push feature větve + komentář `MERGE-PENDING`; agent nesloučí do `main` (výjimka: explicitní „mergni a pushni“).
+- Ověření: VERDIKT-A #76 / V #78 / T #80 GO; `npm run check`.
+- Riziko: hromadění nesloučených `feature/*`; Wiki UI sync až po lidském pushi na `main`.
+- Další krok: člověk `git merge feature/pipeline-74-merge-clovek` → push → zavřít #74.
+- Stav: čeká na ruční merge do main.
+
 ### 2026-08-05 – /m #66 uzavřeno: šablona jen multi-agent
 
 - Výsledek: z HEAD odstraněny produktové stromy a rules + SonarCloud; AGENTS/README/docs/wiki generické; `package.json` = `multiagent-template`.

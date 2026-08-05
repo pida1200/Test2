@@ -16,7 +16,7 @@ Spusť multi-agent dle `.cursor/skills/m/SKILL.md`.
 
 Číslo issue **vždy s `#`**. Bez `#` je `2` režim, ne issue.
 
-**STOP orchestrace:** NO-GO, `gate/blocked`, chybí `gh` write, `once`, close PIPELINE.
+**STOP orchestrace:** NO-GO, `gate/blocked`, chybí `gh` write, `once`, `MERGE-PENDING` (ruční merge).
 
 **Modely:** `docs/multi-agent-workflow.md` (sekce Modely).  
 Detail: rule `.cursor/rules/multi-agenti.mdc`.

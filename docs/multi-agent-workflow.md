@@ -5,7 +5,7 @@
 
 Cíl: větší úkoly řešit jako **pipeline s bránami** — každá produkční role má **kontrolora**.  
 **NO-GO = krok se neposune**: předchozí role musí problém vyřešit a znovu odevzdat; kontrolor znovu rozhodne.  
-**1 integrátor** drží celek, testy/lint a uzavření (**commit / merge / push bez PR**).
+**1 integrátor** drží celek, testy/lint, commit + push **feature větve** a handoff `MERGE-PENDING` (**merge do `main` = člověk**; bez PR).
 
 ## Issues vs Wiki
 
@@ -29,7 +29,7 @@ U změny chování **povinný** záznam `zmeny-YYYY-MM-DD-…` (+ řádek v `zme
 | **Kontrolor vývojáře** | Code review diffu | Neimplementuje |
 | **Tester** | Test plán, edge/regresní testy, ověření | Nerozšiřuje feature mimo testy |
 | **Kontrolor testera** | Kontrola pokrytí a kvality testů | Neimplementuje produkční kód |
-| **Integrátor** | Orchestruje pipeline, konflikty, finální testy/lint, commit, learning-log | — |
+| **Integrátor** | Orchestruje pipeline, konflikty, finální testy/lint, commit feature větve, MERGE-PENDING | — |
 
 ## Modely (doporučené přiřazení — ověř dostupnost)
 
@@ -75,7 +75,7 @@ Uživatel může přepsat; Integrátor v kickoffu uvede `MODEL:` u každé role.
                     │         │
                     GO        NO-GO ──► Tester opraví → znovu [3✓]
                     ▼                   (vadný produkt → eskalace na Vývojáře)
-[I] Integrátor → testy+lint → commit → learning-log
+[I] Integrátor → testy+lint → commit + push feature větve → MERGE-PENDING (člověk → main)
 ```
 
 ### Pravidla brány (závazné)
@@ -152,7 +152,7 @@ NO-GO:  verdikt issue má label gate/no-go; body = seznam vad + odkaz na produk�
 
 1. Další produkční issue **nevytvářej**, dokud předchozí verdikt není `gate/go`.
 2. Kontrolor **nevytváří** produkční issue a **needituje** body produkce „za“ roli — jen verdikt issue (+ labely na produkčním issue).
-3. Integrátor uzavře `[PIPELINE]` až když VERDIKT-A/V/T mají všechny `gate/go`.
+3. Integrátor uzavře `[PIPELINE]` až po ručním merge (nebo explicitním pokynu); předtím A+V+T = `gate/go` + `MERGE-PENDING`.
 4. V chatovém zadání role vždy uveď: `VSTUP_ISSUE: #…` a `VÝSTUP_ISSUE: #…` (nebo „vytvoř nový dle šablony“`).
 
 ### Příkazy (Integrátor / role s právy)
@@ -339,7 +339,7 @@ VÝSTUP_ISSUE: #<VERDIKT-T>  (vždy **vytvoř nové** issue pro každé kolo; la
 Body: Verdikt GO|NO-GO; případně ESKALACE_VÝVOJÁŘ (odkaz na #<IMPLEMENTACE>) nebo odkaz na odložený `[BUG]`.
 Labely gate/go|gate/no-go.
 
-GATE: GO → Integrátor smí uzavřít #<PIPELINE>; NO-GO → Tester nebo Vývojář dle typu vady → **nové** [VERDIKT-T] issue
+GATE: GO → Integrátor smí handoff `MERGE-PENDING` (ne auto-close); NO-GO → Tester nebo Vývojář dle typu vady → **nové** [VERDIKT-T] issue
 NESMÍŠ: psát produkční kód; uzavírat pipeline při NO-GO; přepisovat existující NO-GO verdikt; **zakládat [BUG] issue** (reklamuj chybějící bug v NO-GO)
 ```
 
@@ -351,19 +351,20 @@ NESMÍŠ: psát produkční kód; uzavírat pipeline při NO-GO; přepisovat exi
 ROLE: Integrátor
 MODEL: composer-2.5-fast
 VSTUP_ISSUE: #<PIPELINE> + #<VERDIKT-A> + #<VERDIKT-V> + #<VERDIKT-T> (vše gate/go)
-VÝSTUP_ISSUE: #<PIPELINE> (update checklistu, pak close)
+VÝSTUP_ISSUE: #<PIPELINE> (handoff MERGE-PENDING; issue zůstává OPEN)
 
 Postup:
 1. Kickoff: pokud uživatel už má pipeline issue (např. bez `[PIPELINE]` titulku) → **doplní** titulek + labely; nové `[PIPELINE]` vytvoř **jen když žádné neexistuje**; odkaž v chatu
 2. Orchestruj vytvoření produkčních/verdikt issues dle pipeline
 3. Spoj kód, konflikty, finální testy/lint (Docker dle rules)
 4. **Ověř Wiki:** `bash docs/scripts/check-wiki-seed.sh`; u změny chování existuje záznam `docs/wiki/zmeny-…` + řádek v `zmeny-index.md`
-5. Commit (+ push); bez PR (repo-git.mdc)
-6. Do #<PIPELINE> zapiš odkazy na commity + learning-log; zavři issue
-7. docs/learning-log.md (povinně)
-8. **Bug issues:** zavírá Integrátor po ověření opravy. Otevřený `[BUG]` blocker ve scope brání close `[PIPELINE]`; ostatní bugy vypiš jako known issues mimo markery `multiagent:prehled`
+5. Commit (+ push **feature větve**); bez PR; **nesloučuj do `main`** (repo-git.mdc)
+6. docs/learning-log.md (povinně; „čeká na ruční merge“)
+7. Do #<PIPELINE> komentář `MERGE-PENDING` (větev, SHA, checklist pro člověka); label `gate/go`; **neuzavírej** issue
+8. **Bug issues:** zavírá Integrátor po ověření opravy. Otevřený `[BUG]` blocker ve scope brání handoff; ostatní bugy vypiš jako known issues mimo markery `multiagent:prehled`
 
-GATE: uzavři #<PIPELINE> jen při gate/go na A+V+T a bez otevřeného blocker-bugu ve scope
+GATE: handoff jen při gate/go na A+V+T a bez otevřeného blocker-bugu ve scope
+VÝJIMKA merge do main: jen explicitní „mergni a pushni“ v aktuální session
 PŘI BLOKACI (>3 reworky): komentář do #<PIPELINE> + eskalace uživateli
 ```
 
@@ -384,7 +385,7 @@ Skill: `.cursor/skills/m/SKILL.md` · Command: `.cursor/commands/m.md`
 Číslo issue **vždy s `#`**. Bez `#` je `2` režim, ne issue.  
 Labely `ma/*` **nezavádět** — používej `multiagent/*` + `gate/*`.
 
-**Orchestrace:** jeden chat / jeden kick; preferuj Task per role. **STOP:** NO-GO, `gate/blocked`, chybí `gh` write, `once`, close PIPELINE.
+**Orchestrace:** jeden chat / jeden kick; preferuj Task per role. **STOP:** NO-GO, `gate/blocked`, chybí `gh` write, `once`, `MERGE-PENDING`.
 
 Copy-paste šablony: `docs/prompt-snippets.md`.
 
@@ -401,7 +402,7 @@ Copy-paste šablony: `docs/prompt-snippets.md`.
 | Labely | `docs/scripts/create-multiagent-labels.sh` | idempotentní vytvoření `multiagent/*` + `gate/*` |
 | MA check | `npm run check:ma` | pipeline-sync + regex + wiki-seed + next-lib + dry-run |
 
-**Co zůstává ruční:** první kick `/m` / `/m #N` v Cursoru (CI agenta nespouští). Child issues pokud chybí `gh` write. Finální push = Integrátor. **Plně unattended z Actions** (Cursor API) = follow-up mimo scope.
+**Co zůstává ruční:** první kick `/m` / `/m #N` v Cursoru (CI agenta nespouští). Child issues pokud chybí `gh` write. **Merge do `main` = člověk** (Integrátor jen feature větev + `MERGE-PENDING`). Wiki UI sync až po pushi na `main`. **Plně unattended z Actions** (Cursor API) = follow-up mimo scope.
 
 ## Předávání kódu mezi rolemi
 
@@ -409,7 +410,7 @@ V oddělených agent sessions se změny Vývojáře **ztratí**, pokud nejsou v 
 
 1. **Feature větev** pro celou pipeline.
 2. Vývojář dělá **WIP commit(y)** na feature větvi (Integrátor squashne po GO).
-3. **NE push** bez domluvy (Integrátor pushne po uzavření).
+3. Integrátor pushne **feature větev** + handoff; **merge do `main` = člověk**.
 4. Alternativa: stejný working tree pro Vývojář → Kontrolor → Tester.
 
 ## PR #3 (uzavřít bez merge)
@@ -432,7 +433,7 @@ I/O: GitHub Issues (šablony .github/ISSUE_TEMPLATE/)
 2) Analytik → [ANALÝZA] → Kontrolor → [VERDIKT-A]
 3) Vývojář → [IMPLEMENTACE] → Kontrolor → [VERDIKT-V]
 4) Tester → [TESTY] → Kontrolor → [VERDIKT-T]
-5) Integrátor uzavře [PIPELINE] jen při gate/go na všech verdiktech
+5) Integrátor: handoff MERGE-PENDING (merge do main = člověk); [PIPELINE] zůstává OPEN
 Modely (default — ověř dostupnost):
 - Analytik / K. analytika: claude-opus-5-thinking-high
 - Vývojář / Tester / Integrátor: composer-2.5-fast

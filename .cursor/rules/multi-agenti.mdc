@@ -23,7 +23,7 @@ Skill: `.cursor/skills/m/SKILL.md` · Command: `.cursor/commands/m.md`
 Číslo issue **vždy s `#`**. Bez `#` je `2` režim, ne issue.  
 Labely `ma/*` z PR #3 **nezavádět** — používej `multiagent/*` + `gate/*`.
 
-**Orchestrace (default):** v jednom chatu postupně role (preferuj Task + model z workflow) dokud NO-GO / `blocked` / close / `once`. CI **nespouští** Cursor — bot jen komentuje `/m #N`. Detail: skill `.cursor/skills/m/SKILL.md`.
+**Orchestrace (default):** v jednom chatu postupně role (preferuj Task + model z workflow) dokud NO-GO / `blocked` / `MERGE-PENDING` handoff / `once`. CI **nespouští** Cursor — bot jen komentuje `/m #N`. Detail: skill `.cursor/skills/m/SKILL.md`.
 
 ## Role
 
@@ -33,7 +33,7 @@ Labely `ma/*` z PR #3 **nezavádět** — používej `multiagent/*` + `gate/*`.
 | **Vývojář** → issue `[IMPLEMENTACE]` | **Kontrolor vývojáře** → `[VERDIKT-V]` |
 | **Tester** → issue `[TESTY]` | **Kontrolor testera** → `[VERDIKT-T]` |
 
-**Integrátor**: orchestruje, kickoff (viz níže), konflikty, finální testy/lint, commit/merge/push (**bez PR**), learning-log.
+**Integrátor**: orchestruje, kickoff (viz níže), konflikty, finální testy/lint, commit + push **feature větve**, learning-log, handoff `MERGE-PENDING` (**nesloučí do `main`** — to dělá člověk; bez PR).
 
 **Kickoff (Integrátor):** pokud uživatel už vytvořil pipeline issue (často bez `[PIPELINE]` titulku a labelů) → Integrátor ho **doplní**; nové `[PIPELINE]` vytváří **jen když žádné neexistuje**. Poté child issues dle šablon.
 
@@ -65,7 +65,7 @@ Zápis body: `gh issue edit --body-file` (ne inline `--body`).
 - **Wiki seed** (`docs/wiki/`) = delší artefakty a rostoucí KB (`aplikacni/`, `provozni/`, `zmeny/`) — SoT v gitu.
 - **GitHub Wiki UI** = publikační mirror (`bash docs/scripts/sync-wiki-to-github.sh`).
 - Volitelný řádek v child issue: `Wiki: <cesta-bez-.md>` (nepovinný, neblokuje gate).
-- **Změna chování** → Vývojář aktualizuje `docs/wiki/` + záznam v `zmeny/`; Integrátor před close ověří seed (`bash docs/scripts/check-wiki-seed.sh`) a index.
+- **Změna chování** → Vývojář aktualizuje `docs/wiki/` + záznam v `zmeny/`; Integrátor před handoffem ověří seed (`bash docs/scripts/check-wiki-seed.sh`) a index.
 - Detail: `docs/multiagent-zadani.md` §3–§5.
 
 ## Modely
@@ -87,13 +87,13 @@ produkce → kontrolor → GO → další fáze
 - **Synchronizuj `gate/*`** na verdikt issue **i** produkční issue.
 - Max. ~3 reworky na bránu; po 3. NO-GO → label `gate/blocked` na pipeline + eskalace.
 - **Verdikt = nové issue každé kolo** (NO-GO body neměnit; sync počítá z audit trail).
-- Uzavření jen když VERDIKT_A + VERDIKT_V + VERDIKT_T = GO (`gate/go` na verdikt issues).
+- Uzavření `[PIPELINE]` až po **ručním merge** do `main` (člověk), nebo agent na explicitní pokyn po ověření; předtím A+V+T = GO a handoff `MERGE-PENDING`.
 - Vada produktu zjištěná ve fázi testů → návrat na **Vývojáře** (rework, ne nové issue).
 - **Nález mimo scope nebo odložený** → Tester založí `[BUG]` (`bug` + `multiagent` + `multiagent/bug`, bez `gate/*`); Kontrolor testera bug nezakládá; uzavírá Integrátor. Detail: `docs/multi-agent-workflow.md` (sekce „Nálezy Testera → bug issues“).
 
 ## Předávání kódu mezi rolemi
 
-**WIP commit(y) na feature větvi ano** (Vývojář), aby Tester/Kontrolor viděli diff. **Finální squash/push = Integrátor** po GO (bez PR). Alternativa: stejný working tree bez WIP.
+**WIP commit(y) na feature větvi ano** (Vývojář), aby Tester/Kontrolor viděli diff. **Finální squash + push feature větve = Integrátor** po GO; **merge do `main` = člověk** (bez PR). Alternativa: stejný working tree bez WIP.
 
 ## Automatizace
 
@@ -118,7 +118,9 @@ produkce → kontrolor → GO → další fáze
 
 ## Ukončení (integrátor)
 
-- relevantní testy + lint
-- sebehodnocení dle `repo-kvalita.mdc`
-- `docs/learning-log.md` (**povinně**)
-- žádný otevřený NO-GO
+- relevantní testy + lint + wiki seed
+- `docs/learning-log.md` (**povinně**, na feature větvi; stav „čeká na ruční merge“)
+- commit + push **feature větve** (ne `main`)
+- komentář `MERGE-PENDING` do `[PIPELINE]` (větev, SHA, checklist pro člověka)
+- `[PIPELINE]` **zůstává otevřený** s `gate/go`
+- žádný otevřený NO-GO; sebehodnocení dle `repo-kvalita.mdc`

@@ -10,7 +10,7 @@
 | Vývojář | `[IMPLEMENTACE]` | Kontrolor V | `[VERDIKT-V]` |
 | Tester | `[TESTY]` | Kontrolor T | `[VERDIKT-T]` |
 
-**Integrátor** orchestruje kickoff, konflikty, finální testy/lint, squash/push (**bez PR**), learning-log, close `[PIPELINE]`.
+**Integrátor** orchestruje kickoff, konflikty, finální testy/lint, squash + push **feature větve**, learning-log, handoff `MERGE-PENDING` (**merge do `main` = člověk**; bez PR).
 
 ## Pravidla brány
 
