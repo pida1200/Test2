@@ -84,8 +84,8 @@ Wiki: <cesta stránky, např. zmeny/2026-08-05-pipeline-34>
 ### Vazba Wiki ↔ git seed
 
 - **Zdroj pravdy** = `docs/wiki/` v gitu (reviewovatelné v PR, strojově ověřitelné).
-- **GitHub Wiki** = publikační pohled se stejnou hierarchií; repozitář `.wiki.git` vznikne až po založení první stránky ve Wiki UI (viz §4.6).
-- **Při uzavření pipeline:** Vývojář/Integrátor aktualizuje seed v gitu (`docs/wiki/`, včetně `zmeny/`); **automatický sync do GitHub Wiki UI se nevyžaduje** — follow-up mimo scope běžné pipeline.
+- **GitHub Wiki** = publikační pohled se stejnou hierarchií; sync skriptem (viz §4.6).
+- **Při uzavření pipeline:** Vývojář/Integrátor aktualizuje seed v gitu (`docs/wiki/`, včetně `zmeny/`); sync do Wiki UI (`bash docs/scripts/sync-wiki-to-github.sh`) je doporučený, ale **ne povinný** DoD běžné pipeline.
 - Wiki **nenahrazuje** `gate/*` ani CI.
 
 ---
@@ -174,12 +174,21 @@ docs/wiki/
 
 Agent (Integrátor / Analytik) **nesmí** nechat strukturu prázdnou bez `Home` a indexů — minimálně stub s 2–3 větami + „TODO“.
 
-### 4.6 Inicializace GitHub Wiki
+### 4.6 Inicializace a sync GitHub Wiki
 
 - **Zdroj pravdy** = `docs/wiki/` v gitu (reviewovatelné v PR, strojově ověřitelné).
-- **GitHub Wiki repozitář** (`<repo>.wiki.git`) vznikne až po založení první stránky ve Wiki UI — do té doby je seed jen v gitu.
-- **První stránku** (`Home`) ve Wiki UI založí uživatel ručně (copy z `docs/wiki/Home.md`); automatický sync do Wiki je **follow-up mimo scope** běžné pipeline.
+- **Bootstrap (jednou):** GitHub Wiki git (`<repo>.wiki.git`) vznikne až po založení první stránky ve Wiki UI (`/wiki` → Create the first page → Save, název `Home`). Push do neexistujícího `.wiki.git` selže.
+- **Sync seed → Wiki UI** (po bootstrapu, vyžaduje `gh auth`):
+
+```bash
+bash docs/scripts/sync-wiki-to-github.sh
+# DRY_RUN=1 bash docs/scripts/sync-wiki-to-github.sh   # commit bez push
+```
+
+- Skript ověří seed (`check-wiki-seed.sh`), naklonuje `.wiki.git`, nahradí obsah `docs/wiki/` a pushne.
+- Publikační URL: `https://github.com/pida1200/Test2/wiki`
 - Odkazy ve seedu jsou **bez přípony `.md`** (GitHub Wiki slug); české popisky zůstávají v textu stránek.
+- `_Sidebar.md` v seedu = navigace v Wiki UI.
 
 ---
 
@@ -284,6 +293,7 @@ gh label list | rg 'multiagent|gate/'
 bash docs/scripts/ma-pipeline-view.sh #<PIPELINE>
 ls docs/wiki/Home.md docs/wiki/aplikacni docs/wiki/provozni docs/wiki/zmeny
 bash docs/scripts/check-wiki-seed.sh
+bash docs/scripts/sync-wiki-to-github.sh   # po bootstrapu Wiki UI
 # v Cursoru: /m #<PIPELINE>
 ```
 

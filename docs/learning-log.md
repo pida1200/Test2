@@ -26,6 +26,13 @@ Pravidlo: `repo-kvalita.mdc`.
 
 ## Záznamy
 
+### 2026-08-05 – Publikace GitHub Wiki z docs/wiki/
+
+- Výsledek: bootstrap Home ve Wiki UI → vznikl `pida1200/Test2.wiki.git`; skript `docs/scripts/sync-wiki-to-github.sh` + `_Sidebar.md`; seed syncnut na https://github.com/pida1200/Test2/wiki; §4.6 aktualizován o sync příkaz.
+- Ověření: `git ls-remote …Test2.wiki.git` OK; sync push `179f6db`; Home „Wiki — rozcestník“ + sidebar (10 stránek).
+- Riziko: bootstrap UI je jednorázový (API/.git push bez první stránky nejde); sync vyžaduje `gh auth`.
+- Další krok: volitelně CI/workflow na sync po změně `docs/wiki/` (mimo scope).
+
 ### 2026-08-05 – /m #34 uzavřeno: Hybrid MA + Wiki KB (varianta C)
 
 - Výsledek: gap analysis potvrdila hybrid na main; dokončen Wiki seed (ASCII `aplikacni`/`provozni`/`zmeny`), Wiki pravidla v rules/skill, `check:wiki` + negativní test. `docs/wiki/` = zdroj pravdy; Wiki UI sync = follow-up.
