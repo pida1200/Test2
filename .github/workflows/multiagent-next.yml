@@ -54,6 +54,7 @@ jobs:
                 'multiagent/implementace',
                 'multiagent/testy',
                 'multiagent/pipeline',
+                'multiagent/bug',
               ];
               for (const a of order) {
                 if (arts.includes(a)) return a;
@@ -115,6 +116,9 @@ jobs:
                 'gate/pending': { role: 'Tester', model: 'composer-2.5-fast', hint: 'Testy + checklist → Kontrolor T' },
                 'gate/no-go': { role: 'Tester (rework)', model: 'composer-2.5-fast', hint: 'Oprav testy dle VERDIKT-T' },
                 'gate/go': { role: 'Integrátor', model: 'composer-2.5-fast', hint: 'Testy OK — Integrátor uzavře pipeline' },
+              },
+              'multiagent/bug': {
+                'gate/pending': { role: 'Vývojář', model: 'composer-2.5-fast', hint: 'Bug mimo pipeline — oprav dle repo-kvalita.mdc nebo povyš na pipeline (/m #N)' },
               },
             };
 
