@@ -49,7 +49,13 @@ body:
     id: problems
     attributes:
       label: Nalezené problémy
-      description: Při vadě produktu uveď ESKALACE_VÝVOJÁŘ
+      description: "Vada produktu ve scope → ESKALACE_VÝVOJÁŘ + odkaz na #IMPLEMENTACE. Mimo scope → založ [BUG] issue (šablona multiagent-bug)"
+      value: "Žádné"
+  - type: textarea
+    id: bugs
+    attributes:
+      label: Založené bug issues
+      description: Odkazy na [BUG] issues (#N), pokud vznikly mimo scope nebo jako odložené vady
       value: "Žádné"
   - type: input
     id: version

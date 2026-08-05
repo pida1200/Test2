@@ -54,7 +54,7 @@ body:
     id: details
     attributes:
       label: Proč OK / seznam vad
-      description: Při NO-GO číslovaný seznam; při GO 2–4 body. ESKALACE_VÝVOJÁŘ pokud platí.
+      description: "Při NO-GO číslovaný seznam; při GO 2–4 body. U ESKALACE_VÝVOJÁŘ odkaz na [IMPLEMENTACE]. U odloženého nálezu odkaz na [BUG]."
     validations:
       required: true
   - type: markdown
