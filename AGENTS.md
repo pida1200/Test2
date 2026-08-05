@@ -22,7 +22,8 @@ Tento repozitář je **šablona multi-agentního vývoje** (GitHub Issues + `/m`
 - `repo-git.mdc` — bez PR, feature větve, malé commity
 - `repo-kvalita.mdc` — testy, lint, DoD, learning-log / Obsidian
 - `repo-navrat.mdc` — návrat k projektu (tento checklist)
-- `multi-agenti.mdc` — role 3+3, I/O = GitHub Issues; `/m` a `/m 2`; detail `docs/multi-agent-workflow.md`
+- `multi-agenti.mdc` — role 3+3, I/O = Issues; skill `.cursor/skills/m/SKILL.md` (gramatika); scoped → `/m 2`, plná 3+3 jen při nejasném DoD/API
+- Role cards: `docs/ma-role-cards/` (tenké prompty); detail `docs/multi-agent-workflow.md`
 - `obsidian-prace-programovani.mdc` — trezor doplňuje git (volitelné)
 - `examples-architektura.mdc` — konvence pro `examples/`
 

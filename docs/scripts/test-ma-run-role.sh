@@ -63,6 +63,8 @@ out="$(CURSOR_AGENT_BIN=/nonexistent/cursor-agent assert_exit 0 "--dry-run bez b
 assert_contains "${out}" "ROLE: Analytik" "dry-run obsahuje ROLE:"
 assert_contains "${out}" "--model claude-opus-5-thinking-high" "dry-run obsahuje --model"
 assert_contains "${out}" "PIPELINE: #83" "dry-run obsahuje PIPELINE"
+assert_contains "${out}" "ROLE_CARD: docs/ma-role-cards/analytik.md" "dry-run obsahuje ROLE_CARD"
+assert_contains "${out}" "docs/ma-role-cards/" "dry-run odkazuje role cards"
 
 # 3) chybí --model → exit 2, usage
 out="$(assert_exit 2 "chybí --model" --role vyvojar --pipeline 83)"

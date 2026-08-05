@@ -141,6 +141,7 @@ function authorizeRun(input) {
  * @param {boolean} input.openBlockerBugInScope - otevřený multiagent/bug, blocker, ve scope – odloženo (G3)
  * @param {boolean} input.branchExistsOnOrigin - G4
  * @param {boolean} input.headMatchesSha - G4 (HEAD drift, D5)
+ * @param {boolean} [input.markerPipelineOk=true] - G4b: pipeline="N" v markeru == issue
  * @param {boolean} [input.mergeConflict] - G5
  * @param {boolean} [input.checkFailed] - G6 (`npm run check` po merge)
  * @returns {{ pass: boolean, failures: string[] }}
@@ -179,6 +180,10 @@ function evaluateGuards(input) {
     failures.push('G4: větev z MERGE-PENDING markeru neexistuje na originu');
   } else if (!opts.headMatchesSha) {
     failures.push('G4: HEAD větve neodpovídá sha z markeru (drift) — Integrátor obnoví MERGE-PENDING');
+  }
+
+  if (opts.markerPipelineOk === false) {
+    failures.push('G4b: pipeline="N" v MERGE-PENDING markeru ≠ číslo [PIPELINE] issue');
   }
 
   if (opts.mergeConflict) {
@@ -258,6 +263,38 @@ function composeResultComment(input) {
   return lines.join('\n');
 }
 
+/**
+ * SHA match for MERGE-PENDING marker vs remote branch tip.
+ * Requires marker sha length ≥ 7 (rejects ambiguous short prefixes), then
+ * case-insensitive equality or remote startsWith(marker).
+ *
+ * @param {string|null|undefined} remoteSha
+ * @param {string|null|undefined} markerSha
+ * @returns {boolean}
+ */
+function shaMatches(remoteSha, markerSha) {
+  if (!remoteSha || !markerSha) return false;
+  const remote = String(remoteSha).trim().toLowerCase();
+  const marker = String(markerSha).trim().toLowerCase();
+  if (!/^[0-9a-f]+$/.test(marker) || marker.length < 7) return false;
+  if (!/^[0-9a-f]+$/.test(remote)) return false;
+  return remote === marker || remote.startsWith(marker);
+}
+
+/**
+ * Marker pipeline="N" must equal the issue being merged.
+ * Fallback handoffs (no pipeline field) are allowed for older pipelines (#74/#83).
+ *
+ * @param {{ pipeline: string|null, source: string }|null} pending
+ * @param {string|number} pipelineNum
+ * @returns {boolean}
+ */
+function markerPipelineMatches(pending, pipelineNum) {
+  if (!pending) return true;
+  if (pending.source === 'fallback' || pending.pipeline == null) return true;
+  return String(pending.pipeline) === String(pipelineNum);
+}
+
 module.exports = {
   MERGE_PENDING_RE,
   MERGE_RESULT_MARKER,
@@ -266,4 +303,6 @@ module.exports = {
   authorizeRun,
   evaluateGuards,
   composeResultComment,
+  shaMatches,
+  markerPipelineMatches,
 };

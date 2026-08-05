@@ -223,11 +223,13 @@ jobs:
               try {
                 sh(`git fetch origin "${branch}" --quiet`);
                 const remoteBranchSha = sh('git rev-parse FETCH_HEAD').trim();
-                headMatchesSha = !!sha && remoteBranchSha.startsWith(sha.trim());
+                headMatchesSha = lib.shaMatches(remoteBranchSha, sha);
               } catch (e) {
                 headMatchesSha = false;
               }
             }
+
+            const markerPipelineOk = lib.markerPipelineMatches(pending, pipelineNum);
 
             // G2: posledni [VERDIKT-A]/[VERDIKT-V]/[VERDIKT-T] s "Pipeline: #N"
             const allIssues = await github.paginate(github.rest.issues.listForRepo, {
@@ -270,6 +272,7 @@ jobs:
               openBlockerBugInScope,
               branchExistsOnOrigin,
               headMatchesSha,
+              markerPipelineOk,
               mergeConflict: false,
               checkFailed: false,
             });

@@ -25,8 +25,29 @@ assert.strictEqual(r.prompt, '/m #34');
 assert.ok(r.commentBody.includes('/m #34 once'));
 assert.strictEqual(r.info.role, 'Vývojář');
 assert.ok(r.commentBody.includes('<!-- multiagent-next -->'));
+assert.ok(r.cliOneLiner.includes('ma-run-role.sh'));
+assert.ok(r.cliOneLiner.includes('--role vyvojar'));
+assert.ok(r.cliOneLiner.includes('--pipeline 34'));
+assert.ok(r.cliOneLiner.includes('--write'));
+assert.strictEqual(r.info.model, next.MODELS.vyvojar);
+
+assert.strictEqual(next.MODELS.kontrolorA, 'gpt-5.6-terra-medium');
+assert.notStrictEqual(next.MODELS.kontrolorA, next.MODELS.analytik);
 
 assert.strictEqual(next.modelForPhase('VERDIKT-V'), next.MODELS.kontrolorV);
+assert.strictEqual(next.modelForPhase('VERDIKT-A'), next.MODELS.kontrolorA);
+
+// Kontrolor A route (pending verdikt) → CLI one-liner bez --write
+const ka = next.routeNextStep({
+  labels: ['multiagent', 'multiagent/verdikt', 'gate/pending'],
+  title: '[VERDIKT-A] feat',
+  body: 'Pipeline: #34\nVstup: #35\nVerdikt: GO\n',
+  issueNumber: 40,
+});
+assert.strictEqual(ka.info.role, 'Kontrolor analytika');
+assert.ok(ka.cliOneLiner.includes('--role kontrolor-a'));
+assert.ok(ka.cliOneLiner.includes(next.MODELS.kontrolorA));
+assert.ok(!ka.cliOneLiner.includes('--write'));
 
 // #81 (C5): pipeline gate/go hint routes to label merge/approved, not to a manual/no-action merge.
 const pipelineGo = next.routeNextStep({
@@ -37,5 +58,6 @@ const pipelineGo = next.routeNextStep({
 });
 assert.ok(pipelineGo.commentBody.includes('merge/approved'));
 assert.ok(!pipelineGo.commentBody.includes('bez akce agenta'));
+assert.ok(pipelineGo.cliOneLiner.includes('--role integrator'));
 console.log('OK multiagent-next-lib tests');
 NODE

@@ -10,7 +10,7 @@
 | Vývojář | `[IMPLEMENTACE]` | Kontrolor V | `[VERDIKT-V]` |
 | Tester | `[TESTY]` | Kontrolor T | `[VERDIKT-T]` |
 
-**Integrátor** orchestruje kickoff, konflikty, finální testy/lint, squash + push **feature větve**, learning-log, handoff `MERGE-PENDING` (**merge do `main` = člověk**; bez PR).
+**Integrátor** (tenký) orchestruje kickoff, konflikty, squash + push **feature větve**, learning-log, handoff `MERGE-PENDING` (**merge do `main` = člověk** labelem `merge/approved`; bez PR). Full check = Tester / merge G6.
 
 ## Pravidla brány
 

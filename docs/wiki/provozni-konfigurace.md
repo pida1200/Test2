@@ -28,10 +28,10 @@ Issue formuláře mají textarea „CI kontrakt“ s těmito řádky předvypln�
 
 | Workflow | Účel |
 |----------|------|
-| `multiagent-next.yml` | komentář další role + `/m #N` (`multiagent-next-lib.cjs`) |
-| `multiagent-pipeline-sync.yml` | auto-přehled v `[PIPELINE]` |
-| `multiagent-gate-check.yml` | soft validace verdiktů (komentář, job nepadá) |
-| `multiagent-merge.yml` | **(#81)** merge feature větve do `main` — spouštěč: label `merge/approved` na `[PIPELINE]` (`issues.labeled`) nebo `workflow_dispatch` (fail-closed, `dry_run` default `true`); guardy G0–G6 + autorizace G7 v `docs/scripts/ma-merge-lib.cjs`; po úspěchu: push, wiki mirror, komentář, `merge/done`, close issue |
+| `multiagent-next.yml` | komentář další role + CLI one-liner (`ma-run-role.sh`) + `/m #N` (`multiagent-next-lib.cjs`) |
+| `multiagent-pipeline-sync.yml` | auto-přehled v `[PIPELINE]`; po A+V+T GO → hint `merge/approved` (ne „uzavři issue“) |
+| `multiagent-gate-check.yml` | soft validace verdiktů; při pass **smaže** starý `<!-- multiagent-gate-check -->` komentář |
+| `multiagent-merge.yml` | **(#81)** merge feature větve do `main` — spouštěč: label `merge/approved` na `[PIPELINE]` (`issues.labeled`) nebo `workflow_dispatch` (fail-closed, `dry_run` default `true`); guardy G0–G6 + G4b (`pipeline=` == issue) + SHA ≥7 + autorizace G7 v `docs/scripts/ma-merge-lib.cjs`; po úspěchu: push, wiki mirror, komentář, `merge/done`, close issue |
 | `wiki-sync.yml` | mirror `docs/wiki/` → `.wiki.git` (push na `main` mimo `multiagent-merge.yml`, který si mirror volá sám ve stejném jobu — E11) |
 
 ### `multiagent-merge.yml` — vstupy a autorizace (§3.1, G7)

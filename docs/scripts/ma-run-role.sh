@@ -81,6 +81,19 @@ role_forbidden() {
   esac
 }
 
+role_card() {
+  case "$1" in
+    analytik) printf '%s' "docs/ma-role-cards/analytik.md" ;;
+    kontrolor-a) printf '%s' "docs/ma-role-cards/kontrolor-a.md" ;;
+    vyvojar) printf '%s' "docs/ma-role-cards/vyvojar.md" ;;
+    kontrolor-v) printf '%s' "docs/ma-role-cards/kontrolor-v.md" ;;
+    tester) printf '%s' "docs/ma-role-cards/tester.md" ;;
+    kontrolor-t) printf '%s' "docs/ma-role-cards/kontrolor-t.md" ;;
+    integrator) printf '%s' "docs/ma-role-cards/integrator.md" ;;
+    *) printf '%s' "" ;;
+  esac
+}
+
 is_known_role() {
   case "$1" in
     analytik|kontrolor-a|vyvojar|kontrolor-v|tester|kontrolor-t|integrator) return 0 ;;
@@ -145,6 +158,7 @@ fi
 PIPELINE_NUM="${PIPELINE#\#}"
 ROLE_LABEL="$(role_label "${ROLE}")"
 FORBIDDEN="$(role_forbidden "${ROLE}")"
+ROLE_CARD="$(role_card "${ROLE}")"
 
 issue_lines=""
 if [[ ${#ISSUES[@]} -gt 0 ]]; then
@@ -160,8 +174,9 @@ build_prompt() {
   printf 'MODEL: %s\n' "${MODEL}"
   printf 'PIPELINE: #%s\n' "${PIPELINE_NUM}"
   printf '%s' "${issue_lines}"
-  printf 'VÝSTUP_ISSUE: vytvoř/aktualizuj dle .cursor/skills/m/SKILL.md\n'
-  printf 'Postupuj dle .cursor/skills/m/SKILL.md + docs/multi-agent-workflow.md (I/O šablony, token budget). Nekopíruj obsah workflow do kontextu — jen odkaz.\n'
+  printf 'VÝSTUP_ISSUE: vytvoř/aktualizuj dle role card + .cursor/skills/m/SKILL.md\n'
+  printf 'ROLE_CARD: %s — vyplň VÝSTUP dle této karty (necelý workflow).\n' "${ROLE_CARD}"
+  printf 'Skill STOP/orchestrace: .cursor/skills/m/SKILL.md. Modely/MERGE-PENDING detail jen při potřebě: docs/multi-agent-workflow.md.\n'
   printf 'NESMÍŠ: %s\n' "${FORBIDDEN}"
 }
 
