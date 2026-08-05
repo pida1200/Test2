@@ -34,6 +34,14 @@ Pravidlo: `repo-kvalita.mdc`.
 - Další krok: Kontrolor vývojáře → `[VERDIKT-V]`; poté Tester.
 - Stav: čeká na review (VERDIKT-V), pak testy; handoff `MERGE-PENDING` až po A+V+T GO.
 
+### 2026-08-05 – /m #83 IMPLEMENTACE rework 1/3 dle VERDIKT-V NO-GO #88
+
+- Výsledek: doplněny dva chybějící body z #88 beze změny kontraktu #85 — nový offline test v `test-ma-run-role.sh` (dočasná falešná binárka přes `mktemp -d`, exit 1 + stdout/stderr) ověřující `ma-run-role.sh` → exit `4` a beze zásahu zachovaný výstup CLI (17→20 offline případů); stručná dokumentace E10 (dlouhý/visící CLI běh nemá interní timeout, přerušení řeší volající) v hlavičce/`usage()` `ma-run-role.sh`, `docs/multi-agent-workflow.md` a wiki `provozni-konfigurace.md` (sekce Degradace).
+- Ověření: `npm run check` zelené vč. `check:ma` / `test-ma-run-role.sh` (20/20).
+- Riziko: beze změny oproti #87 — CLI flagy stále neověřené proti reálné instalaci `cursor-agent`.
+- Další krok: nový Kontrolor vývojáře (VERDIKT-V) přes `/m #83`.
+- Stav: commit `a8b85bc` na `feature/pipeline-83-ma-cli-tokeny`, pushnuto; #87 label `gate/no-go` → `gate/pending`.
+
 ### 2026-08-05 – archiv větve cursor/multiagent-role-gates-187d
 
 - Výsledek: remote větev smazána; tip `11294bb` uložen jako tag `archive/cursor-multiagent-role-gates-187d` (raný MA / 1-issue model, mimo main).
