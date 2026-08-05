@@ -4,6 +4,7 @@ Chronologie změn řešení. Každá větší pipeline doplní řádek + stránk
 
 | Datum | Pipeline | Stránka | Shrnutí |
 |-------|----------|---------|---------|
+| 2026-08-05 | #81 | [pipeline-81-merge-git-ukol](zmeny-2026-08-05-pipeline-81-merge-git-ukol) | Merge do main = Git úkol (label `merge/approved`); fail-closed `workflow_dispatch`; bootstrap B0–B5; povinný stav wiki mirroru |
 | 2026-08-05 | #83 | [pipeline-83-ma-cli-tokeny](zmeny-2026-08-05-pipeline-83-ma-cli-tokeny) | MA role CLI first (`ma-run-role.sh`), Task fallback, tenký Integrátor, mini-plán jen A+V |
 | 2026-08-05 | #74 | [pipeline-74-merge-clovek](zmeny-2026-08-05-pipeline-74-merge-clovek) | Merge do main jen člověk; MERGE-PENDING handoff |
 | 2026-08-05 | #66 | [pipeline-66-sablona-ma](zmeny-2026-08-05-pipeline-66-sablona-ma) | Šablona jen MA — odstraněny produktové stromy a odkazy |

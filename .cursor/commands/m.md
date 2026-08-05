@@ -18,7 +18,7 @@ Spusť multi-agent dle `.cursor/skills/m/SKILL.md`.
 
 **CLI first:** role spouštěj přes `docs/scripts/ma-run-role.sh` (`cursor-agent`); chybí-li CLI (exit 3), fallback = Cursor Task s vytištěným promptem.
 
-**STOP orchestrace:** NO-GO, `gate/blocked`, chybí `gh` write, `once`, `MERGE-PENDING` (ruční merge).
+**STOP orchestrace:** NO-GO, `gate/blocked`, chybí `gh` write, `once`, `MERGE-PENDING` (merge do main = člověk labelem `merge/approved`).
 
 **Modely:** `docs/multi-agent-workflow.md` (sekce Modely).  
 Detail: rule `.cursor/rules/multi-agenti.mdc`.

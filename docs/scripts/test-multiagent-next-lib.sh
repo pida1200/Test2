@@ -27,5 +27,15 @@ assert.strictEqual(r.info.role, 'Vývojář');
 assert.ok(r.commentBody.includes('<!-- multiagent-next -->'));
 
 assert.strictEqual(next.modelForPhase('VERDIKT-V'), next.MODELS.kontrolorV);
+
+// #81 (C5): pipeline gate/go hint routes to label merge/approved, not to a manual/no-action merge.
+const pipelineGo = next.routeNextStep({
+  labels: ['multiagent', 'multiagent/pipeline', 'gate/go'],
+  title: '[PIPELINE] test',
+  body: '',
+  issueNumber: 81,
+});
+assert.ok(pipelineGo.commentBody.includes('merge/approved'));
+assert.ok(!pipelineGo.commentBody.includes('bez akce agenta'));
 console.log('OK multiagent-next-lib tests');
 NODE

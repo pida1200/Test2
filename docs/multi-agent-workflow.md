@@ -359,14 +359,55 @@ Postup:
 3. Spoj kód, konflikty, finální testy/lint (Docker dle rules)
 4. **Ověř Wiki:** `bash docs/scripts/check-wiki-seed.sh`; u změny chování existuje záznam `docs/wiki/zmeny-…` + řádek v `zmeny-index.md`
 5. Commit (+ push **feature větve**); bez PR; **nesloučuj do `main`** (repo-git.mdc)
-6. docs/learning-log.md (povinně; „čeká na ruční merge“)
-7. Do #<PIPELINE> komentář `MERGE-PENDING` (větev, SHA, checklist pro člověka); label `gate/go`; **neuzavírej** issue
+6. docs/learning-log.md (povinně; „čeká na label `merge/approved`“)
+7. Do #<PIPELINE> komentář `MERGE-PENDING` (větev, SHA, checklist pro člověka) **+ machine marker** (viz níže); label `gate/go`; **neuzavírej** issue
 8. **Bug issues:** zavírá Integrátor po ověření opravy. Otevřený `[BUG]` blocker ve scope brání handoff; ostatní bugy vypiš jako known issues mimo markery `multiagent:prehled`
 
 GATE: handoff jen při gate/go na A+V+T a bez otevřeného blocker-bugu ve scope
 VÝJIMKA merge do main: jen explicitní „mergni a pushni“ v aktuální session
 PŘI BLOKACI (>3 reworky): komentář do #<PIPELINE> + eskalace uživateli
 ```
+
+#### MERGE-PENDING marker + merge = label v GitHubu (#81)
+
+Merge do `main` **spouští člověk labelem `merge/approved`** na `[PIPELINE]` (workflow
+`.github/workflows/multiagent-merge.yml`), ne příkazem v Cursoru. MERGE-PENDING komentář
+Integrátora proto **musí** obsahovat, kromě lidsky čitelného textu, samostatný řádek
+s machine markerem (parser vezme **poslední** takový komentář dle `created_at` — rework
+generuje víc handoffů):
+
+```text
+<!-- multiagent-merge-pending pipeline="81" branch="feature/pipeline-81-merge-git-ukol" sha="abc1234" -->
+```
+
+Bez markeru běží tolerantní fallback na starší tvar `**Větev:** \`…\`` / `**HEAD:** \`…\``
+(#74, #83) — nový handoff ale marker vždy přidává. Chybí-li obojí, guard workflow selže
+(„chybí handoff“) a `main` zůstává beze změny.
+
+Po přidání `merge/approved`: guardy G0–G6 (actor ≥ write, gate/go, VERDIKT-A/V/T GO, žádný
+otevřený blocker bug ve scope, HEAD větve == sha z markeru, bezkonfliktní merge, zelený
+`npm run check`) + autorizace G7 (`authorizeRun()` — jediná společná pro `issues.labeled`
+i `workflow_dispatch`, default **deny**). Po úspěchu workflow sám: pushne do `main`,
+zrcadlí wiki (`wiki-sync: ok|failed|skipped` — vždy v komentáři), odebere `merge/approved`,
+přidá `merge/done`, a **uzavře** `[PIPELINE]`. Guard fail → `main` beze změny, `merge/failed`,
+issue zůstává OPEN. Detail kontraktu: `docs/scripts/ma-merge-lib.cjs` + ANALÝZA #93.
+
+#### Bootstrap checklist B0–B5 (jen jednou, při zavedení této pipeline #81)
+
+Workflow reagující na `issues` se čte z verze na `main` a `merge/*` labely ještě
+neexistují, dokud nejsou vytvořené — proto **#81 se labelem sloučit nemůže** (E14):
+
+| # | Krok | Kdo |
+|---|------|-----|
+| B0 | `#81` merguje **člověk** dnešním ručním postupem (`git merge --no-ff` + push) | člověk |
+| B1 | `bash docs/scripts/create-multiagent-labels.sh` | člověk / Integrátor |
+| B2 | Ověřit `gh label list --search merge/` → 4 labely (`merge/approved`, `merge/done`, `merge/failed`, `wiki/sync-failed`) | člověk |
+| B3 | Dry-run nad **uzavřenou** historickou pipeline (`workflow_dispatch`, `pipeline: 83`, `dry_run: true`) — běh zelený, `git log origin/main -1` beze změny | člověk |
+| B4 | Zápis výsledku B0–B3 do `[PIPELINE] #81` (komentář, odkaz na běh B3) | člověk / Integrátor |
+| B5 | Teprve **další** pipeline smí použít `merge/approved` ostře | — |
+
+Detail: `docs/wiki/provozni-konfigurace.md` (sekce „Bootstrap merge labelu“) a
+`docs/wiki/zmeny-2026-08-05-pipeline-81-merge-git-ukol.md`.
 
 ---
 
@@ -428,10 +469,11 @@ bash docs/scripts/ma-run-role.sh --role <role> --pipeline <N> \
 | Wiki sync | `.github/workflows/wiki-sync.yml` | push `docs/wiki/**` na `main` → `sync-wiki-to-github.sh` |
 | Lokální přehled | `docs/scripts/ma-pipeline-view.sh` | stejný přehled přes `gh` když Actions nejsou dostupné |
 | Spuštění role | `docs/scripts/ma-run-role.sh` | CLI first (`cursor-agent`) / Task fallback (exit 3); token budget výše |
-| Labely | `docs/scripts/create-multiagent-labels.sh` | idempotentní vytvoření `multiagent/*` + `gate/*` |
-| MA check | `npm run check:ma` | pipeline-sync + regex + wiki-seed + next-lib + dry-run + ma-run-role (offline) |
+| Labely | `docs/scripts/create-multiagent-labels.sh` | idempotentní vytvoření `multiagent/*` + `gate/*` + `merge/*` + `wiki/sync-failed` |
+| MA check | `npm run check:ma` | pipeline-sync + regex + wiki-seed + next-lib + dry-run + ma-run-role + ma-merge-lib (offline) |
+| Merge do main | `.github/workflows/multiagent-merge.yml` + `docs/scripts/ma-merge-lib.cjs` | label `merge/approved` → guardy G0–G6 + autorizace G7 → merge `--no-ff` → push → wiki mirror → komentář + `merge/done` + close (#81; bootstrap B0–B5 do prvního ostrého použití) |
 
-**Co zůstává ruční:** první kick `/m` / `/m #N` v Cursoru (CI agenta nespouští). Child issues pokud chybí `gh` write. **Merge do `main` = člověk** (Integrátor jen feature větev + `MERGE-PENDING`). Wiki UI sync až po pushi na `main`. **Plně unattended z Actions** (Cursor API) = follow-up mimo scope.
+**Co zůstává ruční:** první kick `/m` / `/m #N` v Cursoru (CI agenta nespouští). Child issues pokud chybí `gh` write. **Merge do `main` spouští člověk labelem `merge/approved`** na `[PIPELINE]` (Integrátor jen feature větev + `MERGE-PENDING` handoff s markerem) — do bootstrapu B0–B5 (#81) i nadále ručně. Wiki UI sync po merge dělá workflow sám (`wiki-sync: ok|failed|skipped` v komentáři); mimo tuto cestu (dry-run, offline) po pushi na `main`. **Plně unattended z Actions** (Cursor API) = follow-up mimo scope.
 
 ## Předávání kódu mezi rolemi
 

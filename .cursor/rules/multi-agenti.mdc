@@ -100,8 +100,9 @@ produkce → kontrolor → GO → další fáze
 - `.github/workflows/multiagent-next.yml` — komentuje další roli + `/m #N` (logika: `docs/scripts/multiagent-next-lib.cjs`).
 - `.github/workflows/multiagent-gate-check.yml` — validace verdiktů (komentář při chybě).
 - `.github/workflows/multiagent-pipeline-sync.yml` — auto-přehled fází v `[PIPELINE]` mezi markery.
-- `.github/workflows/wiki-sync.yml` — sync `docs/wiki/` → GitHub Wiki UI při pushi na `main`.
-- Labely: `bash docs/scripts/create-multiagent-labels.sh`
+- `.github/workflows/multiagent-merge.yml` — merge do `main` = label `merge/approved` na `[PIPELINE]` (guardy G0–G6 + autorizace G7 v `docs/scripts/ma-merge-lib.cjs`); `workflow_dispatch` je fail-closed (`dry_run` default `true`, ostrý běh vyžaduje stejný ověřený `merge/approved`). Agent do `main` dál nemerguje. Bootstrap B0–B5 (#81): první merge dělá člověk ručně, label se ostře použije až na další pipeline.
+- `.github/workflows/wiki-sync.yml` — sync `docs/wiki/` → GitHub Wiki UI při pushi na `main`; po merge labelem to dělá `multiagent-merge.yml` sám (`wiki-sync: ok|failed|skipped` v komentáři).
+- Labely: `bash docs/scripts/create-multiagent-labels.sh` (vč. `merge/approved`, `merge/done`, `merge/failed`, `wiki/sync-failed`)
 - Ověření: `npm run check:ma`
 
 ## Kdy použít
@@ -119,8 +120,8 @@ produkce → kontrolor → GO → další fáze
 ## Ukončení (integrátor)
 
 - relevantní testy + lint + wiki seed
-- `docs/learning-log.md` (**povinně**, na feature větvi; stav „čeká na ruční merge“)
+- `docs/learning-log.md` (**povinně**, na feature větvi; stav „čeká na label `merge/approved`“)
 - commit + push **feature větve** (ne `main`)
-- komentář `MERGE-PENDING` do `[PIPELINE]` (větev, SHA, checklist pro člověka)
-- `[PIPELINE]` **zůstává otevřený** s `gate/go`
+- komentář `MERGE-PENDING` do `[PIPELINE]` (větev, SHA, checklist pro člověka **+ machine marker** `<!-- multiagent-merge-pending pipeline="N" branch="…" sha="…" -->`)
+- `[PIPELINE]` **zůstává otevřený** s `gate/go`; **merge do `main` spustí člověk labelem `merge/approved`** (workflow `multiagent-merge.yml` uzavře issue po úspěchu)
 - žádný otevřený NO-GO; sebehodnocení dle `repo-kvalita.mdc`

@@ -11,7 +11,15 @@ bash docs/scripts/sync-wiki-to-github.sh
 # DRY_RUN=1 bash docs/scripts/sync-wiki-to-github.sh
 ```
 
-CI: workflow `wiki-sync.yml` při pushi `docs/wiki/**` na `main` (až po **ručním** merge feature větve). Seed v gitu je SoT i před syncem UI.
+CI: workflow `wiki-sync.yml` při pushi `docs/wiki/**` na `main`. Od #81 je hlavní cesta merge **labelem** `merge/approved` na `[PIPELINE]` (`multiagent-merge.yml`) — ten po pushi do `main` zavolá `sync-wiki-to-github.sh` **sám ve stejném jobu** (push GITHUB_TOKENem by `wiki-sync.yml` nespustil — E11) a stav zapíše do výsledkového komentáře jako `wiki-sync: ok | failed | skipped`. Mimo tuto cestu (dry-run bootstrap, ruční merge při nedostupných Actions) platí dosavadní postup — sync po pushi na `main`. Seed v gitu je SoT i před syncem UI.
+
+**Selhání mirroru (`wiki-sync: failed`):** merge do `main` je hotový fakt a platí i tak. Postup nápravy:
+
+```bash
+bash docs/scripts/sync-wiki-to-github.sh
+```
+
+Po úspěchu smaž label `wiki/sync-failed` z `[PIPELINE]` a zavři založený `[BUG]` follow-up (odkaz je v komentáři `multiagent-merge.yml` i v artefaktu `wiki-sync.log` daného běhu).
 
 Publikační URL: [pida1200/Test2/wiki](https://github.com/pida1200/Test2/wiki)
 
