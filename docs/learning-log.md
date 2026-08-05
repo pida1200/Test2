@@ -26,6 +26,13 @@ Pravidlo: `repo-kvalita.mdc`.
 
 ## Záznamy
 
+### 2026-08-05 – /m #34 uzavřeno: Hybrid MA + Wiki KB (varianta C)
+
+- Výsledek: gap analysis potvrdila hybrid na main; dokončen Wiki seed (ASCII `aplikacni`/`provozni`/`zmeny`), Wiki pravidla v rules/skill, `check:wiki` + negativní test. `docs/wiki/` = zdroj pravdy; Wiki UI sync = follow-up.
+- Ověření: VERDIKT-A #37 GO; VERDIKT-V #39→#40 GO; VERDIKT-T #42→#43 GO; `npm run check` zelený.
+- Riziko: GitHub Wiki UI ještě nemusí být založená.
+- Další krok: volitelně publikovat seed do Wiki UI.
+
 ### 2026-08-05 – Wiki seed + rozhodnutí Issues vs Wiki v MA zadání
 
 - Výsledek: `docs/multiagent-zadani.md` — Issues = stav/gate, Wiki = delší artefakty + KB; požadavek na strukturu `docs/wiki/` (Home, aplikační/, provozní/, zmeny/); seed stránky vytvořeny.
