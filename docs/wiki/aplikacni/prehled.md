@@ -14,7 +14,7 @@ Jeden požadavek = jedno `[PIPELINE]` issue. Role (Analytik → Kontrolor → �
 | Child issues | `[ANALÝZA]`, `[VERDIKT-*]`, `[IMPLEMENTACE]`, `[TESTY]`, `[BUG]` |
 | `gate/*` | `pending` → `go` / `no-go` / `blocked` |
 | Wiki seed | `docs/wiki/{aplikacni,provozni,zmeny}/` |
-| Slash `/m` | ruční orchestrace jedné fáze v Cursoru |
+| Slash `/m` | v Cursoru: `/m #N` = orchestrace fází do STOP; `/m #N once` = jeden krok |
 
 ## Hranice systému
 

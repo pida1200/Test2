@@ -14,14 +14,16 @@ Skill: `.cursor/skills/m/SKILL.md` · Command: `.cursor/commands/m.md`
 
 | Vstup | Význam |
 |-------|--------|
-| **`/m`** | Plná pipeline 3+3; Integrátor doplní/vytvoří `[PIPELINE]` |
-| **`/m #N`** | Pokračuj v pipeline `#N`; fázi odvoď z labelů child issues |
-| **`/m 2`** | Rychlá 2er: Vývojář + Kontrolor vývojáře |
-| **`/m 2 #N`** | Rychlá 2er nad pipeline `#N` |
+| **`/m`** | Kickoff + **orchestrace** celé pipeline 3+3 |
+| **`/m #N`** | **Orchestrace** od aktuální fáze do STOP |
+| **`/m #N once`** | Jen **jeden** krok (aktuální fáze) |
+| **`/m 2`** / **`/m 2 #N`** | Rychlá 2er (orchestrace; `once` = jeden krok) |
 | **`/m #<bug>`** | Issue s `multiagent/bug` — Vývojář (oprava / povýšení) |
 
 Číslo issue **vždy s `#`**. Bez `#` je `2` režim, ne issue.  
 Labely `ma/*` z PR #3 **nezavádět** — používej `multiagent/*` + `gate/*`.
+
+**Orchestrace (default):** v jednom chatu postupně role (preferuj Task + model z workflow) dokud NO-GO / `blocked` / close / `once`. CI **nespouští** Cursor — bot jen komentuje `/m #N`. Detail: skill `.cursor/skills/m/SKILL.md`.
 
 ## Role
 

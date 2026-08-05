@@ -231,13 +231,13 @@ Workflow `multiagent-pipeline-sync.yml` udržuje sekci:
 
 | Příkaz | Režim |
 |--------|--------|
-| `/m` | kickoff — Integrátor vytvoří/doplní `[PIPELINE]` |
-| `/m #N` | plná pipeline 3+3 na issue `#N` |
-| `/m 2` | rychlá 2er (Vývojář + Kontrolor) — bez `#` = režim |
-| `/m 2 #N` | rychlá 2er nad pipeline `#N` |
+| `/m` | kickoff + **orchestrace** celé pipeline |
+| `/m #N` | **orchestrace** od aktuální fáze do STOP |
+| `/m #N once` | jen **jeden** krok |
+| `/m 2` / `/m 2 #N` | rychlá 2er (orchestrace; `once` = jeden krok) |
 | `/m #<bug>` | issue s `multiagent/bug` — Vývojář |
 
-Po změně labelů komentuje `multiagent-next.yml` další `/m #N`.
+Bot `multiagent-next.yml` komentuje `/m #N` i `/m #N once`. CI **nespouští** Cursor.
 
 ---
 

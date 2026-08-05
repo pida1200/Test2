@@ -1,6 +1,6 @@
 ---
 name: m
-description: "Multi-agent pipeline — /m, /m #N, /m 2, /m 2 #N (7 issues + gate/*)"
+description: "Multi-agent pipeline — /m, /m #N, /m #N once, /m 2, /m #<bug> (orchestrace + gate/*)"
 disable-model-invocation: true
 ---
 
@@ -10,25 +10,46 @@ Uživatel spustil slash `/m` s volitelnými argumenty.
 
 ## Parsování argumentů
 
-| Vstup | Režim | Pipeline / cíl |
-|-------|-------|----------------|
-| `/m` | plná 3+3 | Integrátor kickoff — vytvoř/doplň `[PIPELINE]` |
-| `/m #N` | plná 3+3 | pipeline issue `#N` |
-| `/m 2` | rychlá 2er | bez pipeline — zeptej se nebo vezmi z kontextu |
-| `/m 2 #N` | rychlá 2er | pipeline `#N` |
-| `/m #<bug>` | bug cesta | issue s `multiagent/bug` — Vývojář (povýšení / oprava); viz workflow |
+| Vstup | Režim | Chování |
+|-------|-------|---------|
+| `/m` | plná 3+3 | kickoff + **orchestrace** (po child issues) |
+| `/m #N` | plná 3+3 | **orchestrace** od aktuální fáze do STOP |
+| `/m #N once` / `/m once #N` | plná 3+3 | **jeden krok** (jen aktuální fáze) |
+| `/m 2` | rychlá 2er | orchestrace Vývojář→Kontrolor V (zeptá se na pipeline) |
+| `/m 2 #N` | rychlá 2er | orchestrace 2er nad `#N` |
+| `/m 2 #N once` | rychlá 2er | jeden krok 2er |
+| `/m #<bug>` | bug cesta | issue s `multiagent/bug` — Vývojář; viz workflow |
 
-- `#N` = číslo GitHub issue **vždy s `#`** (např. `/m #9`, `/m 2 #9`, `/m #25` u bugu).
+- `#N` = číslo GitHub issue **vždy s `#`**.
 - **`2` bez `#` = režim**, ne issue.
+- Token **`once`** (libovolné pořadí s `#N`) = single-step; jinak **orchestrace**.
 - Chybí pipeline u `/m 2` → zeptej: „Které pipeline? Použij `/m 2 #N`.“
+
+## Orchestrace vs once
+
+**Default (`/m #N`):** v **jednom chatu** proveď po sobě fáze pipeline (Integrátor řídí smyčku), dokud nenastane STOP.
+
+**Preferuj Cursor Task/subagent** pro každou roli s `MODEL:` z `docs/multi-agent-workflow.md` (sekce Modely). Kontrolor ideálně **jiný** model než produkce. Issues = zdroj pravdy (ne spoléhej jen na chat historii).
+
+**STOP orchestrace:**
+
+1. Verdikt `Verdikt: NO-GO` / label `gate/no-go`
+2. `gate/blocked` na pipeline
+3. Chybí `gh` write → degradace + STOP (text k ručnímu vložení)
+4. Uživatel zadal `once`
+5. `[PIPELINE]` uzavřen Integrátorem (A+V+T GO)
+
+**Nesmíš:** přeskočit Kontrolora; sloučit GO bez nového verdikt issue; pokračovat po NO-GO.
+
+Po každé fázi: krátké shrnutí v chatu + odkaz na issue; pak ihned další fáze (orchestrace) nebo STOP (`once` / NO-GO).
 
 ## Kde je celkový obraz
 
-**Čtení celé pipeline:** issue `[PIPELINE]` — sekce mezi markery `<!-- multiagent:prehled:start -->` … `<!-- multiagent:prehled:end -->` (udržuje `multiagent-pipeline-sync.yml`).
+**Čtení:** `[PIPELINE]` — markery `<!-- multiagent:prehled:start -->` … `end` (bot sync).
 
-**Zápis:** každá role edituje **své** artefakt issue (`[ANALÝZA]`, `[IMPLEMENTACE]`, …) přes `gh issue edit --body-file`. **Neupravuj** obsah uvnitř markerů v `[PIPELINE]` — bot ho přepíše.
+**Zápis:** child issue přes `gh issue edit --body-file`. **Neupravuj** obsah uvnitř markerů.
 
-**Vazba na pipeline:** v body child issue musí být na **samostatném řádku** `Pipeline: #N` (CI čte anchored regex `^\s*Pipeline(?:\s+issue)?:\s*#?(\d+)\s*$`).
+**Vazba:** samostatný řádek `Pipeline: #N` (anchored regex).
 
 ## Před akcí: `gh` write
 
@@ -36,14 +57,14 @@ Uživatel spustil slash `/m` s volitelnými argumenty.
 gh auth status
 ```
 
-Bez write scope → **degradace**: vypíš body/komentář/labely k ručnímu vložení; nefailuj v polovině.
+Bez write → degradace; v orchestraci **STOP**.
 
 ## Určení fáze (7-issue model)
 
-1. Načti pipeline `#N`: `gh issue view N --json body,labels,title,number`
-2. **Celkový obraz** čti v `[PIPELINE]` (#N) — auto-přehled mezi markery `multiagent:prehled`.
-3. Najdi child issues (body obsahuje anchored řádek `Pipeline: #N`) — nebo je uživatel na konkrétním artefaktu.
-4. Fáze = label `multiagent/*` + `gate/*` na **aktuálním** artefaktu:
+1. Načti pipeline `#N`
+2. Čti auto-přehled v `[PIPELINE]`
+3. Child issues s `Pipeline: #N`
+4. Aktuální fáze = `multiagent/*` + `gate/*`:
 
 | Label artefaktu | Gate | Role | Model (default) |
 |-----------------|------|------|-----------------|
@@ -59,39 +80,29 @@ Bez write scope → **degradace**: vypíš body/komentář/labely k ručnímu vl
 | `multiagent/bug` | (bez gate) | Vývojář | viz workflow §Modely |
 | všechny verdikty A+V+T | `gate/go` | Integrátor | viz workflow §Modely |
 
-**Modely:** kanonická tabulka + fallback v `docs/multi-agent-workflow.md` (sekce Modely). Uveď skutečný slug v `MODEL:`.
+Po dokončení fáze (orchestrace): znovu načti labely / přehled → další řádek tabulky, dokud STOP.
 
 ### Režim `/m 2`
 
-Jen Vývojář → Kontrolor vývojáře. Přeskoč Analytika/Testera.  
-Artefakty: `[IMPLEMENTACE]` → `[VERDIKT-V]`. Pole ANALÝZA/VERDIKT-A v šabloně nejsou povinná.
+Jen Vývojář → Kontrolor V. Orchestrace default; `once` = jeden krok.
 
-## Postup role
+## Postup jedné role
 
-1. Načti VSTUP issue: `gh issue view <num> --json body,labels,title`
-2. Proveď **jen aktuální fázi** dle `docs/multi-agent-workflow.md` (I/O šablony).
-3. Zapiš výstup do **body** cílového issue:
-
-   ```bash
-   gh issue view <num> --json body -q .body > /tmp/issue-body.md
-   # edituj soubor
-   gh issue edit <num> --body-file /tmp/issue-body.md
-   ```
-
-   **Nikdy** `gh issue edit --body "..."` inline — přepisuje celé body.
-4. U verdiktu: samostatný řádek `Verdikt: GO` nebo `Verdikt: NO-GO` (line-anchored; může být po form `###` nadpisech).
-5. Labely gate na verdikt **i** produkční issue (stejný `gate/go` nebo `gate/no-go`).
+1. Načti VSTUP: `gh issue view <num> --json body,labels,title`
+2. Proveď roli dle `docs/multi-agent-workflow.md` (I/O šablony).
+3. Zápis: `gh issue edit --body-file` (**ne** inline `--body`).
+4. Verdikt: řádek `Verdikt: GO|NO-GO` (line-anchored).
+5. Sync `gate/*` na verdikt **i** produkční issue.
 6. Kontrolor **neimplementuje**.
-7. **NO-GO → STOP** — nepostupuj na další fázi.
-8. Vývojář: WIP commit(y) na feature větvi povoleny (Integrátor squashne); **NE push** bez domluvy.
-9. **Wiki:** delší artefakt → `docs/wiki/`; v issue jen shrnutí + volitelný řádek `Wiki: <cesta-bez-.md>`. Po změně chování aktualizuj `zmeny/` (+ index). Integrátor před close ověří seed (`bash docs/scripts/check-wiki-seed.sh`).
-10. V chatu: shrnutí + odkaz na issue + aktuální fáze.
-11. **Tester:** vada ve scope → `ESKALACE_VÝVOJÁŘ` v `[TESTY]` (rework, ne bug issue). Nález mimo scope nebo odložený → založ `[BUG]` a uveď # v poli „Založené bug issues“.
+7. **NO-GO → STOP** orchestrace.
+8. Vývojář: WIP commit na feature větvi OK; **NE push** bez Integrátora.
+9. Wiki: `docs/wiki/` + `zmeny/`; `Wiki: <cesta>`.
+10. Chat: shrnutí + issue + fáze.
+11. Tester: ve scope → `ESKALACE_VÝVOJÁŘ`; mimo scope → `[BUG]`.
 
 ## Rework
 
-Max ~3 reworky na bránu. Po 3. NO-GO → label `gate/blocked` na pipeline + eskalace Integrátorovi.
+Max ~3 reworky. Po 3. NO-GO → `gate/blocked`.  
+**Nové** `[VERDIKT-*]` každé kolo — nepřepisuj NO-GO na GO.
 
-**Verdikt issue = 1 kolo (audit trail):** Kontrolor pro každé kolo review vytvoří **nové** `[VERDIKT-A|V|T]` issue. **Nepřepisuj** existující NO-GO verdikt na GO — staré issue zůstává s `Verdikt: NO-GO` v body (sync počítá NO-GO z body všech verdikt child issues, open i closed). Po opravě produkčního artefaktu → nový verdikt issue → znovu review.
-
-Nežádej dlouhé ROLE/VSTUP prompty — stačí `/m #N`.
+Nežádej dlouhé ROLE/VSTUP prompty — stačí `/m #N` nebo `/m #N once`.

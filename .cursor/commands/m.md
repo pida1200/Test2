@@ -1,20 +1,22 @@
 ---
-description: Multi-agent pipeline — /m, /m #N, /m 2, /m 2 #N, /m #<bug>
+description: Multi-agent pipeline — /m, /m #N, /m #N once, /m 2, /m #<bug>
 ---
 
-Spusť multi-agent krok dle `.cursor/skills/m/SKILL.md`.
+Spusť multi-agent dle `.cursor/skills/m/SKILL.md`.
 
 **Gramatika:**
 
 | Vstup | Význam |
 |-------|--------|
-| `/m` | Nový úkol — plná pipeline 3+3; Integrátor doplní/vytvoří `[PIPELINE]` |
-| `/m #N` | Pokračuj v pipeline `#N`; fázi odvoď z labelů child issues |
-| `/m 2` | Rychlá 2er (Vývojář + Kontrolor vývojáře) |
-| `/m 2 #N` | Rychlá 2er nad pipeline `#N` |
+| `/m` | Kickoff + **orchestrace** celé pipeline |
+| `/m #N` | **Orchestrace** od aktuální fáze do STOP |
+| `/m #N once` | Jen **jeden** krok (aktuální fáze) |
+| `/m 2` / `/m 2 #N` | Rychlá 2er (orchestrace; přidej `once` = jeden krok) |
 | `/m #<bug>` | Issue s `multiagent/bug` — Vývojář |
 
 Číslo issue **vždy s `#`**. Bez `#` je `2` režim, ne issue.
+
+**STOP orchestrace:** NO-GO, `gate/blocked`, chybí `gh` write, `once`, close PIPELINE.
 
 **Modely:** `docs/multi-agent-workflow.md` (sekce Modely).  
 Detail: rule `.cursor/rules/multi-agenti.mdc`.
