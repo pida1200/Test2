@@ -26,6 +26,13 @@ Pravidlo: `repo-kvalita.mdc`.
 
 ## Záznamy
 
+### 2026-08-05 – /m #52 uzavřeno: orchestrace `/m #N` + once
+
+- Výsledek: default `/m #N` = orchestrace fází do STOP; `/m #N once` = jeden krok. Skill/rule/command/docs + next-bot dual prompt; wiki `prehled`/`scénáře`/`provozni` + `zmeny/…#52`.
+- Ověření: VERDIKT-A #54 / V #57 (po reworku #56) / T #59 GO; `check:docs`+`wiki`+`ma` zelené; Tester #58.
+- Riziko: orchestrace stále vyžaduje otevřený Cursor chat (CI→Cursor API mimo scope); dlouhý kontext → preferovat Task per role.
+- Další krok: ověřit v praxi `/m #<pipeline>` bez `once` na další feature.
+
 ### 2026-08-05 – /m #44 uzavřeno: kompletní wiki MA (funkční + provozní)
 
 - Výsledek: vyplněn wiki seed (`aplikacni/` + `provozni/` + Home/`_Sidebar` + `zmeny/…#44`); na `main` i MA revize A–C (next-lib, `check:ma`, `wiki-sync.yml`, dedupe modelů). Wiki UI syncnuta.
