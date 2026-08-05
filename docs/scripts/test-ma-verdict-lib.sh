@@ -123,6 +123,39 @@ console.log('OK  N11b: duplicitní atribut markeru → atributy');
 }
 console.log('OK  N11c: neznámý atribut markeru → atributy');
 
+// --- N14: fail-closed proti nezpracovanému/nequoted atributu mimo allowlist ---
+// (rework po VERDIKT-V NO-GO #107 — marker s jinak platnými atributy a přívěskem
+// `bypass=1` dřív procházel jako valid:true, protože ATTR_RE tichem přeskočilo
+// token bez uvozovek místo aby ho odmítlo.)
+
+{
+  const body = [
+    '<!-- multiagent-verdikt v="1" kind="A" pipeline="100" vstup="102" verdikt="GO" kontrola="kontrolor" bypass=1 -->',
+    'Pipeline: #100',
+    'Vstup: #102',
+    'Verdikt: GO',
+  ].join('\n');
+  const p = lib.parseVerdictComment({ body });
+  assert.strictEqual(p.valid, false);
+  assert.strictEqual(p.reason, 'atributy');
+  assert.ok(p.errors.some((e) => e.includes('Nerozpoznaný obsah markeru') && e.includes('bypass=1')));
+}
+console.log('OK  N14a: nequoted přívěsek "bypass=1" mimo allowlist → valid false (fail-closed)');
+
+{
+  const body = [
+    '<!-- multiagent-verdikt v="1" kind="A" pipeline="100" vstup="102" verdikt="GO" kontrola="kontrolor" ;;drop table-- -->',
+    'Pipeline: #100',
+    'Vstup: #102',
+    'Verdikt: GO',
+  ].join('\n');
+  const p = lib.parseVerdictComment({ body });
+  assert.strictEqual(p.valid, false);
+  assert.strictEqual(p.reason, 'atributy');
+  assert.ok(p.errors.some((e) => e.includes('Nerozpoznaný obsah markeru')));
+}
+console.log('OK  N14b: malformed token (bez "=", bez uvozovek) → valid false (fail-closed)');
+
 // --- N12: neznámá verze kontraktu -------------------------------------------
 
 {

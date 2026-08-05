@@ -57,10 +57,22 @@ Dvě zrychlení MA pipeline beze ztráty auditovatelnosti a fail-closed principu
   automatizace next/gate-check/sync/merge), `docs/ma-role-cards/kontrolor-a.md`
   (self-check proces + formát GO komentáře s `kontrola="self"`).
 
+## Rework po VERDIKT-V NO-GO #107
+
+`parseVerdictComment()` v `ma-verdict-lib.cjs` doplněn o lexikální validaci celého
+obsahu markeru: dřív `matchAll(ATTR_RE)` tiše přeskočilo nezachycený token, takže
+marker s jinak platnými povinnými atributy a nequoted přívěskem `bypass=1` vracel
+`valid: true`. Teď parser hlídá mezery mezi shodami — cokoli mimo přesnou množinu
+`v`, `kind`, `pipeline`, `vstup`, `verdikt`, `kontrola` ve tvaru `key="value"` je
+`Nerozpoznaný obsah markeru` → `valid: false` (fail-closed). Nové negativní testy
+N14a/N14b v `test-ma-verdict-lib.sh`.
+
 ## Odkazy
 
 - [#100](https://github.com/pida1200/Test2/issues/100) (PIPELINE) ·
   [#102](https://github.com/pida1200/Test2/issues/102) (ANALÝZA v2) ·
-  [#105](https://github.com/pida1200/Test2/issues/105) (VERDIKT-A GO)
+  [#105](https://github.com/pida1200/Test2/issues/105) (VERDIKT-A GO) ·
+  [#106](https://github.com/pida1200/Test2/issues/106) (IMPLEMENTACE) ·
+  [#107](https://github.com/pida1200/Test2/issues/107) (VERDIKT-V NO-GO — fail-closed marker)
 - Wiki: [pipeline-81-merge-git-ukol](zmeny-2026-08-05-pipeline-81-merge-git-ukol) (MERGE-PENDING
   marker, na který verdikt-as-comment navazuje)

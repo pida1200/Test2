@@ -26,6 +26,24 @@ Pravidlo: `repo-kvalita.mdc`.
 
 ## Záznamy
 
+### 2026-08-05 – Rework IMPLEMENTACE #106 po VERDIKT-V NO-GO #107 (fail-closed marker)
+
+- Výsledek: `parseVerdictComment()` v `docs/scripts/ma-verdict-lib.cjs` opraven —
+  místo `matchAll(ATTR_RE)` (které tiše přeskočilo nezachycený token, takže marker
+  s platnými povinnými atributy a přívěskem `bypass=1` vracel `valid: true`) teď
+  parser skenuje celý obsah markeru a hlídá mezery mezi shodami; jakýkoli
+  nerozpoznaný/nequoted/malformed token mimo `v`, `kind`, `pipeline`, `vstup`,
+  `verdikt`, `kontrola` je nová chyba „Nerozpoznaný obsah markeru“ → `valid: false`,
+  `reason: 'atributy'` (fail-closed, žádný jiný kontrakt nezměněn).
+- Ověření: 2 nové negativní testy N14a (`bypass=1`) a N14b (malformed token bez
+  `=`/uvozovek) v `test-ma-verdict-lib.sh`; `npm run check` PASS (backend 10/10,
+  markdownlint 0, wiki seed OK, `check:ma` vč. všech verdict-lib testů).
+- Riziko: žádné nové — čistě zúžení validace, zpětně kompatibilní se všemi
+  existujícími pozitivními/negativními fixtures (P1–P5, N1–N13 beze změny).
+- Další krok: nový Kontrolor vývojáře (VERDIKT-V) nad `feature/pipeline-100-ma-p2`.
+- Vstup: [VERDIKT-V NO-GO #107](https://github.com/pida1200/Test2/issues/107)
+- Větev: `feature/pipeline-100-ma-p2`
+
 ### 2026-08-05 – IMPLEMENTACE #100 (P2): Verdikt-as-comment + risk/low + check:merge
 
 - Výsledek: dle ANALÝZA [#102](https://github.com/pida1200/Test2/issues/102) v2 (GO

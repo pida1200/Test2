@@ -73,21 +73,36 @@ function parseVerdictComment(comment) {
     };
   }
 
-  const attrMatches = [...markers[0][1].matchAll(ATTR_RE)];
+  // Lexikální validace celého obsahu markeru (fail-closed): striktně jen
+  // `key="value"` páry z ALLOWED_KEYS, cokoli mezi/kolem nich (nequoted `bypass=1`,
+  // osamocený token, čárka navíc apod.) je nerozpoznaný a marker je neplatný —
+  // matchAll by takový obsah tiše přeskočilo, proto se mezery mezi shodami hlídají ručně.
+  const markerContent = markers[0][1];
   const attrs = {};
   const errors = [];
   const seenKeys = new Set();
-  for (const [, key, value] of attrMatches) {
+  const scanRe = new RegExp(ATTR_RE.source, 'g');
+  let cursor = 0;
+  let match;
+  while ((match = scanRe.exec(markerContent)) !== null) {
+    const gap = markerContent.slice(cursor, match.index).trim();
+    if (gap !== '') {
+      errors.push(`Nerozpoznaný obsah markeru: „${gap}“.`);
+    }
+    const [, key, value] = match;
     if (!ALLOWED_KEYS.includes(key)) {
       errors.push(`Neznámý atribut markeru: „${key}“.`);
-      continue;
-    }
-    if (seenKeys.has(key)) {
+    } else if (seenKeys.has(key)) {
       errors.push(`Duplicitní atribut markeru: „${key}“.`);
-      continue;
+    } else {
+      seenKeys.add(key);
+      attrs[key] = value;
     }
-    seenKeys.add(key);
-    attrs[key] = value;
+    cursor = scanRe.lastIndex;
+  }
+  const trailingGap = markerContent.slice(cursor).trim();
+  if (trailingGap !== '') {
+    errors.push(`Nerozpoznaný obsah markeru: „${trailingGap}“.`);
   }
   for (const key of ALLOWED_KEYS) {
     if (!(key in attrs)) errors.push(`Chybí povinný atribut markeru: „${key}“.`);
