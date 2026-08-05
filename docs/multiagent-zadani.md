@@ -83,9 +83,9 @@ Wiki: <cesta stránky, např. zmeny/2026-08-05-pipeline-34>
 
 ### Vazba Wiki ↔ git seed
 
-- **Zdroj struktury v PR:** `docs/wiki/` (reviewovatelné, v gitu).  
-- **Publikační pohled:** GitHub Wiki repa (stejná hierarchie).  
-- Integrátor / Vývojář při uzavření pipeline synchronizuje relevantní stránky (nebo založí PR do `docs/wiki/` a wiki syncne později).  
+- **Zdroj pravdy** = `docs/wiki/` v gitu (reviewovatelné v PR, strojově ověřitelné).
+- **GitHub Wiki** = publikační pohled se stejnou hierarchií; repozitář `.wiki.git` vznikne až po založení první stránky ve Wiki UI (viz §4.6).
+- **Při uzavření pipeline:** Vývojář/Integrátor aktualizuje seed v gitu (`docs/wiki/`, včetně `zmeny/`); **automatický sync do GitHub Wiki UI se nevyžaduje** — follow-up mimo scope běžné pipeline.
 - Wiki **nenahrazuje** `gate/*` ani CI.
 
 ---
