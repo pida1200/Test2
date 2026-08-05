@@ -1,0 +1,6 @@
+# Uživatelské scénáře
+
+> TODO: klíčové use-cases (happy path).
+
+1. …
+2. …

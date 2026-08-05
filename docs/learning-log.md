@@ -26,6 +26,13 @@ Pravidlo: `repo-kvalita.mdc`.
 
 ## Záznamy
 
+### 2026-08-05 – Wiki seed + rozhodnutí Issues vs Wiki v MA zadání
+
+- Výsledek: `docs/multiagent-zadani.md` — Issues = stav/gate, Wiki = delší artefakty + KB; požadavek na strukturu `docs/wiki/` (Home, aplikační/, provozní/, zmeny/); seed stránky vytvořeny.
+- Ověření: strom `docs/wiki/` v gitu; odkazy v AGENTS.md a multi-agent-workflow.md.
+- Riziko: GitHub Wiki je oddělený git — seed v `docs/wiki/` je pravda v PR; sync do Wiki UI je manuální/Integrátor.
+- Další krok: `/m #34` + doplnit labely na PIPELINE; při uzavření změny zapsat `zmeny/…`.
+
 ### 2026-08-05 – Zadání MA varianty C (hybrid) v docs/multiagent-zadani.md
 
 - Výsledek: formální zadání — 1× `[PIPELINE]` jako požadavek, child issues jako artefakty, `gate/*` stav, `/m #N`, kritéria hotovo + copy-paste šablona PIPELINE.
