@@ -6,9 +6,9 @@ Zdroj struktury v gitu (`docs/wiki/`). Stejnou hierarchii drž v **GitHub Wiki**
 
 | Oblast | Cesta | Účel |
 |--------|-------|------|
-| **Aplikační** | [aplikační/prehled](aplikační/prehled.md) | co produkt dělá |
-| **Provozní** | [provozní/prehled](provozní/prehled.md) | jak běží / deploy / konfigurace |
-| **Změny** | [zmeny/index](zmeny/index.md) | chronologie změn (pipeline) |
+| **Aplikační** | [aplikacni/prehled](aplikacni/prehled) | co produkt dělá |
+| **Provozní** | [provozni/prehled](provozni/prehled) | jak běží / deploy / konfigurace |
+| **Změny** | [zmeny/index](zmeny/index) | chronologie změn (pipeline) |
 
 ## Multi-agent
 
@@ -18,6 +18,6 @@ Zdroj struktury v gitu (`docs/wiki/`). Stejnou hierarchii drž v **GitHub Wiki**
 
 ## Rychlé odkazy
 
-- Aplikace: [moduly](aplikační/moduly.md) · [scénáře](aplikační/uzivatelske-scenare.md)
-- Provoz: [deploy](provozní/deploy.md) · [konfigurace](provozní/konfigurace.md) · [monitoring](provozní/monitoring.md)
-- Šablona změny: [zmeny/_sablona-zmeny](zmeny/_sablona-zmeny.md)
+- Aplikace: [moduly](aplikacni/moduly) · [scénáře](aplikacni/uzivatelske-scenare)
+- Provoz: [deploy](provozni/deploy) · [konfigurace](provozni/konfigurace) · [monitoring](provozni/monitoring)
+- Šablona změny: [zmeny/_sablona-zmeny](zmeny/_sablona-zmeny)

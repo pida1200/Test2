@@ -24,7 +24,8 @@ Multi-agent vývoj má mít **jedno issue jako požadavek** (`[PIPELINE]`), zat�
 
 **Rozhodnutí (varianta C):** datový model **7 child issues** zůstává; **jeden pohled** = `[PIPELINE]` + bot sync.
 
-**Rozhodnutí (dokumentace):**  
+**Rozhodnutí (dokumentace):**
+
 - **Issues** = požadavek + stav + krátký kontrakt / verdikt + odkazy  
 - **Wiki** = delší artefakty a postupně rostoucí dokumentace celého řešení  
 - **git (`docs/` + kód)** = technická spec v PR + implementace  
@@ -48,8 +49,8 @@ Varianta B (`ma/*`) zůstává odmítnutá.
     ├── [BUG]…         ← volitelně (multiagent/bug)
     │
     └── Wiki (docs/wiki/ → GitHub Wiki)
-            ├── aplikační/     ← co systém dělá
-            ├── provozní/      ← jak běží / deploy / provisioning
+            ├── aplikacni/     ← co systém dělá
+            ├── provozni/      ← jak běží / deploy / provisioning
             └── zmeny/         ← changelog podle pipeline / data
 ```
 
@@ -59,7 +60,7 @@ Varianta B (`ma/*`) zůstává odmítnutá.
 |-------|-----|
 | Cíl, kontext, DoD návrh, přehled fází | `[PIPELINE]` |
 | Krátký kontrakt, verdikt, odkaz na Wiki stránku | **child issue** |
-| Delší analýza, rozhodnutí, popis řešení | **Wiki** (`aplikační/` / `provozní/` / `zmeny/`) |
+| Delší analýza, rozhodnutí, popis řešení | **Wiki** (`aplikacni/` / `provozni/` / `zmeny/`) |
 | Verdikt GO/NO-GO | **nové** `[VERDIKT-*]` issue |
 | Kód, unit testy | **git** (větev + commit) |
 | Technická API/spec v PR | **`docs/` / `mujdum/docs/`** (git) |
@@ -100,26 +101,26 @@ Součást DoD této pipeline (a trvalé konvence): **existuje jasná wiki strukt
 | `Home` | rozcestník — odkaz na aplikační / provozní / změny |
 | `_Sidebar` (volitelně) | navigace ve Wiki UI |
 
-### 4.2 Aplikační dokumentace (`aplikační/`)
+### 4.2 Aplikační dokumentace (`aplikacni/`)
 
 Popis **co produkt dělá** (pro uživatele i vývojáře):
 
 | Stránka (návrh) | Obsah |
 |-----------------|--------|
-| `aplikační/prehled` | účel produktu, hlavní entity, hranice systému |
-| `aplikační/moduly` | FE / BE / DB / integrace (stručně) |
-| `aplikační/uzivatelske-scenare` | klíčové use-cases |
+| `aplikacni/prehled` | účel produktu, hlavní entity, hranice systému |
+| `aplikacni/moduly` | FE / BE / DB / integrace (stručně) |
+| `aplikacni/uzivatelske-scenare` | klíčové use-cases |
 
-### 4.3 Provozní / provisioning dokumentace (`provozní/`)
+### 4.3 Provozní / provisioning dokumentace (`provozni/`)
 
 Popis **jak to běží a nasazuje se**:
 
 | Stránka (návrh) | Obsah |
 |-----------------|--------|
-| `provozní/prehled` | prostředí (lokál / Docker / server), porty |
-| `provozní/deploy` | lokální compose, vzdálený deploy **jen na žádost** |
-| `provozní/konfigurace` | env proměnné (bez secretů), závislosti |
-| `provozní/monitoring` | health endpointy, logy, typické incidenty |
+| `provozni/prehled` | prostředí (lokál / Docker / server), porty |
+| `provozni/deploy` | lokální compose, vzdálený deploy **jen na žádost** |
+| `provozni/konfigurace` | env proměnné (bez secretů), závislosti |
+| `provozni/monitoring` | health endpointy, logy, typické incidenty |
 
 ### 4.4 Jednotlivé změny (`zmeny/`)
 
@@ -157,11 +158,11 @@ Požadovaná výchozí struktura (soubory):
 ```text
 docs/wiki/
   Home.md
-  aplikační/
+  aplikacni/
     prehled.md
     moduly.md
     uzivatelske-scenare.md
-  provozní/
+  provozni/
     prehled.md
     deploy.md
     konfigurace.md
@@ -172,6 +173,13 @@ docs/wiki/
 ```
 
 Agent (Integrátor / Analytik) **nesmí** nechat strukturu prázdnou bez `Home` a indexů — minimálně stub s 2–3 větami + „TODO“.
+
+### 4.6 Inicializace GitHub Wiki
+
+- **Zdroj pravdy** = `docs/wiki/` v gitu (reviewovatelné v PR, strojově ověřitelné).
+- **GitHub Wiki repozitář** (`<repo>.wiki.git`) vznikne až po založení první stránky ve Wiki UI — do té doby je seed jen v gitu.
+- **První stránku** (`Home`) ve Wiki UI založí uživatel ručně (copy z `docs/wiki/Home.md`); automatický sync do Wiki je **follow-up mimo scope** běžné pipeline.
+- Odkazy ve seedu jsou **bez přípony `.md`** (GitHub Wiki slug); české popisky zůstávají v textu stránek.
 
 ---
 
@@ -238,7 +246,7 @@ Po změně labelů komentuje `multiagent-next.yml` další `/m #N`.
 
 | Role | Wiki povinnost |
 |------|----------------|
-| Analytik | odkaz na cílovou Wiki stránku / návrh aktualizace `aplikační/` nebo `provozní/` |
+| Analytik | odkaz na cílovou Wiki stránku / návrh aktualizace `aplikacni/` nebo `provozni/` |
 | Vývojář | po změně chování aktualizovat `docs/wiki/` (+ `zmeny/…`) |
 | Integrátor | ověřit seed strukturu; doplnit `zmeny/index`; sync poznámka do PIPELINE |
 
@@ -253,7 +261,7 @@ Po změně labelů komentuje `multiagent-next.yml` další `/m #N`.
 - [ ] NO-GO vytvoří nový verdikt; produkční issue jde do reworku
 - [ ] Tester může eskalovat ve scope bez `[BUG]`; mimo scope → `[BUG]`
 - [ ] Integrátor uzavře pipeline jen při GO na A+V+T
-- [ ] **Existuje `docs/wiki/` se strukturou Home + `aplikační/` + `provozní/` + `zmeny/`**
+- [ ] **Existuje `docs/wiki/` se strukturou Home + `aplikacni/` + `provozni/` + `zmeny/`**
 - [ ] **Každá uzavřená větší změna má záznam v `zmeny/` + odkaz z PIPELINE**
 - [ ] Záznam v `docs/learning-log.md` po větším běhu
 
@@ -274,7 +282,8 @@ Po změně labelů komentuje `multiagent-next.yml` další `/m #N`.
 ```bash
 gh label list | rg 'multiagent|gate/'
 bash docs/scripts/ma-pipeline-view.sh #<PIPELINE>
-ls docs/wiki/Home.md docs/wiki/aplikační docs/wiki/provozní docs/wiki/zmeny
+ls docs/wiki/Home.md docs/wiki/aplikacni docs/wiki/provozni docs/wiki/zmeny
+bash docs/scripts/check-wiki-seed.sh
 # v Cursoru: /m #<PIPELINE>
 ```
 
