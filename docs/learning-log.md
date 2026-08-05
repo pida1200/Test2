@@ -26,6 +26,13 @@ Pravidlo: `repo-kvalita.mdc`.
 
 ## Záznamy
 
+### 2026-08-05 – /m #51 uzavřeno: wiki flat slugy + link checks
+
+- Výsledek: seed `docs/wiki/` zploštěn (unikátní basename = GitHub Wiki slug); sidebar/odkazy bez `/`/`../`/`.md`; `check-wiki-seed` + negativní testy; sync UI.
+- Ověření: VERDIKT-A #61 / V #63 / T #65 GO; `npm run check` (docs/wiki/ma); HTTP smoke po syncu.
+- Riziko: staré URL (`/wiki/prehled`, nested cesty) jsou mrtvé — GH Wiki redirecty neumí.
+- Další krok: v nové dokumentaci vždy používat ploché slugy; checker blokuje regression.
+
 ### 2026-08-05 – /m #52 uzavřeno: orchestrace `/m #N` + once
 
 - Výsledek: default `/m #N` = orchestrace fází do STOP; `/m #N once` = jeden krok. Skill/rule/command/docs + next-bot dual prompt; wiki `prehled`/`scénáře`/`provozni` + `zmeny/…#52`.
