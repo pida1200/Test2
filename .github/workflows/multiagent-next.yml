@@ -2,6 +2,9 @@ name: Multi-agent next step
 
 # Při změně multiagent/* nebo gate/* labelu napíše do issue komentář s /m #N.
 # Logika: docs/scripts/multiagent-next-lib.cjs
+#
+# risk/low (#102 v2, Pipeline #100): u [ANALÝZA] dohledá nadřazenou [PIPELINE] a předá
+# routeNextStep({ riskLow }) — přeskočí nejednoznačný hint "Kontrolor A / Vývojář".
 
 on:
   issues:
@@ -31,11 +34,31 @@ jobs:
             const next = require('./docs/scripts/multiagent-next-lib.cjs');
             const issue = context.payload.issue;
             const labels = (issue.labels || []).map(l => l.name);
+            const body = issue.body || '';
+
+            let riskLow = false;
+            if (labels.includes('multiagent/analyza')) {
+              const pipelineNum = next.parsePipelineNum(body);
+              if (pipelineNum) {
+                try {
+                  const { data: pipelineIssue } = await github.rest.issues.get({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: parseInt(pipelineNum, 10),
+                  });
+                  riskLow = (pipelineIssue.labels || []).map(l => l.name).includes('risk/low');
+                } catch (e) {
+                  riskLow = false; // fail-closed — bez ověření [PIPELINE] žádná zkratka
+                }
+              }
+            }
+
             const { commentBody, marker } = next.routeNextStep({
               labels,
               title: issue.title || '',
-              body: issue.body || '',
+              body,
               issueNumber: issue.number,
+              riskLow,
             });
 
             const comments = await github.paginate(github.rest.issues.listComments, {

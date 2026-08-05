@@ -13,6 +13,11 @@ name: Multi-agent merge
 #
 # Guardy G0-G6 + autorizace G7 (authorizeRun): docs/scripts/ma-merge-lib.cjs
 # (offline testy: npm run check:ma / test-ma-merge-lib.sh).
+#
+# G2 (#102 v2, Pipeline #100): sjednocena osa GO/NO-GO pres docs/scripts/ma-verdict-lib.cjs
+# (stare [VERDIKT-*] issues i nove GO komentare na produkcnim issue, fail-closed trust).
+# Post-merge overeni (G6) pouziva `npm run check:merge` (examples-backend + wiki-seed),
+# ne plny `npm run check` — rychlejsi G6, plny check zustava lokalne/CI mimo merge job.
 
 on:
   issues:
@@ -72,6 +77,7 @@ jobs:
             const fs = require('fs');
             const lib = require('./docs/scripts/ma-merge-lib.cjs');
             const nextLib = require('./docs/scripts/multiagent-next-lib.cjs');
+            const verdictLib = require('./docs/scripts/ma-verdict-lib.cjs');
 
             const owner = context.repo.owner;
             const repo = context.repo.repo;
@@ -90,15 +96,6 @@ jobs:
               } catch (e) {
                 return 'none';
               }
-            }
-
-            function resolveGate(labelList) {
-              const gates = labelList.filter((l) => l.startsWith('gate/'));
-              const precedence = ['gate/go', 'gate/no-go', 'gate/blocked', 'gate/pending'];
-              for (const g of precedence) {
-                if (gates.includes(g)) return g;
-              }
-              return 'gate/pending';
             }
 
             async function findOpenFollowUp(title) {
@@ -240,22 +237,69 @@ jobs:
                 && nextLib.parsePipelineNum(i.body || '') === String(pipelineNum)
             );
 
-            const verdicts = {};
-            for (const kind of ['A', 'V', 'T']) {
-              const matches = children
+            // G2 (#102 v2): sjednocená osa GO/NO-GO — jak staré [VERDIKT-*] issues, tak
+            // GO komentáře na produkčním issue (ANALÝZA/IMPLEMENTACE/TESTY). Jediný parser:
+            // docs/scripts/ma-verdict-lib.cjs#resolveVerdictSignal (fail-closed).
+            async function buildVerdictSignal(kind) {
+              const prodLabel = verdictLib.PROD_LABEL_FOR_KIND[kind];
+              const verdictIssues = children
                 .filter(
                   (i) => (i.labels || []).map((l) => l.name).includes('multiagent/verdikt')
                     && nextLib.verdictKind(i.title || '') === kind
                 )
+                .map((i) => ({ number: i.number, body: i.body || '', labels: (i.labels || []).map((l) => l.name), created_at: i.created_at }));
+
+              const hostCandidates = children
+                .filter((i) => (i.labels || []).map((l) => l.name).includes(prodLabel))
                 .sort((a, b) => a.number - b.number);
-              const latest = matches.length ? matches[matches.length - 1] : null;
-              verdicts[kind] = latest
-                ? {
-                    gate: resolveGate((latest.labels || []).map((l) => l.name)),
-                    verdikt: nextLib.parseVerdiktValue(latest.body || ''),
-                  }
-                : null;
+              const hostIssueMeta = hostCandidates.length ? hostCandidates[hostCandidates.length - 1] : null;
+
+              if (!hostIssueMeta) {
+                // Bez produkčního issue nelze ověřit GO komentáře (chybí kontext) — jen legacy osa.
+                return verdictLib.resolveVerdictSignal({ kind, pipeline: String(pipelineNum), verdictIssues });
+              }
+
+              const hostComments = await github.paginate(github.rest.issues.listComments, {
+                owner, repo, issue_number: hostIssueMeta.number, per_page: 100,
+              });
+              const markerComments = hostComments.filter((c) => c.body && c.body.includes('multiagent-verdikt'));
+
+              const hostTimeline = await github.paginate(github.rest.issues.listEventsForTimeline, {
+                owner, repo, issue_number: hostIssueMeta.number, per_page: 100,
+              });
+              const labelEvents = hostTimeline
+                .filter((e) => e.event === 'labeled')
+                .map((e) => ({ event: 'labeled', label: { name: e.label && e.label.name }, created_at: e.created_at }));
+
+              const uniqueLogins = [...new Set(markerComments.map((c) => c.user && c.user.login).filter(Boolean))];
+              const permissions = {};
+              for (const login of uniqueLogins) {
+                permissions[login] = await getPermission(login);
+              }
+
+              const commentsForLib = markerComments.map((c) => ({
+                id: c.id, body: c.body, created_at: c.created_at, author: c.user && c.user.login,
+              }));
+
+              return verdictLib.resolveVerdictSignal({
+                kind,
+                pipeline: String(pipelineNum),
+                hostIssue: { number: hostIssueMeta.number, labels: (hostIssueMeta.labels || []).map((l) => l.name) },
+                comments: commentsForLib,
+                verdictIssues,
+                labelEvents,
+                permissions,
+                pipelineLabels: plLabels,
+              });
             }
+
+            const verdictSignals = {};
+            for (const kind of ['A', 'V', 'T']) {
+              verdictSignals[kind] = await buildVerdictSignal(kind);
+            }
+            core.info(`verdictSignals -> ${JSON.stringify({
+              A: verdictSignals.A.status, V: verdictSignals.V.status, T: verdictSignals.T.status,
+            })}`);
 
             // G3: otevreny multiagent/bug, blocker, ve scope – odlozeno
             const openBlockerBugInScope = children.some((i) => {
@@ -268,7 +312,7 @@ jobs:
             const preGuards = lib.evaluateGuards({
               actorPermission,
               pipelineIssue: { state: pipelineIssue.state, labels: plLabels },
-              verdicts,
+              verdictSignals,
               openBlockerBugInScope,
               branchExistsOnOrigin,
               headMatchesSha,
@@ -364,7 +408,7 @@ jobs:
               }
               try {
                 sh('npm ci --prefix examples/backend');
-                sh('npm run check');
+                sh('npm run check:merge'); // #102: examples-backend + wiki-seed (bez check:ma) — rychlejší G6
               } catch (e) {
                 sh(`git reset --hard ${baseSha}`);
                 return { checkFailed: true };
@@ -386,7 +430,7 @@ jobs:
             if (result.conflict || result.checkFailed || result.pushRejected) {
               const failures = [];
               if (result.conflict) failures.push('G5: merge do main zpusobil konflikt');
-              if (result.checkFailed) failures.push('G6: overeni (`npm run check`) po merge selhalo');
+              if (result.checkFailed) failures.push('G6: overeni (`npm run check:merge`) po merge selhalo');
               if (result.pushRejected) failures.push('E9: push do main odmitnut (non-fast-forward) i po jednom retry');
               await postFailure(failures, 'merge/overeni/push selhalo');
               return;
