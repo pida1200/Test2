@@ -13,6 +13,7 @@ Default `/m #N` = orchestrace fází v jednom chatu; `/m #N once` = jeden krok. 
 ### Aplikační
 
 - Scénáře `/m`: orchestrace vs `once` ([uzivatelske-scenare](../aplikacni/uzivatelske-scenare)).
+- Přehled entity Slash `/m`: orchestrace do STOP vs `once` ([prehled](../aplikacni/prehled)).
 
 ### Provozní
 
