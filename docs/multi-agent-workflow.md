@@ -1,13 +1,25 @@
 # Multi‑agent workflow (Cursor) – role 3+3
 
 > **Zadání / architektura (varianta C hybrid):** [`multiagent-zadani.md`](multiagent-zadani.md)  
-> **Wiki seed:** [`wiki/Home.md`](wiki/Home.md) — Issues = stav, Wiki = KB (aplikační / provozní / změny)
+> **Wiki seed:** [`wiki/Home.md`](wiki/Home.md) — Issues = stav, Wiki = KB (`aplikacni/` / `provozni/` / `zmeny/`)
 
 Cíl: větší úkoly řešit jako **pipeline s bránami** — každá produkční role má **kontrolora**.  
 **NO-GO = krok se neposune**: předchozí role musí problém vyřešit a znovu odevzdat; kontrolor znovu rozhodne.  
 **1 integrátor** drží celek, testy/lint a uzavření (**commit / merge / push bez PR**).
 
-## Role (6 + integrátor)
+## Issues vs Wiki
+
+| Obsah | Kde |
+|-------|-----|
+| Požadavek, stav, gate, krátký kontrakt / verdikt | **GitHub Issues** (child artefakty) |
+| Delší analýza, rozhodnutí, popis řešení, changelog | **Wiki seed** [`docs/wiki/`](wiki/Home.md) |
+| Technická spec, kód | **git** (`docs/`, `mujdum/docs/`, větev) |
+| Session / „proč“ | **Obsidian** |
+
+**Pravidlo:** delší text → `docs/wiki/`; v issue jen shrnutí + volitelný řádek `Wiki: <cesta-bez-.md>`.  
+U změny chování **povinný** záznam v `zmeny/` (+ řádek v `zmeny/index.md`). Detail: [`multiagent-zadani.md`](multiagent-zadani.md) §3–§5.
+
+---
 
 | Role | Co dělá | Co **nedělá** |
 |------|---------|----------------|
@@ -214,6 +226,7 @@ Do body VÝSTUP_ISSUE zapiš:
 5. Edge cases + rizika
 6. Návrh ověření (testy/lint/docker)
 7. Pipeline: #<PIPELINE>
+8. Wiki: <volitelně cesta v docs/wiki/ bez .md, např. aplikacni/prehled nebo zmeny/YYYY-MM-DD-slug>
 
 GATE: po uložení body → Kontrolor analytika čte #<ANALÝZA>
 PŘI NO-GO: oprav body #<ANALÝZA> dle vad z #<VERDIKT-A>; verze (v2…); label gate/pending
@@ -263,7 +276,8 @@ Do body VÝSTUP_ISSUE:
 3. Odchylky od ANALÝZY (jen po eskalaci)
 4. Ověření (příkazy + výsledek)
 5. Odkazy: Pipeline #<PIPELINE>, Analýza #<ANALÝZA>
-6. Unit testy: happy path + ≥1 edge case
+6. Wiki: <volitelně cesta v docs/wiki/ bez .md>; po změně chování aktualizuj docs/wiki/ + zmeny/
+7. Unit testy: happy path + ≥1 edge case
 
 GATE: → Kontrolor vývojáře na #<IMPLEMENTACE>
 PŘI NO-GO: oprav kód + body #<IMPLEMENTACE> dle #<VERDIKT-V>
@@ -341,10 +355,11 @@ Postup:
 1. Kickoff: pokud uživatel už má pipeline issue (např. bez `[PIPELINE]` titulku) → **doplní** titulek + labely; nové `[PIPELINE]` vytvoř **jen když žádné neexistuje**; odkaž v chatu
 2. Orchestruj vytvoření produkčních/verdikt issues dle pipeline
 3. Spoj kód, konflikty, finální testy/lint (Docker dle rules)
-4. Commit (+ push); bez PR (repo-git.mdc)
-5. Do #<PIPELINE> zapiš odkazy na commity + learning-log; zavři issue
-6. docs/learning-log.md (povinně)
-7. **Bug issues:** zavírá Integrátor po ověření opravy. Otevřený `[BUG]` blocker ve scope brání close `[PIPELINE]`; ostatní bugy vypiš jako known issues mimo markery `multiagent:prehled`
+4. **Ověř Wiki:** `bash docs/scripts/check-wiki-seed.sh`; u změny chování existuje záznam v `docs/wiki/zmeny/` + řádek v `zmeny/index.md`
+5. Commit (+ push); bez PR (repo-git.mdc)
+6. Do #<PIPELINE> zapiš odkazy na commity + learning-log; zavři issue
+7. docs/learning-log.md (povinně)
+8. **Bug issues:** zavírá Integrátor po ověření opravy. Otevřený `[BUG]` blocker ve scope brání close `[PIPELINE]`; ostatní bugy vypiš jako known issues mimo markery `multiagent:prehled`
 
 GATE: uzavři #<PIPELINE> jen při gate/go na A+V+T a bez otevřeného blocker-bugu ve scope
 PŘI BLOKACI (>3 reworky): komentář do #<PIPELINE> + eskalace uživateli

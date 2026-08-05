@@ -84,8 +84,9 @@ Artefakty: `[IMPLEMENTACE]` → `[VERDIKT-V]`. Pole ANALÝZA/VERDIKT-A v šablon
 6. Kontrolor **neimplementuje**.
 7. **NO-GO → STOP** — nepostupuj na další fázi.
 8. Vývojář: WIP commit(y) na feature větvi povoleny (Integrátor squashne); **NE push** bez domluvy.
-9. V chatu: shrnutí + odkaz na issue + aktuální fáze.
-10. **Tester:** vada ve scope → `ESKALACE_VÝVOJÁŘ` v `[TESTY]` (rework, ne bug issue). Nález mimo scope nebo odložený → založ `[BUG]` a uveď # v poli „Založené bug issues“.
+9. **Wiki:** delší artefakt → `docs/wiki/`; v issue jen shrnutí + volitelný řádek `Wiki: <cesta-bez-.md>`. Po změně chování aktualizuj `zmeny/` (+ index). Integrátor před close ověří seed (`bash docs/scripts/check-wiki-seed.sh`).
+10. V chatu: shrnutí + odkaz na issue + aktuální fáze.
+11. **Tester:** vada ve scope → `ESKALACE_VÝVOJÁŘ` v `[TESTY]` (rework, ne bug issue). Nález mimo scope nebo odložený → založ `[BUG]` a uveď # v poli „Založené bug issues“.
 
 ## Rework
 

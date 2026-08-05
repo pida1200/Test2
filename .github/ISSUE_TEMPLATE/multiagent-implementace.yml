@@ -65,6 +65,14 @@ body:
     validations:
       required: true
   - type: input
+    id: wiki
+    attributes:
+      label: Wiki stránka
+      description: "Volitelně — cesta v docs/wiki/ bez .md, např. zmeny/2026-08-05-slug"
+      placeholder: zmeny/2026-08-05-slug
+    validations:
+      required: false
+  - type: input
     id: version
     attributes:
       label: Verze artefaktu

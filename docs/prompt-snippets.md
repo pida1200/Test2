@@ -181,6 +181,7 @@ Do body VÝSTUP_ISSUE:
 6. Návrh ověření
 7. Doporučené implementační kroky (pořadí commitů)
 8. Pipeline: #<PIPELINE>
+9. Wiki: <volitelně cesta v docs/wiki/ bez .md>
 
 GATE: → Kontrolor analytika
 PŘI NO-GO: oprav body dle #<VERDIKT-A>
@@ -209,8 +210,9 @@ Před close [PIPELINE]:
    (nebo lokálně: bash docs/scripts/ma-pipeline-view.sh #<PIPELINE>)
 2. Tabulka: všech 6 fází má issue + správný gate; historie verdiktů sedí s reworky
 3. Ruční checklist child issues doplň pokud bot ještě nesynchronizoval
-4. Commit/merge/push + docs/learning-log.md
-5. Zavři #<PIPELINE> jen při gate/go na A+V+T
+4. Wiki: bash docs/scripts/check-wiki-seed.sh; u změny chování záznam v docs/wiki/zmeny/ + řádek v index.md
+5. Commit/merge/push + docs/learning-log.md
+6. Zavři #<PIPELINE> jen při gate/go na A+V+T
 ```
 
 ## Multi‑agent rychlá 2er — `/m 2` (Vývojář + Kontrolor vývojáře)

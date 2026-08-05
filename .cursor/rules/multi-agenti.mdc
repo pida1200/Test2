@@ -56,6 +56,14 @@ V zadání vždy `VSTUP_ISSUE:` / `VÝSTUP_ISSUE:`. Obsah do **body issue**, ne 
 
 Zápis body: `gh issue edit --body-file` (ne inline `--body`).
 
+## Wiki vs Issues
+
+- **Issues** = stav pipeline, gate, krátký kontrakt / verdikt.
+- **Wiki** (`docs/wiki/`) = delší artefakty a rostoucí KB (`aplikacni/`, `provozni/`, `zmeny/`).
+- Volitelný řádek v child issue: `Wiki: <cesta-bez-.md>` (nepovinný, neblokuje gate).
+- **Změna chování** → Vývojář aktualizuje `docs/wiki/` + záznam v `zmeny/`; Integrátor před close ověří seed (`bash docs/scripts/check-wiki-seed.sh`) a index.
+- Detail: `docs/multiagent-zadani.md` §3–§5.
+
 ## Modely (verifikované slugy)
 
 | Role | Doporučený model | Alternativa |
