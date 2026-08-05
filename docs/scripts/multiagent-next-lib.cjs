@@ -3,13 +3,8 @@
  * Model slugs mirror docs/multi-agent-workflow.md (sekce Modely) — keep in sync there first.
  */
 
-const { PIPELINE_RE, parsePipelineNum } = require('./pipeline-sync-lib.cjs');
-
-/** Line-anchored Vstup: #N (same style as Pipeline). */
-const VSTUP_RE = /^\s*Vstup(?:ní)?(?:\s+issue)?:\s*#?(\d+)\s*$/m;
-
-/** Line-anchored Verdikt (may appear after form ### headings). */
-const VERDIKT_RE = /^\s*Verdikt:\s*(NO-GO|GO)\b/m;
+const { PIPELINE_RE, VSTUP_RE, VERDIKT_RE, parsePipelineNum } = require('./pipeline-sync-lib.cjs');
+const verdictLib = require('./ma-verdict-lib.cjs');
 
 const ARTIFACT_ORDER = [
   'multiagent/verdikt',
@@ -233,7 +228,8 @@ function expectedProdLabel(title) {
 }
 
 /**
- * @param {{ labels: string[], title?: string, body?: string, issueNumber: number }} opts
+ * @param {{ labels: string[], title?: string, body?: string, issueNumber: number, riskLow?: boolean }} opts
+ *   `riskLow` = má nadřazená `[PIPELINE]` label `risk/low`? (ANALÝZA #102 — přeskočí Kontrolora A)
  * @returns {{ artifact, gate, vk, pipelineNum, info, prompt, commentBody }}
  */
 function routeNextStep(opts) {
@@ -241,6 +237,7 @@ function routeNextStep(opts) {
   const title = opts.title || '';
   const body = opts.body || '';
   const n = opts.issueNumber;
+  const riskLow = !!opts.riskLow;
 
   const artifact = resolveArtifact(labels);
   const gate = resolveGate(labels);
@@ -258,6 +255,16 @@ function routeNextStep(opts) {
     info =
       map[gate] ||
       map['gate/pending'] || { role: '—', model: '—', hint: 'Zkontroluj labely' };
+  }
+
+  // risk/low (#102): self-check GO na ANALÝZE (bez nového [VERDIKT-A]) → routuj rovnou
+  // na Vývojáře, ne na nejednoznačné „Kontrolor A / Vývojář“.
+  if (artifact === 'multiagent/analyza' && gate === 'gate/go' && riskLow) {
+    info = {
+      role: 'Vývojář',
+      model: MODELS.vyvojar,
+      hint: 'ANALÝZA self-check GO (risk/low, Kontrolor A přeskočen) — spusť Vývojáře → [IMPLEMENTACE]',
+    };
   }
 
   const prompt = pipelineNum ? `/m #${pipelineNum}` : `/m #${n}`;
@@ -345,4 +352,7 @@ module.exports = {
   expectedProdLabel,
   routeNextStep,
   modelForPhase,
+  // Re-export jediného verdikt parseru (ma-verdict-lib.cjs) — next.yml jej používá
+  // pro risk/low routing (viz routeNextStep) beze změny importu ve workflow.
+  verdictLib,
 };

@@ -155,6 +155,45 @@ console.log('OK  evaluateGuards: actor bez ≥ write → fail (G0)');
 }
 console.log('OK  evaluateGuards: pipeline= v markeru ≠ issue → fail (G4b)');
 
+// --- G2 přes verdictSignals (ANALÝZA #102 v2 — resolveVerdictSignal) --------
+
+const fullGoSignals = {
+  A: { status: 'GO', source: 'comment' },
+  V: { status: 'GO', source: 'issue' },
+  T: { status: 'GO', source: 'comment' },
+};
+
+{
+  const fixture = { ...fullGoFixture, verdicts: undefined, verdictSignals: fullGoSignals };
+  const r = lib.evaluateGuards(fixture);
+  assert.strictEqual(r.pass, true);
+}
+console.log('OK  evaluateGuards: verdictSignals plná GO sada (GO komentář i staré issue) → pass');
+
+for (const status of ['NO-GO', 'stale', 'none']) {
+  const fixture = {
+    ...fullGoFixture,
+    verdicts: undefined,
+    verdictSignals: { ...fullGoSignals, V: { status } },
+  };
+  const r = lib.evaluateGuards(fixture);
+  assert.strictEqual(r.pass, false, `status ${status} mělo selhat`);
+  assert.ok(r.failures.some((f) => f.startsWith('G2:') && f.includes('VERDIKT-V')));
+}
+console.log('OK  evaluateGuards: verdictSignals status NO-GO/stale/none → fail (G2), nikdy GO');
+
+{
+  // verdictSignals má přednost před legacy verdicts, i kdyby legacy tvar byl formálně GO.
+  const fixture = {
+    ...fullGoFixture,
+    verdictSignals: { ...fullGoSignals, A: { status: 'stale' } },
+  };
+  const r = lib.evaluateGuards(fixture);
+  assert.strictEqual(r.pass, false);
+  assert.ok(r.failures.some((f) => f.includes('VERDIKT-A')));
+}
+console.log('OK  evaluateGuards: verdictSignals má přednost před legacy verdicts');
+
 // --- shaMatches / markerPipelineMatches --------------------------------
 
 {

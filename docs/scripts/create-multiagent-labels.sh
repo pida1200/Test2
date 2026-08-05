@@ -23,4 +23,5 @@ create "merge/approved" "0E8A16" "Human-approved merge to main (multiagent-merge
 create "merge/done" "0E8A16" "Merge to main completed by multiagent-merge.yml"
 create "merge/failed" "B60205" "Merge to main blocked by a guard or error"
 create "wiki/sync-failed" "B60205" "Wiki mirror sync failed after merge (see follow-up issue)"
+create "risk/low" "C2E0C6" "Low-risk pipeline: self-check ANALÝZA skips Kontrolor A (#100)"
 echo "OK: multi-agent labels ready (no ma/* labels)"
