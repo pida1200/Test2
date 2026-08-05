@@ -15,6 +15,7 @@ Tento soubor je **trvalá paměť projektu** — načti ho po restartu Cursoru, 
 | `infra/` | Docker služby (Hydrawise MCP, home-mcp, …) |
 | `.cursor/rules/` | Závazná pravidla pro agenta |
 | `docs/` | Návody, learning-log, šablony promptů |
+| `docs/multiagent-zadani.md` | Zadání MA — hybrid (1× PIPELINE + child artefakty) |
 | Obsidian `projekty/mujdum/` | Session, proč, follow-up (MCP) |
 
 ## Pravidla (vždy respektovat)
