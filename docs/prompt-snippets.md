@@ -7,14 +7,14 @@ Používej jako “copy‑paste” šablony pro zadávání úkolů tak, aby Cur
 Detailní checklist: [`navrat-k-projektu.md`](navrat-k-projektu.md). Agent čte [`AGENTS.md`](../AGENTS.md).
 
 ```text
-Navazuji na práci v repu cursor.
+Navazuji na práci v multi-agent template repu.
 
-Přečti AGENTS.md (sekce Návrat), git status + git log -5, docs/learning-log.md (konec),
-Obsidian projekty/mujdum/hub.md + nejnovější session-*.md.
+Přečti AGENTS.md (sekce Návrat), git status + git log -5, docs/learning-log.md (konec).
+Volitelně Obsidian projekty/<projekt>/hub.md + nejnovější session-*.md.
 
 Větev: <…>
 Úkol teď: <jedna věta>
-Pravidla: .cursor/rules/ — vzdálený deploy mujdum jen na žádost.
+Pravidla: .cursor/rules/ — bez PR; MA přes /m.
 ```
 
 ## Základní šablona (vždy)

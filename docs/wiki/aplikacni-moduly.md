@@ -1,6 +1,6 @@
 # Moduly procesu (role 3+3)
 
-„Moduly“ multi-agent toku = **role**, ne React/Node balíčky. Produktové vrstvy (mujdum FE/BE) zůstávají v `AGENTS.md`.
+„Moduly“ multi-agent toku = **role**, ne React/Node balíčky. Struktura šablony je v `AGENTS.md`.
 
 ## Produkce ↔ kontrola
 

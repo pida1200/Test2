@@ -19,7 +19,7 @@ Jeden požadavek = jedno `[PIPELINE]` issue. Role (Analytik → Kontrolor → �
 ## Hranice systému
 
 - **Dělá:** řízení vývoje přes Issues + KB ve Wiki; boty (next/sync/gate-check) asistují.
-- **Nedělá:** nespouští Cursor agenty z CI; nenahrazuje unit testy / lint; není produktová dokumentace mujdum/ciselniky (jen odkazy).
+- **Nedělá:** nespouští Cursor agenty z CI; nenahrazuje unit testy / lint; není dokumentace konkrétní produktové aplikace (to patří do cílového repa).
 
 ## Kde je detail pro agenty
 

@@ -10,7 +10,7 @@ Krátké záznamy po významnějších krocích. Slouží jako:
 
 **Ano:** změny v `.cursor/rules/`, multi-agent běh, větší refaktor, incident (infra/produkce), učení v `examples/`.
 
-**Ne (stačí odpověď v chatu):** drobný bugfix v `mujdum/` — větší úlohy v mujdum raději do Obsidianu (`projekty/mujdum/session-…`).
+**Ne (stačí odpověď v chatu):** drobný bugfix / typo. Větší úlohy raději do Obsidianu (`projekty/<projekt>/session-…`) nebo learning-logu.
 
 Pravidlo: `repo-kvalita.mdc`.
 

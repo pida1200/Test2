@@ -1,43 +1,52 @@
-# cursor — projekt na učení práce v Cursoru
+# Multi-agent template
 
-Tenhle repozitář je “sandbox” na trénink workflow v Cursoru: Git bez PR, pravidla pro AI (`.cursor/rules`), ukázky v `examples/` a produkt **mujdum**.
+Šablona repozitáře pro **multi-agentní vývoj** v Cursoru: GitHub Issues jako I/O, slash `/m`, role 3+3 + kontroloři, Wiki KB seed.
 
-## Pro AI agenty a návrat po restartu
+Neobsahuje produktovou aplikaci — jen tooling, dokumentaci a ukázku `examples/backend`.
 
-- **[`AGENTS.md`](AGENTS.md)** — struktura repa, checklist kontextu, kde zapisovat paměť
-- **[`docs/navrat-k-projektu.md`](docs/navrat-k-projektu.md)** — copy-paste prompty pro nový chat
-- **Obsidian** `projekty/mujdum/` — sessiony a follow-up (viz `.cursor/rules/obsidian-prace-programovani.mdc`)
+## Pro AI agenty
+
+- **[`AGENTS.md`](AGENTS.md)** — struktura, checklist návratu
+- **[`docs/navrat-k-projektu.md`](docs/navrat-k-projektu.md)** — copy-paste prompty
+- **[`docs/multi-agent-workflow.md`](docs/multi-agent-workflow.md)** — role, modely, šablony
+- **Wiki seed:** [`docs/wiki/Home.md`](docs/wiki/Home.md)
 
 ## Co tady najdeš
 
-- `docs/` – krátké návody, learning-log, šablony session
-- `.cursor/rules/` – pravidla pro AI (`repo-navrat`, `repo-git`, `repo-kvalita`, `mujdum`, …)
+| Cesta | Účel |
+|-------|------|
+| `docs/` | workflow, zadání, learning-log, scripts |
+| `docs/wiki/` | KB seed (sync → GitHub Wiki) |
+| `.cursor/skills/m/` | slash `/m` |
+| `.cursor/rules/` | závazná pravidla |
+| `examples/backend` | třívrstvá ukázka + unit testy |
+| `.github/` | issue šablony + MA Actions |
 
-## Doporučený postup (10–20 min)
+## Jak použít jako šablonu
 
-1. Otevři `docs/01-zakladni-nastaveni.md` a nastav editor na “team-friendly” defaulty.
-2. Projdi `docs/02-git-a-pr-workflow.md` a zkus si vytvořit větev + změnu + commit.
-3. Zapni a uprav pravidla v `.cursor/rules/` a vyzkoušej “piš kód podle pravidel”.
+1. Na GitHubu: **Use this template** (nebo fork) → nový repo.
+2. Uprav `README.md` / `AGENTS.md` (název projektu).
+3. Nahraď odkazy `pida1200/Test2` svým `owner/repo` ve `docs/wiki/` (absolutní GitHub URL) a v dokumentaci.
+4. Jednorázově: `bash docs/scripts/create-multiagent-labels.sh`.
+5. Bootstrap Wiki UI (Create first page `Home`), pak `bash docs/scripts/sync-wiki-to-github.sh`.
+6. Ověř: `npm run check`.
+7. První změna: feature větev + commit (**bez PR** — viz `repo-git.mdc`).
 
-## Jak začít
+## Rychlý start
 
 ```bash
-cd /Users/zdenekkorinek/Programovani/cursor
 git status
+npm run check
+# Multi-agent:
+# /m          — kickoff + orchestrace
+# /m #N       — orchestrace pipeline
+# /m #N once  — jeden krok
 ```
 
-## Template checklist (když založíš nový projekt z template)
+## Ověření
 
-Po vytvoření nového repa přes **Use this template** doporučený postup:
-
-1. **Uprav README** (název projektu, popis, odkazy).
-2. **Zkontroluj `.cursor/rules/`** – ponech jen pravidla, která chceš skutečně vynucovat pro daný projekt.
-3. **Nastav `npm run check`**:
-   - buď ponech root `package.json` a uprav skripty pro tvůj stack,
-   - nebo ho nahraď vlastním “check” pipeline (test+lint).
-4. **První PR**:
-   - malá změna (např. úprava pravidel/README),
-   - `npm run check`,
-   - PR popis se Summary + Test plan.
-5. **Learning log**:
-   - používej `docs/learning-log.md` jako backlog rizik a dalších kroků.
+```bash
+npm run check          # examples + docs + wiki + ma
+npm run check:wiki
+npm run check:ma
+```

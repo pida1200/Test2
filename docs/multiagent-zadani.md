@@ -30,7 +30,7 @@ Multi-agent vývoj má mít **jedno issue jako požadavek** (`[PIPELINE]`), zat�
 - **Wiki seed (`docs/wiki/`)** = delší artefakty a rostoucí KB (SoT v gitu)  
 - **GitHub Wiki UI** = publikační mirror seedu (sync skriptem, viz §4.6)  
 - **git (`docs/` + kód)** = technická spec + implementace (bez PR — přímý commit)  
-- **Obsidian** = session / „proč“ (mujdum) — beze změny
+- **Obsidian** = session / „proč“ (volitelné) — beze změny
 
 Varianta B (`ma/*`) zůstává odmítnutá.
 
@@ -64,7 +64,7 @@ Varianta B (`ma/*`) zůstává odmítnutá.
 | Delší analýza, rozhodnutí, popis řešení | **Wiki** (`aplikacni-*` / `provozni-*` / `zmeny-*`) |
 | Verdikt GO/NO-GO | **nové** `[VERDIKT-*]` issue |
 | Kód, unit testy | **git** (větev + commit) |
-| Technická API/spec v PR | **`docs/` / `mujdum/docs/`** (git) |
+| Technická API/spec | **`docs/` / `examples/`** (git) |
 | Session / follow-up | **Obsidian** |
 | Nález mimo scope / odložený | `[BUG]` |
 
@@ -272,7 +272,7 @@ Bot `multiagent-next.yml` komentuje `/m #N` i `/m #N once`. CI **nespouští** C
 
 ## 10. Mimo scope
 
-- Změna runtime aplikace (mujdum/ciselniky) — jen pokud pipeline to explicitně vyžaduje
+- Změna runtime aplikace — jen pokud pipeline to explicitně vyžaduje (tato šablona je MA tooling)
 - Náhrada modelu `ma/*` (varianta B) — **ne**
 - Wiki jako náhrada Issues / `gate/*` — **ne**
 - Vzdálený deploy bez explicitní žádosti uživatele

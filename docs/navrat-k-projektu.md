@@ -8,49 +8,31 @@ Viz **`AGENTS.md`** → sekce „Návrat k projektu“. Stručně:
 
 1. `git status` + `git log -5`
 2. `docs/learning-log.md` (konec souboru)
-3. **mujdum:** Obsidian `projekty/mujdum/hub.md` + poslední `session-*.md`; spec v `mujdum/docs/`
-4. **číselníky:** `ciselniky/AGENTS.md` + `ciselniky/docs/README.md`; Obsidian `projekty/ciselniky/hub.md` + poslední `session-*.md`
+3. Otevřené `[PIPELINE]` / Wiki dle úkolu
+4. Obsidian `projekty/<projekt>/` (pokud trezor používáš)
 
 ## Copy-paste pro tebe (nový chat)
 
 ```text
-Navazuji na práci v repu cursor.
+Navazuji na práci v multi-agent template repu.
 
-Přečti AGENTS.md (sekce Návrat k projektu), git log -5, docs/learning-log.md (poslední záznamy),
-Obsidian projekty/mujdum/hub.md + nejnovější session-*.md.
+Přečti AGENTS.md (sekce Návrat k projektu), git log -5, docs/learning-log.md (poslední záznamy).
+Volitelně Obsidian projekty/<projekt>/hub.md + nejnovější session-*.md.
 
-Větev: <např. cursor/optional-issues-f4e46>
+Větev: <např. feature/…>
 Poslední známý commit: <hash nebo „git log“>
 Úkol teď: <jedna věta>
 
-Pravidla: .cursor/rules/ — lokální Docker po změně mujdum, vzdálený deploy jen na žádost.
+Pravidla: .cursor/rules/ — bez PR; MA přes /m.
 ```
 
-## Copy-paste — jen mujdum / sport
+## Copy-paste — multi-agent pipeline
 
 ```text
-Scope: mujdum/** — sport modul.
+Scope: multi-agent / docs/wiki.
 
-Před kódem: mujdum/docs/sport.md (stav fází), Obsidian session dnešního dne,
-mujdum/docs/api.md (Sport).
-
-Teď: <konkrétní krok>
-```
-
-## Copy-paste — číselníky
-
-```text
-Scope: cursor/ciselniky/**
-
-Před kódem: ciselniky/AGENTS.md, ciselniky/docs/README.md,
-Obsidian projekty/ciselniky/hub.md + nejnovější session-*.md.
-Spec jen dle tabulky v AGENTS.md — ne celé zadani.md.
-
-Větev: <větev>
-Úkol teď: <jedna věta>
-
-Po změně běhu: npm test, npm run deploy, npm run check.
-Commit/push jen na mou žádost.
+Před kódem: docs/multi-agent-workflow.md, otevřené [PIPELINE] issue.
+Teď: /m #<N>  (nebo /m #<N> once)
 ```
 
 ## Kdy založit novou Obsidian session
