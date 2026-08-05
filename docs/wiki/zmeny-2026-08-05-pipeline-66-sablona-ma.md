@@ -6,7 +6,7 @@
 
 ## Cíl
 
-Vyčistit Test2 od produktů (produktových stromů, odkazy na číselníky) → znovupoužitelná MA šablona.
+Vyčistit Test2 od produktových stromů a jejich odkazů v dokumentaci → znovupoužitelná MA šablona.
 
 ## Dopad
 
