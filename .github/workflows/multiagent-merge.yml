@@ -1,0 +1,493 @@
+name: Multi-agent merge
+
+# Zavrecny merge feature vetve do main jako ukol v GitHubu — label `merge/approved`
+# na `[PIPELINE]` issue (issues.labeled), nebo `workflow_dispatch` (fail-closed: dry_run
+# default true; ostry beh vyzaduje stejny overeny `merge/approved` — guard G7).
+# Kontrakt: ANALYZA #93 (v2, oprava vad z VERDIKT-A NO-GO #94). Pipeline: #81.
+#
+# Bootstrap (§3.6, E14): #81 se timto workflow slouzit NEMUZE — workflow z `main` jeste
+# label `merge/approved` nezna a label v repu jeste neexistuje. Prvni merge #81 dela
+# clovek rucne; label se ostre uzije az na DALSI pipeline. Detail:
+# docs/wiki/provozni-konfigurace.md (Bootstrap merge labelu) a
+# docs/wiki/zmeny-2026-08-05-pipeline-81-merge-git-ukol.md.
+#
+# Guardy G0-G6 + autorizace G7 (authorizeRun): docs/scripts/ma-merge-lib.cjs
+# (offline testy: npm run check:ma / test-ma-merge-lib.sh).
+
+on:
+  issues:
+    types: [labeled]
+  workflow_dispatch:
+    inputs:
+      pipeline:
+        description: 'Cislo [PIPELINE] issue'
+        required: true
+      branch:
+        description: 'Override zdrojove vetve (jinak z MERGE-PENDING markeru)'
+        required: false
+      dry_run:
+        description: 'true = jen report, bez merge/push/labelu (fail-closed default)'
+        type: boolean
+        required: false
+        default: true
+
+concurrency:
+  group: merge-main
+  cancel-in-progress: false
+
+permissions:
+  contents: write # default repa je READ — eskalace jen v tomto jednom workflow (E10)
+  issues: write
+
+jobs:
+  merge:
+    if: >
+      (
+        github.event_name == 'issues' &&
+        github.event.label.name == 'merge/approved' &&
+        contains(join(github.event.issue.labels.*.name, ','), 'multiagent/pipeline')
+      ) ||
+      github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Guard + merge + wiki mirror
+        id: run
+        uses: actions/github-script@v7
+        env:
+          INPUT_PIPELINE: ${{ inputs.pipeline }}
+          INPUT_BRANCH: ${{ inputs.branch }}
+          INPUT_DRY_RUN: ${{ inputs.dry_run }}
+        with:
+          script: |
+            const { execSync } = require('child_process');
+            const fs = require('fs');
+            const lib = require('./docs/scripts/ma-merge-lib.cjs');
+            const nextLib = require('./docs/scripts/multiagent-next-lib.cjs');
+
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const eventName = context.eventName;
+            const runUrl = `${process.env.GITHUB_SERVER_URL}/${owner}/${repo}/actions/runs/${process.env.GITHUB_RUN_ID}`;
+            const WIKI_LOG = 'wiki-sync.log';
+
+            function sh(cmd) {
+              return execSync(cmd, { encoding: 'utf8' });
+            }
+
+            async function getPermission(login) {
+              try {
+                const { data } = await github.rest.repos.getCollaboratorPermissionLevel({ owner, repo, username: login });
+                return data.permission;
+              } catch (e) {
+                return 'none';
+              }
+            }
+
+            function resolveGate(labelList) {
+              const gates = labelList.filter((l) => l.startsWith('gate/'));
+              const precedence = ['gate/go', 'gate/no-go', 'gate/blocked', 'gate/pending'];
+              for (const g of precedence) {
+                if (gates.includes(g)) return g;
+              }
+              return 'gate/pending';
+            }
+
+            async function findOpenFollowUp(title) {
+              const issues = await github.paginate(github.rest.issues.listForRepo, {
+                owner, repo, state: 'open', labels: 'multiagent/bug', per_page: 50,
+              });
+              return issues.find((i) => i.title === title) || null;
+            }
+
+            async function postFailure(failures, wikiSyncReason) {
+              const comment = lib.composeResultComment({
+                status: 'failed',
+                failureReasons: failures,
+                runUrl,
+                wikiSync: 'skipped',
+                wikiSyncReason,
+              });
+              await github.rest.issues.createComment({ owner, repo, issue_number: pipelineNum, body: comment });
+              if (plLabels.includes('merge/approved')) {
+                await github.rest.issues
+                  .removeLabel({ owner, repo, issue_number: pipelineNum, name: 'merge/approved' })
+                  .catch(() => {});
+              }
+              await github.rest.issues.addLabels({ owner, repo, issue_number: pipelineNum, labels: ['merge/failed'] });
+              core.setFailed(failures.join(' | '));
+            }
+
+            // --- 1) Resolve trigger + inputs -------------------------------------------------
+
+            let pipelineNum;
+            let branchOverride = null;
+            let dryRunInput = true;
+            let labelName = null;
+
+            if (eventName === 'workflow_dispatch') {
+              pipelineNum = parseInt(process.env.INPUT_PIPELINE || '', 10);
+              branchOverride = process.env.INPUT_BRANCH || null;
+              dryRunInput = String(process.env.INPUT_DRY_RUN || 'true') !== 'false';
+            } else if (eventName === 'issues') {
+              pipelineNum = context.payload.issue.number;
+              labelName = context.payload.label && context.payload.label.name;
+              dryRunInput = false;
+            } else {
+              core.info(`Nepodporovana udalost: ${eventName} — no-op`);
+              return;
+            }
+
+            if (!pipelineNum || Number.isNaN(pipelineNum)) {
+              core.setFailed('workflow_dispatch: chybi nebo neplatne cislo pipeline (input "pipeline")');
+              return;
+            }
+
+            const { data: pipelineIssue } = await github.rest.issues.get({ owner, repo, issue_number: pipelineNum });
+            const plLabels = (pipelineIssue.labels || []).map((l) => l.name);
+
+            if (!plLabels.includes('multiagent/pipeline')) {
+              core.info(`#${pipelineNum} nema label multiagent/pipeline — no-op (E1)`);
+              return;
+            }
+
+            // --- 2) Autorizace zapisu (G7) — jedina a spolecna pro obe cesty ------------------
+
+            let approvedByPermission = null;
+            if (eventName === 'workflow_dispatch' && !dryRunInput) {
+              const timeline = await github.paginate(github.rest.issues.listEventsForTimeline, {
+                owner, repo, issue_number: pipelineNum, per_page: 100,
+              });
+              const labelEvents = timeline.filter(
+                (e) => e.event === 'labeled' && e.label && e.label.name === 'merge/approved'
+              );
+              const last = labelEvents.length ? labelEvents[labelEvents.length - 1] : null;
+              if (last && last.actor && last.actor.login) {
+                approvedByPermission = await getPermission(last.actor.login);
+              }
+            }
+
+            const authz = lib.authorizeRun({
+              eventName,
+              labelName,
+              dryRun: dryRunInput,
+              currentLabels: plLabels,
+              approvedByPermission,
+            });
+            core.info(`authorizeRun -> ${JSON.stringify(authz)}`);
+
+            const dryRunReportOnly = eventName === 'workflow_dispatch' && dryRunInput === true;
+
+            if (!authz.allowed) {
+              core.info(`G7 deny: ${authz.reason}`);
+              if (dryRunReportOnly) {
+                // nedosazitelne (dryRun:true => authz.allowed vzdy true), ale pro jistotu bez zasahu do issue
+                core.setFailed(`G7 deny: ${authz.reason}`);
+                return;
+              }
+              await postFailure([`G7: ${authz.reason}`], 'autorizace zamitnuta — merge neproveden');
+              return;
+            }
+
+            // --- 3) MERGE-PENDING handoff + guardy G0-G4 --------------------------------------
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner, repo, issue_number: pipelineNum, per_page: 100,
+            });
+            const pending = lib.parseMergePending(comments);
+
+            const actorPermission = await getPermission(context.actor);
+            const branch = branchOverride || (pending && pending.branch) || null;
+            const sha = pending ? pending.sha : null;
+
+            let branchExistsOnOrigin = false;
+            if (branch) {
+              try {
+                sh(`git ls-remote --exit-code origin "refs/heads/${branch}"`);
+                branchExistsOnOrigin = true;
+              } catch (e) {
+                branchExistsOnOrigin = false;
+              }
+            }
+
+            let headMatchesSha = false;
+            if (branchExistsOnOrigin) {
+              try {
+                sh(`git fetch origin "${branch}" --quiet`);
+                const remoteBranchSha = sh('git rev-parse FETCH_HEAD').trim();
+                headMatchesSha = !!sha && remoteBranchSha.startsWith(sha.trim());
+              } catch (e) {
+                headMatchesSha = false;
+              }
+            }
+
+            // G2: posledni [VERDIKT-A]/[VERDIKT-V]/[VERDIKT-T] s "Pipeline: #N"
+            const allIssues = await github.paginate(github.rest.issues.listForRepo, {
+              owner, repo, labels: 'multiagent', state: 'all', per_page: 100,
+            });
+            const children = allIssues.filter(
+              (i) => !i.pull_request && i.number !== pipelineNum
+                && nextLib.parsePipelineNum(i.body || '') === String(pipelineNum)
+            );
+
+            const verdicts = {};
+            for (const kind of ['A', 'V', 'T']) {
+              const matches = children
+                .filter(
+                  (i) => (i.labels || []).map((l) => l.name).includes('multiagent/verdikt')
+                    && nextLib.verdictKind(i.title || '') === kind
+                )
+                .sort((a, b) => a.number - b.number);
+              const latest = matches.length ? matches[matches.length - 1] : null;
+              verdicts[kind] = latest
+                ? {
+                    gate: resolveGate((latest.labels || []).map((l) => l.name)),
+                    verdikt: nextLib.parseVerdiktValue(latest.body || ''),
+                  }
+                : null;
+            }
+
+            // G3: otevreny multiagent/bug, blocker, ve scope – odlozeno
+            const openBlockerBugInScope = children.some((i) => {
+              const labels = (i.labels || []).map((l) => l.name);
+              if (i.state !== 'open' || !labels.includes('multiagent/bug')) return false;
+              const body = i.body || '';
+              return /Z[aá]va[zž]nost:\s*blocker/i.test(body) && /Rozsah:\s*ve scope\s*[-–]\s*odlo[zž]eno/i.test(body);
+            });
+
+            const preGuards = lib.evaluateGuards({
+              actorPermission,
+              pipelineIssue: { state: pipelineIssue.state, labels: plLabels },
+              verdicts,
+              openBlockerBugInScope,
+              branchExistsOnOrigin,
+              headMatchesSha,
+              mergeConflict: false,
+              checkFailed: false,
+            });
+
+            if (!pending) {
+              preGuards.failures.unshift('E2: chybi MERGE-PENDING marker i fallback (**Vetev:**/**HEAD:**) v komentarich');
+            }
+            const preGuardsPass = preGuards.pass && !!pending;
+
+            core.info(`Guardy G0-G4: ${preGuardsPass ? 'PASS' : 'FAIL'} ${JSON.stringify(preGuards.failures)}`);
+            core.info(`Vetev: ${branch || '?'} · SHA: ${sha || '?'}`);
+
+            // --- 4) Idempotence (E5) ----------------------------------------------------------
+
+            let alreadyMerged = false;
+            if (preGuardsPass && sha) {
+              try {
+                sh(`git fetch origin main --quiet`);
+                sh(`git merge-base --is-ancestor ${sha} origin/main`);
+                alreadyMerged = true;
+              } catch (e) {
+                alreadyMerged = false;
+              }
+            }
+
+            // --- 5) Dry-run report-only (E15) — zadny zasah do issue --------------------------
+
+            if (dryRunReportOnly) {
+              let commits = [];
+              if (branchExistsOnOrigin) {
+                try {
+                  commits = sh(`git log origin/main..origin/${branch} --oneline`).trim().split('\n').filter(Boolean);
+                } catch (e) {
+                  commits = [];
+                }
+              }
+              await core.summary
+                .addHeading(`Dry-run — pipeline #${pipelineNum}`)
+                .addRaw(`Vetev: \`${branch || '?'}\` · SHA: \`${sha || '?'}\`\n\n`, true)
+                .addRaw(`Guardy G0-G4: **${preGuardsPass ? 'PASS' : 'FAIL'}**\n`, true)
+                .addList(preGuards.failures.length ? preGuards.failures : ['(zadne — plna GO sada)'])
+                .addRaw(alreadyMerged ? '\nMain uz obsahuje HEAD vetve — realny beh by byl no-op (E5).\n' : '', true)
+                .addRaw(`\nCommity, ktere by se sloucily (${commits.length}):\n`, true)
+                .addList(commits.length ? commits : ['(zadne)'])
+                .write();
+              core.info('dry_run:true — bez merge, pushe i zmeny labelu (E15)');
+              return;
+            }
+
+            // --- 6) Guard fail (ostry beh) -----------------------------------------------------
+
+            if (!preGuardsPass) {
+              await postFailure(preGuards.failures, 'guard fail — merge neproveden');
+              return;
+            }
+
+            // --- 7) Idempotentni no-op (E5) -----------------------------------------------------
+
+            if (alreadyMerged) {
+              const comment = lib.composeResultComment({
+                status: 'already-merged',
+                runUrl,
+                wikiSync: 'skipped',
+                wikiSyncReason: 'main uz obsahuje HEAD vetve',
+              });
+              await github.rest.issues.createComment({ owner, repo, issue_number: pipelineNum, body: comment });
+              if (plLabels.includes('merge/approved')) {
+                await github.rest.issues
+                  .removeLabel({ owner, repo, issue_number: pipelineNum, name: 'merge/approved' })
+                  .catch(() => {});
+              }
+              await github.rest.issues.addLabels({ owner, repo, issue_number: pipelineNum, labels: ['merge/done'] });
+              await github.rest.issues.update({ owner, repo, issue_number: pipelineNum, state: 'closed' });
+              core.info('OK: uz slouceno (idempotence, E5)');
+              return;
+            }
+
+            // --- 8) Merge --no-ff + overeni (G5/G6) + push (E9 = 1x retry) ---------------------
+
+            function attempt() {
+              sh(`git fetch origin main "${branch}" --quiet`);
+              const baseSha = sh('git rev-parse origin/main').trim();
+              sh('git checkout -B main origin/main');
+              try {
+                sh(`git merge --no-ff "origin/${branch}" -m "Merge branch '${branch}' (#${pipelineNum})"`);
+              } catch (e) {
+                sh('git merge --abort || true');
+                return { conflict: true };
+              }
+              try {
+                sh('npm ci --prefix examples/backend');
+                sh('npm run check');
+              } catch (e) {
+                sh(`git reset --hard ${baseSha}`);
+                return { checkFailed: true };
+              }
+              try {
+                sh('git push origin main');
+              } catch (e) {
+                return { pushRejected: true };
+              }
+              return { ok: true, baseSha };
+            }
+
+            let result = attempt();
+            if (result.pushRejected) {
+              core.info('Non-fast-forward — retry (E9): fetch + merge znovu');
+              result = attempt();
+            }
+
+            if (result.conflict || result.checkFailed || result.pushRejected) {
+              const failures = [];
+              if (result.conflict) failures.push('G5: merge do main zpusobil konflikt');
+              if (result.checkFailed) failures.push('G6: overeni (`npm run check`) po merge selhalo');
+              if (result.pushRejected) failures.push('E9: push do main odmitnut (non-fast-forward) i po jednom retry');
+              await postFailure(failures, 'merge/overeni/push selhalo');
+              return;
+            }
+
+            const mergeSha = sh('git rev-parse HEAD').trim();
+            const commitLines = sh(`git log ${result.baseSha}..HEAD --pretty=format:%h%x09%s`).trim();
+            const mergedCommits = commitLines
+              ? commitLines.split('\n').map((line) => {
+                  const [csha, ...rest] = line.split('\t');
+                  return { sha: csha, message: rest.join('\t') };
+                })
+              : [];
+
+            // --- 9) Wiki mirror (§3.4 krok 5, E11; §3.7 D7) -------------------------------------
+
+            let wikiSync = 'skipped';
+            let wikiSyncReason = 'zadne zmeny v docs/wiki/**';
+            let wikiTouched = false;
+            try {
+              wikiTouched = sh(`git diff --name-only ${result.baseSha}..HEAD -- docs/wiki`).trim().length > 0;
+            } catch (e) {
+              wikiTouched = false;
+            }
+
+            if (wikiTouched) {
+              try {
+                const out = sh('bash docs/scripts/sync-wiki-to-github.sh 2>&1');
+                fs.writeFileSync(WIKI_LOG, out);
+                wikiSync = 'ok';
+                wikiSyncReason = null;
+              } catch (e) {
+                const out = (e.stdout || '') + (e.stderr || '') || String((e && e.message) || e);
+                fs.writeFileSync(WIKI_LOG, out);
+                wikiSync = 'failed';
+                wikiSyncReason = null;
+              }
+            }
+
+            let wikiLogArtifactUrl = null;
+            let followUpIssueUrl = null;
+            if (wikiSync === 'failed') {
+              wikiLogArtifactUrl = `${runUrl} (artefakt wiki-sync.log)`;
+              const title = `[BUG] wiki mirror nesynchronizovan (pipeline #${pipelineNum})`;
+              const existing = await findOpenFollowUp(title);
+              if (existing) {
+                await github.rest.issues.createComment({
+                  owner, repo, issue_number: existing.number,
+                  body: `Dalsi selhani wiki mirroru — beh: ${runUrl}`,
+                });
+                followUpIssueUrl = existing.html_url;
+              } else {
+                const body = [
+                  `Pipeline: #${pipelineNum}`,
+                  '',
+                  `Merge do \`main\` probehl (\`${mergeSha}\`), ale synchronizace wiki mirroru selhala.`,
+                  '',
+                  `Beh: ${runUrl}`,
+                  '',
+                  'Rucni naprava:',
+                  '```bash',
+                  'bash docs/scripts/sync-wiki-to-github.sh',
+                  '```',
+                ].join('\n');
+                const created = await github.rest.issues.create({
+                  owner, repo,
+                  title,
+                  labels: ['multiagent', 'multiagent/bug', 'bug'],
+                  body,
+                });
+                followUpIssueUrl = created.data.html_url;
+              }
+              await github.rest.issues.addLabels({ owner, repo, issue_number: pipelineNum, labels: ['wiki/sync-failed'] });
+            }
+
+            // --- 10) Vysledkovy komentar + labely + close (§3.4 krok 6-7) -----------------------
+
+            const resultComment = lib.composeResultComment({
+              status: 'merged',
+              mergeSha,
+              mergedCommits,
+              runUrl,
+              wikiSync,
+              wikiSyncReason: wikiSync === 'skipped' ? wikiSyncReason : undefined,
+              wikiLogArtifactUrl,
+              followUpIssueUrl,
+            });
+            await github.rest.issues.createComment({ owner, repo, issue_number: pipelineNum, body: resultComment });
+
+            if (plLabels.includes('merge/approved')) {
+              await github.rest.issues
+                .removeLabel({ owner, repo, issue_number: pipelineNum, name: 'merge/approved' })
+                .catch(() => {});
+            }
+            await github.rest.issues.addLabels({ owner, repo, issue_number: pipelineNum, labels: ['merge/done'] });
+            await github.rest.issues.update({ owner, repo, issue_number: pipelineNum, state: 'closed' });
+
+            core.info(`OK: merge ${mergeSha} -> main; wiki-sync: ${wikiSync}`);
+
+      - name: Upload wiki-sync log (pokud vznikl)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wiki-sync-log
+          path: wiki-sync.log
+          if-no-files-found: ignore
+          retention-days: 14

@@ -41,7 +41,7 @@ Uživatel spustil slash `/m` s volitelnými argumenty.
 2. `gate/blocked` na pipeline
 3. Chybí `gh` write → degradace + STOP (text k ručnímu vložení)
 4. Uživatel zadal `once`
-5. Integrátor předal k ručnímu merge (`MERGE-PENDING` na `[PIPELINE]`, A+V+T GO)
+5. Integrátor předal handoff `MERGE-PENDING` (marker + `**Větev:**`/`**HEAD:**`) na `[PIPELINE]`, A+V+T GO — merge do `main` spustí **člověk** přidáním labelu `merge/approved` (workflow `multiagent-merge.yml`), ne agent v Cursoru
 
 **Nesmíš:** přeskočit Kontrolora; sloučit GO bez nového verdikt issue; pokračovat po NO-GO.
 

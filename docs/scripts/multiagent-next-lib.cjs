@@ -101,7 +101,7 @@ const artifactMap = {
     'gate/go': {
       role: 'Integrátor',
       model: MODELS.integrator,
-      hint: 'MERGE-PENDING — čeká na ruční merge do main (bez akce agenta)',
+      hint: 'MERGE-PENDING — přidej label `merge/approved` (spustí multiagent-merge.yml)',
     },
   },
   'multiagent/analyza': {

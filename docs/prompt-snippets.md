@@ -105,7 +105,7 @@ Skill: `.cursor/skills/m/SKILL.md` · Command: `.cursor/commands/m.md`
 
 **Modely:** kanonická tabulka v [`multi-agent-workflow.md`](multi-agent-workflow.md) (sekce Modely) — sem nekopíruj.
 
-**STOP orchestrace:** NO-GO, `gate/blocked`, chybí `gh` write, `once`, `MERGE-PENDING` (ruční merge).
+**STOP orchestrace:** NO-GO, `gate/blocked`, chybí `gh` write, `once`, `MERGE-PENDING` (merge do main = člověk labelem `merge/approved`, ne agent).
 
 **CLI first, Task fallback:** role spouštěj přes `docs/scripts/ma-run-role.sh` (exit 3 = CLI chybí → vlož vytištěný prompt do Task).
 
@@ -220,7 +220,16 @@ Před handoffem:
 3. Ruční checklist child issues doplň pokud bot ještě nesynchronizoval
 4. Wiki: bash docs/scripts/check-wiki-seed.sh; u změny chování záznam docs/wiki/zmeny-… + řádek v zmeny-index.md
 5. Commit + push **feature větve** + docs/learning-log.md (ne merge do main)
-6. Komentář MERGE-PENDING do #<PIPELINE>; issue nech OPEN s gate/go
+6. Komentář MERGE-PENDING do #<PIPELINE> — lidský text **+ machine marker** na samostatném řádku:
+   <!-- multiagent-merge-pending pipeline="<PIPELINE>" branch="<větev>" sha="<HEAD>" -->
+   Issue nech OPEN s gate/go.
+7. Merge do main spustí ČLOVĚK přidáním labelu `merge/approved` (workflow multiagent-merge.yml
+   — guardy G0–G6 + autorizace G7, docs/scripts/ma-merge-lib.cjs). Ty do main nemerguj.
+
+Bootstrap (jen dokud neproběhlo B0–B5 z #81 — jinak tento blok vynech):
+   B0 člověk zmerguje #81 ručně → B1 create-multiagent-labels.sh → B2 ověř 4× merge/*+wiki/sync-failed
+   → B3 dry-run (workflow_dispatch, dry_run:true) nad uzavřenou pipeline, main beze změny
+   → B4 zapiš výsledek do #81 → B5 teprve další pipeline smí použít merge/approved ostře.
 ```
 
 ## Multi‑agent rychlá 2er — `/m 2` (Vývojář + Kontrolor vývojáře)
