@@ -3,6 +3,15 @@ description: Výstup Vývojáře (vstup pro Kontrolora vývojáře)
 title: "[IMPLEMENTACE] "
 labels: ["multiagent", "multiagent/implementace", "gate/pending"]
 body:
+  - type: textarea
+    id: ci_pipeline
+    attributes:
+      label: "CI řádek Pipeline (neměň formát)"
+      description: "Samostatný řádek pro anchored regex v CI — doplň číslo za #"
+      value: |
+        Pipeline: #
+    validations:
+      required: true
   - type: dropdown
     id: mode
     attributes:
@@ -16,15 +25,10 @@ body:
   - type: input
     id: pipeline
     attributes:
-      label: Pipeline issue #
-      description: "Jen číslo (#N); do body doplň samostatný řádek `Pipeline: #N`"
+      label: Pipeline issue # (kopie)
       placeholder: "#9"
     validations:
       required: true
-  - type: markdown
-    attributes:
-      value: |
-        **Povinný řádek v body** (samostatně): `Pipeline: #<číslo z pole výše>`
   - type: input
     id: analyza
     attributes:

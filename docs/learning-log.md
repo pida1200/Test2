@@ -26,19 +26,33 @@ Pravidlo: `repo-kvalita.mdc`.
 
 ## Záznamy
 
+### 2026-08-05 – /m #44 uzavřeno: kompletní wiki MA (funkční + provozní)
+
+- Výsledek: vyplněn wiki seed (`aplikacni/` + `provozni/` + Home/`_Sidebar` + `zmeny/…#44`); na `main` i MA revize A–C (next-lib, `check:ma`, `wiki-sync.yml`, dedupe modelů). Wiki UI syncnuta.
+- Ověření: VERDIKT-A #46 / V #48 / T #50 GO; `npm run check` zelený; Tester #49.
+- Riziko: větev byla merge bez squash (2 commity) — historie čitelná.
+- Další krok: ověřit CI `wiki-sync.yml` po pushi `docs/wiki/**` na main.
+
+### 2026-08-05 – Revize MA setup (optimalizace A–C)
+
+- Výsledek: dokumentační pravda (Wiki UI + AGENTS mapa + terminologie seed vs UI); jedna kanonická tabulka modelů; next-lib + unify Pipeline RE; `check:ma`; template body kontrakt; `_Sidebar` REQUIRED; `wiki-sync.yml`.
+- Ověření: `npm run check` (+ `check:ma`); sync Wiki po opravě `zmeny/`.
+- Riziko: wiki-sync CI potřebuje token s push do `.wiki.git`.
+- Další krok: ověřit první CI běh wiki-sync po pushi `docs/wiki/**`.
+
 ### 2026-08-05 – Publikace GitHub Wiki z docs/wiki/
 
 - Výsledek: bootstrap Home ve Wiki UI → vznikl `pida1200/Test2.wiki.git`; skript `docs/scripts/sync-wiki-to-github.sh` + `_Sidebar.md`; seed syncnut na https://github.com/pida1200/Test2/wiki; §4.6 aktualizován o sync příkaz.
 - Ověření: `git ls-remote …Test2.wiki.git` OK; sync push `179f6db`; Home „Wiki — rozcestník“ + sidebar (10 stránek).
 - Riziko: bootstrap UI je jednorázový (API/.git push bez první stránky nejde); sync vyžaduje `gh auth`.
-- Další krok: volitelně CI/workflow na sync po změně `docs/wiki/` (mimo scope).
+- Další krok: ~~volitelně CI/workflow na sync~~ → fáze C revize (`wiki-sync.yml`).
 
 ### 2026-08-05 – /m #34 uzavřeno: Hybrid MA + Wiki KB (varianta C)
 
 - Výsledek: gap analysis potvrdila hybrid na main; dokončen Wiki seed (ASCII `aplikacni`/`provozni`/`zmeny`), Wiki pravidla v rules/skill, `check:wiki` + negativní test. `docs/wiki/` = zdroj pravdy; Wiki UI sync = follow-up.
 - Ověření: VERDIKT-A #37 GO; VERDIKT-V #39→#40 GO; VERDIKT-T #42→#43 GO; `npm run check` zelený.
 - Riziko: GitHub Wiki UI ještě nemusí být založená.
-- Další krok: volitelně publikovat seed do Wiki UI.
+- Další krok: ~~volitelně publikovat seed do Wiki UI~~ → **[done]** publikace + sync (viz záznam výše).
 
 ### 2026-08-05 – Wiki seed + rozhodnutí Issues vs Wiki v MA zadání
 

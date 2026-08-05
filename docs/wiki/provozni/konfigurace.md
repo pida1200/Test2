@@ -1,17 +1,42 @@
-# Konfigurace
+# Konfigurace multi-agent
 
-> **Nikdy** neuvádět hesla, API klíče ani tokeny. Jen názvy proměnných a kde se berou.
+## Labely (povinné)
 
-## Typické soubory
+| Skupina | Hodnoty |
+|---------|---------|
+| Základ | `multiagent` |
+| Artefakt | `multiagent/pipeline`, `…/analyza`, `…/implementace`, `…/testy`, `…/verdikt`, `…/bug` |
+| Gate | `gate/pending`, `gate/go`, `gate/no-go`, `gate/blocked` |
 
-| Soubor | Účel |
-|--------|------|
-| `mujdum/.env` / `.env.example` | runtime BE/FE |
-| `ciselniky/.env` | číselníky |
-| Cloud Environment secrets | např. `GH_TOKEN` pro Issues write |
+Bug: `bug` + `multiagent` + `multiagent/bug` — **bez** `gate/*`.
 
-## Příklady názvů (bez hodnot)
+## CI kontrakt v body issue
 
-- `THESPORTSDB_API_KEY`
-- `DATABASE_URL` / DB host+port
-- `GH_TOKEN` (Issues pro cloud agenty)
+Samostatné řádky (anchored regex):
+
+```text
+Pipeline: #44
+Verdikt: GO          # jen verdikt issues
+Vstup: #45           # verdikt → produkční issue
+```
+
+Issue formuláře mají textarea „CI kontrakt“ s těmito řádky předvyplněnými.
+
+## GitHub Actions
+
+| Workflow | Účel |
+|----------|------|
+| `multiagent-next.yml` | komentář další role + `/m #N` (`multiagent-next-lib.cjs`) |
+| `multiagent-pipeline-sync.yml` | auto-přehled v `[PIPELINE]` |
+| `multiagent-gate-check.yml` | soft validace verdiktů (komentář, job nepadá) |
+| `wiki-sync.yml` | mirror `docs/wiki/` → `.wiki.git` |
+
+## Cursor
+
+- Skill `/m`: `.cursor/skills/m/SKILL.md` (`disable-model-invocation` — jen na slash)
+- Rule: `.cursor/rules/multi-agenti.mdc` (requestable)
+- Modely: jedna tabulka v `docs/multi-agent-workflow.md` (sekce Modely)
+
+## Degradace
+
+Bez `gh` write scope: agent vypíše body/labely k ručnímu vložení — nefailuje napůl.

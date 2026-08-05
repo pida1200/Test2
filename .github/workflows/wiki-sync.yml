@@ -1,0 +1,30 @@
+name: Wiki sync
+
+# Mirror docs/wiki/ → GitHub Wiki (.wiki.git) on push to main.
+# Prereq: Wiki UI bootstrapped once (Create the first page).
+# Uses GITHUB_TOKEN (contents: write) — same-repo .wiki.git push.
+# Docs: docs/multiagent-zadani.md §4.6 · docs/scripts/sync-wiki-to-github.sh
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/wiki/**'
+      - 'docs/scripts/sync-wiki-to-github.sh'
+      - 'docs/scripts/check-wiki-seed.sh'
+      - '.github/workflows/wiki-sync.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sync docs/wiki → GitHub Wiki
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: bash docs/scripts/sync-wiki-to-github.sh

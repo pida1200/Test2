@@ -9,7 +9,7 @@
 
 ## 1. Cíl (1 věta)
 
-Multi-agent vývoj má mít **jedno issue jako požadavek** (`[PIPELINE]`), zatímco **výstupy rolí** žijí v **child issues** (stav) a **delší / trvalá dokumentace** v **GitHub Wiki** (seed v `docs/wiki/`); stav pipeline se řídí **`gate/*` labely**.
+Multi-agent vývoj má mít **jedno issue jako požadavek** (`[PIPELINE]`), zatímco **výstupy rolí** žijí v **child issues** (stav) a **delší / trvalá dokumentace** ve **wiki seedu** (`docs/wiki/` = SoT; GitHub Wiki UI = publikační mirror); stav pipeline se řídí **`gate/*` labely**.
 
 ---
 
@@ -27,8 +27,9 @@ Multi-agent vývoj má mít **jedno issue jako požadavek** (`[PIPELINE]`), zat�
 **Rozhodnutí (dokumentace):**
 
 - **Issues** = požadavek + stav + krátký kontrakt / verdikt + odkazy  
-- **Wiki** = delší artefakty a postupně rostoucí dokumentace celého řešení  
-- **git (`docs/` + kód)** = technická spec v PR + implementace  
+- **Wiki seed (`docs/wiki/`)** = delší artefakty a rostoucí KB (SoT v gitu)  
+- **GitHub Wiki UI** = publikační mirror seedu (sync skriptem, viz §4.6)  
+- **git (`docs/` + kód)** = technická spec + implementace (bez PR — přímý commit)  
 - **Obsidian** = session / „proč“ (mujdum) — beze změny
 
 Varianta B (`ma/*`) zůstává odmítnutá.
@@ -99,7 +100,7 @@ Součást DoD této pipeline (a trvalé konvence): **existuje jasná wiki strukt
 | Stránka | Účel |
 |---------|------|
 | `Home` | rozcestník — odkaz na aplikační / provozní / změny |
-| `_Sidebar` (volitelně) | navigace ve Wiki UI |
+| `_Sidebar` | navigace ve Wiki UI (REQUIRED v `check-wiki-seed.sh`) |
 
 ### 4.2 Aplikační dokumentace (`aplikacni/`)
 
@@ -234,22 +235,15 @@ Workflow `multiagent-pipeline-sync.yml` udržuje sekci:
 | `/m #N` | plná pipeline 3+3 na issue `#N` |
 | `/m 2` | rychlá 2er (Vývojář + Kontrolor) — bez `#` = režim |
 | `/m 2 #N` | rychlá 2er nad pipeline `#N` |
+| `/m #<bug>` | issue s `multiagent/bug` — Vývojář |
 
 Po změně labelů komentuje `multiagent-next.yml` další `/m #N`.
 
 ---
 
-## 8. Role a modely (default — ověř slug v Cursor)
+## 8. Role a modely
 
-| Fáze | Role | Model |
-|------|------|--------|
-| ANALÝZA | Analytik | `claude-opus-5-thinking-high` |
-| VERDIKT-A | Kontrolor A | `claude-opus-5-thinking-high` |
-| IMPLEMENTACE | Vývojář | `composer-2.5-fast` |
-| VERDIKT-V | Kontrolor V | `gpt-5.6-sol-medium` |
-| TESTY | Tester | `composer-2.5-fast` |
-| VERDIKT-T | Kontrolor T | `claude-sonnet-5-thinking-high` |
-| uzavření | Integrátor | `composer-2.5-fast` |
+**Modely (kanonická tabulka):** [`docs/multi-agent-workflow.md`](multi-agent-workflow.md) — sekce Modely. Sem nekopíruj slugy.
 
 **Wiki při rolích:**
 

@@ -19,7 +19,7 @@ Uzavřít mezery kolem Wiki KB pro hybridní multi-agent model (varianta C): ASC
 
 - Nový skript `docs/scripts/check-wiki-seed.sh` + `npm run check:wiki` v `npm run check`.
 - `check:docs` lintuje `docs/multiagent-zadani.md` a `docs/wiki/**/*.md`.
-- GitHub Wiki UI zatím neexistuje — zdroj pravdy zůstává v gitu; první stránka ručně (follow-up sync).
+- **Zdroj pravdy** = `docs/wiki/` v gitu; **GitHub Wiki UI** publikován (bootstrap Home + sync): [pida1200/Test2/wiki](https://github.com/pida1200/Test2/wiki) — `bash docs/scripts/sync-wiki-to-github.sh`.
 
 ## Odkazy
 

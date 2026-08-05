@@ -85,9 +85,17 @@ async function run() {
     assert.strictEqual(k1, k2);
   });
 
-  await test('isVerdictNoGo anchored at body start only', () => {
+  await test('isVerdictNoGo line-anchored (not mid-line citation)', () => {
     assert.strictEqual(lib.isVerdictNoGo('Verdikt: NO-GO\n\nVady...'), true);
     assert.strictEqual(lib.isVerdictNoGo('Verdikt: GO\n\nOK'), false);
+    assert.strictEqual(
+      lib.isVerdictNoGo('### CI\n\nVerdikt: NO-GO\n\nPipeline: #1\n'),
+      true,
+    );
+    assert.strictEqual(
+      lib.isVerdictGo('### CI\n\nVerdikt: GO\n\nPipeline: #1\n'),
+      true,
+    );
   });
 
   await test('GO body citing Verdikt: NO-GO does not count as NO-GO', () => {

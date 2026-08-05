@@ -26,6 +26,7 @@ jobs:
         with:
           script: |
             const sync = require('./docs/scripts/pipeline-sync-lib.cjs');
+            const nextLib = require('./docs/scripts/multiagent-next-lib.cjs');
             const { START, END, PIPELINE_RE, parsePipelineNum, replacePrehledSection,
               buildVerdictHistoryLine, countNoGoRounds, shouldBlockPipeline,
               safeUpdatePipelineBody } = sync;
@@ -156,7 +157,7 @@ jobs:
               : 'Historie verdiktů: —';
 
             let nextRole = 'Integrátor → Analytik';
-            let nextModel = 'composer-2.5-fast';
+            let nextModel = nextLib.MODELS.integrator;
             let nextHint = `/m #${pipelineNum}`;
 
             outer: for (const phase of PHASES) {
@@ -164,55 +165,47 @@ jobs:
               if (!iss) {
                 if (phase.key === 'ANALÝZA') {
                   nextRole = 'Analytik';
-                  nextModel = 'claude-opus-5-thinking-high';
                 } else if (phase.key.startsWith('VERDIKT')) {
                   nextRole = phase.key === 'VERDIKT-A' ? 'Kontrolor analytika'
                     : phase.key === 'VERDIKT-V' ? 'Kontrolor vývojáře'
                     : 'Kontrolor testera';
-                  nextModel = phase.key === 'VERDIKT-V' ? 'gpt-5.6-sol-medium' : 'claude-opus-5-thinking-high';
                 } else if (phase.key === 'IMPLEMENTACE') {
                   nextRole = 'Vývojář';
-                  nextModel = 'composer-2.5-fast';
                 } else {
                   nextRole = 'Tester';
-                  nextModel = 'composer-2.5-fast';
                 }
+                nextModel = nextLib.modelForPhase(phase.key);
                 break outer;
               }
               const gate = issueGate(iss);
               if (gate === 'gate/no-go') {
                 if (phase.key === 'ANALÝZA' || phase.key === 'VERDIKT-A') {
                   nextRole = 'Analytik (rework)';
-                  nextModel = 'claude-opus-5-thinking-high';
+                  nextModel = nextLib.MODELS.analytik;
                 } else if (phase.key === 'IMPLEMENTACE' || phase.key === 'VERDIKT-V') {
                   nextRole = 'Vývojář (rework)';
-                  nextModel = 'composer-2.5-fast';
+                  nextModel = nextLib.MODELS.vyvojar;
                 } else {
                   nextRole = 'Tester (rework)';
-                  nextModel = 'composer-2.5-fast';
+                  nextModel = nextLib.MODELS.tester;
                 }
                 break outer;
               }
               if (gate === 'gate/pending') {
                 if (phase.key === 'ANALÝZA') {
                   nextRole = 'Analytik';
-                  nextModel = 'claude-opus-5-thinking-high';
                 } else if (phase.key === 'VERDIKT-A') {
                   nextRole = 'Kontrolor analytika';
-                  nextModel = 'claude-opus-5-thinking-high';
                 } else if (phase.key === 'IMPLEMENTACE') {
                   nextRole = 'Vývojář';
-                  nextModel = 'composer-2.5-fast';
                 } else if (phase.key === 'VERDIKT-V') {
                   nextRole = 'Kontrolor vývojáře';
-                  nextModel = 'gpt-5.6-sol-medium';
                 } else if (phase.key === 'TESTY') {
                   nextRole = 'Tester';
-                  nextModel = 'composer-2.5-fast';
                 } else {
                   nextRole = 'Kontrolor testera';
-                  nextModel = 'claude-sonnet-5-thinking-high';
                 }
+                nextModel = nextLib.modelForPhase(phase.key);
                 break outer;
               }
             }
@@ -232,7 +225,7 @@ jobs:
               });
               if (allGo && plLabels.includes('gate/go')) {
                 nextRole = 'Integrátor';
-                nextModel = 'composer-2.5-fast';
+                nextModel = nextLib.MODELS.integrator;
                 nextHint = 'Pipeline dokončena — uzavři issue';
               }
             }

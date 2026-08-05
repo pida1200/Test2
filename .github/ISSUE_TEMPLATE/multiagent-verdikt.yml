@@ -3,6 +3,17 @@ description: Výstup kontrolora (GO/NO-GO) — použij pro VERDIKT-A/V/T
 title: "[VERDIKT-] "
 labels: ["multiagent", "multiagent/verdikt", "gate/pending"]
 body:
+  - type: textarea
+    id: ci_contract
+    attributes:
+      label: "CI kontrakt (neměň formát řádků)"
+      description: "Gate-check vyžaduje tyto samostatné řádky — doplň čísla a GO|NO-GO"
+      value: |
+        Verdikt: GO
+        Pipeline: #
+        Vstup: #
+    validations:
+      required: true
   - type: dropdown
     id: kind
     attributes:
@@ -16,7 +27,7 @@ body:
   - type: dropdown
     id: verdict
     attributes:
-      label: Verdikt
+      label: Verdikt (sync s CI řádkem)
       options:
         - GO
         - NO-GO
@@ -25,19 +36,14 @@ body:
   - type: input
     id: pipeline
     attributes:
-      label: Pipeline issue #
-      description: "Jen číslo (#N); do body doplň samostatný řádek `Pipeline: #N`"
+      label: Pipeline issue # (kopie)
       placeholder: "#9"
     validations:
       required: true
-  - type: markdown
-    attributes:
-      value: |
-        **Povinný řádek v body** (samostatně): `Pipeline: #<číslo z pole výše>`
   - type: input
     id: input_issue
     attributes:
-      label: Vstupní produkční issue #
+      label: Vstupní produkční issue # (kopie)
       description: ANALÝZA / IMPLEMENTACE / TESTY
       placeholder: "#8"
     validations:
@@ -62,6 +68,6 @@ body:
       value: |
         **Titulek:** uprav na `[VERDIKT-A|V|T] <feature> — GO|NO-GO`.
 
-        **Labely (povinné):** nastav `gate/go` nebo `gate/no-go` na **tomto verdiktu i na produkčním issue** (# výše).
+        **Labely (povinné):** nastav `gate/go` nebo `gate/no-go` na **tomto verdiktu i na produkčním issue**.
 
-        **Body** musí začínat řádkem `Verdikt: GO` nebo `Verdikt: NO-GO`.
+        **CI kontrakt** nahoře musí obsahovat samostatné řádky `Verdikt:` / `Pipeline:` / `Vstup:`.

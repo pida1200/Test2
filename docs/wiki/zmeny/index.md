@@ -4,6 +4,7 @@ Chronologie změn řešení. Každá větší pipeline doplní řádek + stránk
 
 | Datum | Pipeline | Stránka | Shrnutí |
 |-------|----------|---------|---------|
+| 2026-08-05 | #44 | [pipeline-44-wiki-komplet](2026-08-05-pipeline-44-wiki-komplet) | Kompletní MA wiki (aplikacni + provozni) + revize tooling |
 | 2026-08-05 | #34 | [pipeline-34-hybrid-ma](2026-08-05-pipeline-34-hybrid-ma) | Wiki KB seed ASCII, check skript, pravidla rolí |
 
 ## Pravidlo

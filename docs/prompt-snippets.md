@@ -99,8 +99,11 @@ Skill: `.cursor/skills/m/SKILL.md` · Command: `.cursor/commands/m.md`
 | **`/m #N`** | Pokračuj v pipeline `#N` (fáze z labelů) |
 | **`/m 2`** | Rychlá 2er: Vývojář + Kontrolor vývojáře |
 | **`/m 2 #N`** | Rychlá 2er nad pipeline `#N` |
+| **`/m #<bug>`** | Issue s `multiagent/bug` — Vývojář (oprava / povýšení) |
 
 Číslo issue **vždy s `#`**. Labely `ma/*` nezavádět.
+
+**Modely:** kanonická tabulka v [`multi-agent-workflow.md`](multi-agent-workflow.md) (sekce Modely) — sem nekopíruj.
 
 I/O vždy přes GitHub Issues (`VSTUP_ISSUE` / `VÝSTUP_ISSUE`). Integrátor při kickoffu: existující pipeline issue **doplní** (`[PIPELINE]` titulek + labely); nové vytvoří jen když žádné neexistuje.
 
@@ -146,11 +149,11 @@ Scope: <složky/soubory>
 Mimo scope: <…>
 
 I/O: GitHub Issues (`.github/ISSUE_TEMPLATE/`)
-Pipeline + MODEL (ověř dostupnost slugů):
-1) [PIPELINE] → Analytik → [ANALÝZA] → K.A → [VERDIKT-A] [claude-opus-5-thinking-high]
-2) Vývojář → [IMPLEMENTACE] [composer-2.5-fast] → K.V → [VERDIKT-V] [gpt-5.6-sol-medium]
-3) Tester → [TESTY] [composer-2.5-fast] → K.T → [VERDIKT-T] [claude-sonnet-5-thinking-high]
-4) Integrátor [composer-2.5-fast] uzavře [PIPELINE] jen při gate/go na A+V+T
+Pipeline + MODEL: viz `docs/multi-agent-workflow.md` (sekce Modely) — uveď `MODEL:` u role
+1) [PIPELINE] → Analytik → [ANALÝZA] → K.A → [VERDIKT-A]
+2) Vývojář → [IMPLEMENTACE] → K.V → [VERDIKT-V]
+3) Tester → [TESTY] → K.T → [VERDIKT-T]
+4) Integrátor uzavře [PIPELINE] jen při gate/go na A+V+T
 
 Gate:
 - NO-GO = STOP; oprav produkční issue dle verdikt issue; znovu verdikt
