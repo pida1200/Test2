@@ -26,6 +26,34 @@ Pravidlo: `repo-kvalita.mdc`.
 
 ## Záznamy
 
+### 2026-08-05 – IMPLEMENTACE #100 (P2): Verdikt-as-comment + risk/low + check:merge
+
+- Výsledek: dle ANALÝZA [#102](https://github.com/pida1200/Test2/issues/102) v2 (GO
+  [#105](https://github.com/pida1200/Test2/issues/105)) — nová sdílená knihovna
+  `docs/scripts/ma-verdict-lib.cjs` (marker `multiagent-verdikt`, parser, fail-closed
+  trust guardy, `resolveVerdictSignal()` = jednotná časová osa legacy `[VERDIKT-*]`
+  issues + GO komentářů s precedencí a detekcí `stale` po rework) + `test-ma-verdict-lib.sh`
+  (P1–P5, N1–N13) zapojené do `check:ma`. Napojeno na G2 v `ma-merge-lib.cjs`
+  (`evaluateGuards` přijímá `verdictSignals`, fallback na legacy `verdicts`),
+  `multiagent-merge.yml`, `multiagent-gate-check.yml` (nový job `validate-verdict-comment`),
+  `multiagent-next.yml` a `multiagent-pipeline-sync.yml`. Label `risk/low`
+  (`create-multiagent-labels.sh`) → `routeNextStep({ riskLow })` v
+  `multiagent-next-lib.cjs` přeskočí Kontrolora A u `multiagent/analyza`+`gate/go`.
+  `package.json`: nový `check:merge` (lehčí subset pro G6 v merge workflow) + `check:ma`
+  doplněn o verdict-lib testy. Docs sladěny (`multi-agent-workflow.md` — nová sekce
+  „Verdikt-as-comment + risk/low“, `SKILL.md`, `multi-agenti.mdc`,
+  `docs/ma-role-cards/kontrolor-a.md` — self-check proces).
+- Ověření: `npm run check` (vč. `check:ma` s novými `test-ma-verdict-lib.sh` a
+  rozšířenými `test-ma-merge-lib.sh` / `test-multiagent-next-lib.sh`).
+- Riziko: workflow YAML (`multiagent-gate-check.yml`, `multiagent-merge.yml`,
+  `multiagent-pipeline-sync.yml`, `multiagent-next.yml`) validován jen manuální kontrolou
+  struktury (bez `js-yaml`/`pyyaml` v prostředí) — ostrý běh na GitHubu ještě neproběhl.
+  Verdikt-as-comment nese fail-closed trust, ale je to nová, dosud neprocvičená cesta.
+- Další krok: Kontrolor vývojáře (VERDIKT-V), pak Tester; první ostré použití
+  `risk/low` self-check GO komentáře ověřit na reálném issue.
+- Wiki: `zmeny-2026-08-05-pipeline-100-ma-p2-risk-low`
+- Větev: `feature/pipeline-100-ma-p2`
+
 ### 2026-08-05 – MA quality + token P0–P1 (revize spotřeba)
 
 - Výsledek: P0 — sync Další krok = `merge/approved`; Integrátor bez full check; Kontrolor A = `gpt-5.6-terra-medium`; gate-check maže stale; merge `shaMatches` (≥7) + G4b pipeline=. P1 — `docs/ma-role-cards/`, tenký `ma-run-role` prompt, next-bot CLI one-liner, `/m 2` routing, dedupe gramatika ve skillu, checklist KA, smazán Scope-first snippet. P2 založen jako samostatný `[PIPELINE]` (risk/low, verdikt-as-comment, check:merge).

@@ -138,6 +138,7 @@ Labely jsou v repu (`gh label list --repo <owner/repo> | rg 'multiagent|gate/'`)
 | `gate/go` | brána otevřená |
 | `gate/no-go` | brána zavřená — předchozí role musí opravit |
 | `gate/blocked` | eskalace po ~3 rework kolech |
+| `risk/low` | na `[PIPELINE]`: nízké riziko → self-check ANALÝZY přeskočí Kontrolora A (#102, sekce „Verdikt-as-comment“) |
 
 ### Gate přes Issues (závazné)
 
@@ -149,6 +150,11 @@ NO-GO:  verdikt issue má label gate/no-go; body = seznam vad + odkaz na produk�
         → předchozí role opraví body produkčního issue (verze v2…)
         → **nové** verdikt issue po opravě (staré NO-GO issue neměnit — audit trail)
 ```
+
+**Alternativa GO (#102):** místo nového `[VERDIKT-*]` issue smí být GO **komentář s
+markerem** přímo na produkčním issue (`kontrola="self"` jen s `risk/low`, jinak
+`kontrola="kontrolor"`) — viz sekce „Verdikt-as-comment“ níže. **NO-GO tudy nikdy** —
+vždy nové `[VERDIKT-*]` issue (marker `verdikt="NO-GO"` je zakázán, fail-closed).
 
 1. Další produkční issue **nevytvářej**, dokud předchozí verdikt není `gate/go`.
 2. Kontrolor **nevytváří** produkční issue a **needituje** body produkce „za“ roli — jen verdikt issue (+ labely na produkčním issue).
@@ -392,10 +398,13 @@ Bez markeru běží tolerantní fallback na starší tvar `**Větev:** \`…\`` 
 (#74, #83) — nový handoff ale marker vždy přidává. Chybí-li obojí, guard workflow selže
 („chybí handoff“) a `main` zůstává beze změny.
 
-Po přidání `merge/approved`: guardy G0–G6 (actor ≥ write, gate/go, VERDIKT-A/V/T GO, žádný
-otevřený blocker bug ve scope, HEAD větve == sha z markeru, bezkonfliktní merge, zelený
-`npm run check`) + autorizace G7 (`authorizeRun()` — jediná společná pro `issues.labeled`
-i `workflow_dispatch`, default **deny**). Po úspěchu workflow sám: pushne do `main`,
+Po přidání `merge/approved`: guardy G0–G6 (actor ≥ write, gate/go, G2 = VERDIKT-A/V/T GO
+vyhodnoceno **jednotně** přes `verdictLib.resolveVerdictSignal()` — legacy `[VERDIKT-*]`
+issue i GO komentář (#102), žádný otevřený blocker bug ve scope, HEAD větve == sha
+z markeru, bezkonfliktní merge, G6 = zelený **`npm run check:merge`** — lehčí varianta
+`npm run check` pro post-merge ověření, viz níže) + autorizace G7 (`authorizeRun()` —
+jediná společná pro `issues.labeled` i `workflow_dispatch`, default **deny**). Po úspěchu
+workflow sám: pushne do `main`,
 zrcadlí wiki (`wiki-sync: ok|failed|skipped` — vždy v komentáři), odebere `merge/approved`,
 přidá `merge/done`, a **uzavře** `[PIPELINE]`. Guard fail → `main` beze změny, `merge/failed`,
 issue zůstává OPEN. Detail kontraktu: `docs/scripts/ma-merge-lib.cjs` + ANALÝZA #93.
@@ -416,6 +425,68 @@ neexistují, dokud nejsou vytvořené — proto **#81 se labelem sloučit nemů�
 
 Detail: `docs/wiki/provozni-konfigurace.md` (sekce „Bootstrap merge labelu“) a
 `docs/wiki/zmeny-2026-08-05-pipeline-81-merge-git-ukol.md`.
+
+---
+
+## Verdikt-as-comment + risk/low (#102)
+
+**Cíl:** u nízkorizikových pipeline (`risk/low` na `[PIPELINE]`) přeskočit Kontrolora A a
+u kterékoli fáze (A/V/T) umožnit GO bez nového `[VERDIKT-*]` issue — GO jako **komentář**
+na produkčním issue. **NO-GO tudy nikdy nejde** — vždy nové `[VERDIKT-*]` issue (audit
+trail zachován). Jediná implementace (parser, precedence, trust): `docs/scripts/ma-verdict-lib.cjs`
+(`npm run check:ma` → `test-ma-verdict-lib.sh`, případy P1–P5 + N1–N13).
+
+### Marker + tvar komentáře
+
+```text
+<!-- multiagent-verdikt v="1" kind="A" pipeline="100" vstup="102" verdikt="GO" kontrola="kontrolor" -->
+### VERDIKT-A — GO
+
+Pipeline: #100
+Vstup: #102
+Verdikt: GO
+
+## Checklist
+1. …
+```
+
+- `kind` ∈ `A`\|`V`\|`T` — musí odpovídat labelu hostitele (`multiagent/analyza` \|
+  `multiagent/implementace` \| `multiagent/testy`).
+- `pipeline` = číslo vyhodnocované `[PIPELINE]`; `vstup` = číslo hostitelského issue
+  (komentář nejde zkopírovat na jiné issue ani „přehrát“ z jiné pipeline).
+- `verdikt="GO"` — `verdikt="NO-GO"` je **vždy zakázán** (marker jen pro GO).
+- `kontrola` ∈ `kontrolor`\|`self` — `self` platí **jen** s `risk/low` na `[PIPELINE]`.
+- Anchored `Pipeline: #N` / `Vstup: #M` / `Verdikt: GO` v textu musí souhlasit s markerem;
+  komentář nesmí obsahovat i `Verdikt: NO-GO` (dvojí verdikt = neplatné).
+
+### Precedence + invalidace (rework)
+
+Jedna časová osa na fázi = staré `[VERDIKT-<kind>]` issues + validní GO komentáře.
+Autoritativní je **poslední** záznam (dle `created_at`); při shodném čase vítězí NO-GO.
+Poslední NO-GO přebíjí libovolný starší GO. GO je **stale** (a G2/next/sync ho neuznají),
+pokud na hostitelském issue existuje **novější** `labeled` event `gate/no-go` nebo
+`gate/pending` — rework vždy vrací gate na `pending`, takže je to deterministický signál.
+
+### Fail-closed trust
+
+| Guard | Pravidlo |
+|-------|----------|
+| Autor | permission ≥ `write`/`admin`; chybějící/neověřitelné → deny |
+| Umístění | komentář musí ležet na issue `vstup` (ne kopie) |
+| Pipeline | `pipeline` v markeru musí odpovídat vyhodnocované `[PIPELINE]` (ne replay) |
+| Artefakt | `kind` musí odpovídat labelu hostitele |
+| Self-check | `kontrola="self"` jen s `risk/low` na `[PIPELINE]` |
+
+Cokoli neúplné/neznámé/neověřitelné → `resolveVerdictSignal()` vrací `none`/`stale`,
+**nikdy** `GO`. G2 (merge), gate-check i pipeline-sync akceptují výhradně `status === 'GO'`.
+
+### Kdo píše self-check GO (risk/low)
+
+U `[ANALÝZA]` s `risk/low` na `[PIPELINE]`: Integrátor/Analytik provede checklist
+`docs/ma-role-cards/kontrolor-a.md` (body 1–7) sám a napíše GO komentář s
+`kontrola="self"`. Bot (`multiagent-gate-check.yml`, job `validate-verdict-comment`)
+ověří formát + trust a po úspěchu sám nastaví `gate/go` na `[ANALÝZA]` — next/sync pak
+routují rovnou na Vývojáře (`docs/scripts/multiagent-next-lib.cjs` — `routeNextStep({ riskLow })`).
 
 ---
 
@@ -479,9 +550,10 @@ bash docs/scripts/ma-run-role.sh --role <role> --pipeline <N> \
 | Wiki sync | `.github/workflows/wiki-sync.yml` | push `docs/wiki/**` na `main` → `sync-wiki-to-github.sh` |
 | Lokální přehled | `docs/scripts/ma-pipeline-view.sh` | stejný přehled přes `gh` když Actions nejsou dostupné |
 | Spuštění role | `docs/scripts/ma-run-role.sh` | CLI first (`cursor-agent`) / Task fallback (exit 3); token budget výše |
-| Labely | `docs/scripts/create-multiagent-labels.sh` | idempotentní vytvoření `multiagent/*` + `gate/*` + `merge/*` + `wiki/sync-failed` |
-| MA check | `npm run check:ma` | pipeline-sync + regex + wiki-seed + next-lib + dry-run + ma-run-role + ma-merge-lib (offline) |
-| Merge do main | `.github/workflows/multiagent-merge.yml` + `docs/scripts/ma-merge-lib.cjs` | label `merge/approved` → guardy G0–G6 + autorizace G7 → merge `--no-ff` → push → wiki mirror → komentář + `merge/done` + close (#81; bootstrap B0–B5 do prvního ostrého použití) |
+| Labely | `docs/scripts/create-multiagent-labels.sh` | idempotentní vytvoření `multiagent/*` + `gate/*` + `merge/*` + `risk/low` + `wiki/sync-failed` |
+| MA check | `npm run check:ma` | pipeline-sync + regex + wiki-seed + next-lib + dry-run + ma-run-role + ma-merge-lib + **ma-verdict-lib** (offline) |
+| Post-merge check | `npm run check:merge` | lehčí subset (examples-backend + wiki) pro G6 v merge workflow; plný `npm run check` zůstává pro lokální/CI ověření |
+| Merge do main | `.github/workflows/multiagent-merge.yml` + `docs/scripts/ma-merge-lib.cjs` + `docs/scripts/ma-verdict-lib.cjs` | label `merge/approved` → guardy G0–G6 (G2 = jednotný verdikt signál issue/komentář) + autorizace G7 → merge `--no-ff` → push → wiki mirror → komentář + `merge/done` + close (#81; bootstrap B0–B5 do prvního ostrého použití) |
 
 **Co zůstává ruční:** první kick `/m` / `/m #N` v Cursoru (CI agenta nespouští). Child issues pokud chybí `gh` write. **Merge do `main` spouští člověk labelem `merge/approved`** na `[PIPELINE]` (Integrátor jen feature větev + `MERGE-PENDING` handoff s markerem) — do bootstrapu B0–B5 (#81) i nadále ručně. Wiki UI sync po merge dělá workflow sám (`wiki-sync: ok|failed|skipped` v komentáři); mimo tuto cestu (dry-run, offline) po pushi na `main`. **Plně unattended z Actions** (Cursor API) = follow-up mimo scope.
 

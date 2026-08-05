@@ -80,6 +80,7 @@ Bez write → degradace; v orchestraci **STOP**.
 | `multiagent/analyza` | `gate/pending` | Analytik | viz workflow §Modely |
 | `multiagent/analyza` | `gate/no-go` | Analytik (rework) | viz workflow §Modely |
 | `multiagent/verdikt` (VERDIKT-A) | `gate/pending` | Kontrolor analytika | viz workflow §Modely |
+| `multiagent/analyza` | `gate/go` **+ `risk/low`** na `[PIPELINE]` | Vývojář (Kontrolor A přeskočen — self-check GO komentář, viz „Verdikt-as-comment“) | viz workflow §Modely |
 | `multiagent/implementace` | `gate/pending` | Vývojář | viz workflow §Modely |
 | `multiagent/implementace` | `gate/no-go` | Vývojář (rework) | viz workflow §Modely |
 | `multiagent/verdikt` (VERDIKT-V) | `gate/pending` | Kontrolor vývojáře | viz workflow §Modely |
@@ -108,10 +109,20 @@ Jen Vývojář → Kontrolor V. Orchestrace default; `once` = jeden krok.
 10. Chat: shrnutí + issue + fáze.
 11. Tester: ve scope → `ESKALACE_VÝVOJÁŘ`; mimo scope → `[BUG]`.
 
+## risk/low + Verdikt-as-comment (#102)
+
+Label `risk/low` na `[PIPELINE]` přeskočí Kontrolora A — self-check (checklist
+`docs/ma-role-cards/kontrolor-a.md`) a GO **komentář s markerem** na `[ANALÝZA]` (ne nové
+`[VERDIKT-A]`). GO-jako-komentář smí nahradit `[VERDIKT-*]` u kterékoli fáze A/V/T; **NO-GO
+má vždy vlastní issue** (audit trail). Tvar markeru + fail-closed pravidla:
+`docs/multi-agent-workflow.md` (sekce „Verdikt-as-comment“); jediný parser
+`docs/scripts/ma-verdict-lib.cjs`.
+
 ## Rework
 
 Max ~3 reworky. Po 3. NO-GO → `gate/blocked`.  
-**Nové** `[VERDIKT-*]` každé kolo — nepřepisuj NO-GO na GO.
+**Nové** `[VERDIKT-*]` každé kolo — nepřepisuj NO-GO na GO. (Výjimka: risk/low self-check
+GO na ANALÝZE je komentář, ne issue — viz výše.)
 
 Nežádej dlouhé ROLE/VSTUP prompty — stačí `/m #N` nebo `/m #N once`.
 

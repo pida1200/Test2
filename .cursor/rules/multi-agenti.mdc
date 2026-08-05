@@ -70,6 +70,18 @@ V kickoffu uveď `MODEL:` u role; kontrolor ideálně **jiný** model než produ
 
 **Fallback:** pokud doporučený slug není v Cursor Task dostupný, použij alternativu ze sloupce Alternativa. **`*-fast` je legitimní**, když ne-fast alternativa neexistuje (dnes Vývojář/Tester/Integrátor) — uveď skutečný slug v `MODEL:`.
 
+## risk/low + verdikt-as-comment (#102)
+
+Label **`risk/low`** na `[PIPELINE]` přeskočí Kontrolora A: Analytik/Integrátor udělá
+self-check (checklist `docs/ma-role-cards/kontrolor-a.md`, body 1–7) a napíše na
+`[ANALÝZA]` **GO komentář s markerem** (ne nové `[VERDIKT-A]` issue). Bez `risk/low` se
+nic nemění — plná 3+3 včetně Kontrolora A.
+
+GO jako komentář smí nahradit `[VERDIKT-*]` issue u **kterékoli** fáze (A/V/T), ne jen
+u risk/low ANALÝZY — **NO-GO má vždy vlastní `[VERDIKT-*]` issue** (audit trail). Tvar
+markeru, precedence/invalidace a fail-closed autorizace: `docs/multi-agent-workflow.md`
+(sekce „Verdikt-as-comment“), jediná implementace `docs/scripts/ma-verdict-lib.cjs`.
+
 ## Gate + rework (závazné)
 
 ```text
@@ -92,13 +104,13 @@ produkce → kontrolor → GO → další fáze
 
 ## Automatizace
 
-- `.github/workflows/multiagent-next.yml` — komentuje další roli + `/m #N` (logika: `docs/scripts/multiagent-next-lib.cjs`).
-- `.github/workflows/multiagent-gate-check.yml` — validace verdiktů (komentář při chybě).
-- `.github/workflows/multiagent-pipeline-sync.yml` — auto-přehled fází v `[PIPELINE]` mezi markery.
-- `.github/workflows/multiagent-merge.yml` — merge do `main` = label `merge/approved` na `[PIPELINE]` (guardy G0–G6 + autorizace G7 v `docs/scripts/ma-merge-lib.cjs`); `workflow_dispatch` je fail-closed (`dry_run` default `true`, ostrý běh vyžaduje stejný ověřený `merge/approved`). Agent do `main` dál nemerguje. Bootstrap B0–B5 (#81): první merge dělá člověk ručně, label se ostře použije až na další pipeline.
+- `.github/workflows/multiagent-next.yml` — komentuje další roli + `/m #N` (logika: `docs/scripts/multiagent-next-lib.cjs`; u `[ANALÝZA]` dohledá `risk/low` na `[PIPELINE]`).
+- `.github/workflows/multiagent-gate-check.yml` — validace `[VERDIKT-*]` issues **i** GO komentářů (`issue_comment` s markerem `multiagent-verdikt`) — komentář při chybě; po úspěchu sám sync gate/go na hostitele.
+- `.github/workflows/multiagent-pipeline-sync.yml` — auto-přehled fází v `[PIPELINE]` mezi markery; „Historie verdiktů“ a gotovost k merge přes sjednocenou osu `docs/scripts/ma-verdict-lib.cjs`.
+- `.github/workflows/multiagent-merge.yml` — merge do `main` = label `merge/approved` na `[PIPELINE]` (guardy G0–G6 + autorizace G7 v `docs/scripts/ma-merge-lib.cjs`; G2 přes `ma-verdict-lib.cjs#resolveVerdictSignal`); `workflow_dispatch` je fail-closed (`dry_run` default `true`, ostrý běh vyžaduje stejný ověřený `merge/approved`). Post-merge ověření (G6) = `npm run check:merge` (rychlejší; plný `npm run check` zůstává lokálně/CI mimo merge job). Agent do `main` dál nemerguje. Bootstrap B0–B5 (#81): první merge dělá člověk ručně, label se ostře použije až na další pipeline.
 - `.github/workflows/wiki-sync.yml` — sync `docs/wiki/` → GitHub Wiki UI při pushi na `main`; po merge labelem to dělá `multiagent-merge.yml` sám (`wiki-sync: ok|failed|skipped` v komentáři).
-- Labely: `bash docs/scripts/create-multiagent-labels.sh` (vč. `merge/approved`, `merge/done`, `merge/failed`, `wiki/sync-failed`)
-- Ověření: `npm run check:ma`
+- Labely: `bash docs/scripts/create-multiagent-labels.sh` (vč. `merge/approved`, `merge/done`, `merge/failed`, `wiki/sync-failed`, `risk/low`)
+- Ověření: `npm run check:ma` (vč. `test-ma-verdict-lib.sh`); `npm run check:merge` = rychlejší subset použitý v merge workflow
 
 ## Kdy použít
 
