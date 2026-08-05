@@ -26,6 +26,13 @@ Pravidlo: `repo-kvalita.mdc`.
 
 ## Záznamy
 
+### 2026-08-05 – /m #25: nálezy testera → [BUG] issues
+
+- Výsledek: kontrakt „ve scope + blokující = ESKALACE_VÝVOJÁŘ (bez nového issue); mimo scope / odloženo = `[BUG]`“ s labely `bug`+`multiagent`+`multiagent/bug` (bez gate/*). Šablona `multiagent-bug.yml`, routing v `multiagent-next.yml`, docs/rules/skill/snippets.
+- Ověření: VERDIKT-A #27 GO → VERDIKT-V #29 GO → VERDIKT-T #31 GO; Tester #30 8/8; dry-run bug→Vývojář; sync 11/11.
+- Riziko: živý smoke test `[BUG]` na GitHubu až po push.
+- Další krok: po merge ověřit komentář bota na testovacím bug issue.
+
 ### 2026-08-04 – /m #13/#17: hybrid „jeden pohled“ (ne single-issue)
 
 - Výsledek: požadavek „vše v jednom issue“ → **varianta C**: 7 issues zůstává zápis/gate; `[PIPELINE]` dostane auto-přehled (`multiagent-pipeline-sync.yml` + markery `multiagent:prehled`). Oprava `multiagent-next.yml` (anchored Pipeline regex, marker dedupe). Single-issue (B) znovu odmítnuto (gate labely, lost update, historie, CI) — konzistentní s #8/PR #3.
