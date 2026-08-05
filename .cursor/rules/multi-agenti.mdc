@@ -12,18 +12,13 @@ Skill: `.cursor/skills/m/SKILL.md` · Command: `.cursor/commands/m.md`
 
 ## Slash gramatika (závazná)
 
-| Vstup | Význam |
-|-------|--------|
-| **`/m`** | Kickoff + **orchestrace** celé pipeline 3+3 |
-| **`/m #N`** | **Orchestrace** od aktuální fáze do STOP |
-| **`/m #N once`** | Jen **jeden** krok (aktuální fáze) |
-| **`/m 2`** / **`/m 2 #N`** | Rychlá 2er (orchestrace; `once` = jeden krok) |
-| **`/m #<bug>`** | Issue s `multiagent/bug` — Vývojář (oprava / povýšení) |
+Kanonicky: `.cursor/skills/m/SKILL.md` (sekce Parsování / STOP). Sem nekopíruj tabulky.
 
-Číslo issue **vždy s `#`**. Bez `#` je `2` režim, ne issue.  
+**Routing:** scoped / drobná změna → preferuj `/m 2 #N`; plná 3+3 jen při nejasném DoD/API/bezpečnosti.
+
 Labely `ma/*` z PR #3 **nezavádět** — používej `multiagent/*` + `gate/*`.
 
-**Orchestrace (default):** v jednom chatu postupně role — **CLI first** (`docs/scripts/ma-run-role.sh --role … --model <slug z workflow>`), **Task = fallback** při exitu 3 (CLI chybí) — dokud NO-GO / `blocked` / `MERGE-PENDING` handoff / `once`. Mini-plán 1–3 věty jen Analytik + Vývojář. CI **nespouští** Cursor — bot jen komentuje `/m #N`. Detail: skill `.cursor/skills/m/SKILL.md`, token budget: `docs/multi-agent-workflow.md`.
+**Orchestrace (default):** v jednom chatu postupně role — **CLI first** (`docs/scripts/ma-run-role.sh` + `docs/ma-role-cards/`), **Task = fallback** při exitu 3 — dokud NO-GO / `blocked` / `MERGE-PENDING` / `once`. Mini-plán jen Analytik + Vývojář. CI **nespouští** Cursor — bot komentuje CLI one-liner + `/m #N`.
 
 ## Role
 

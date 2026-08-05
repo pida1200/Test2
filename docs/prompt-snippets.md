@@ -91,28 +91,17 @@ Ověření: N/A
 
 ## Multi‑agent: slash gramatika
 
-Skill: `.cursor/skills/m/SKILL.md` · Command: `.cursor/commands/m.md`
+Kanonicky: [`.cursor/skills/m/SKILL.md`](../.cursor/skills/m/SKILL.md) (gramatika + STOP).  
+Role cards: [`docs/ma-role-cards/`](ma-role-cards/README.md).  
+**Routing:** scoped → `/m 2 #N`; plná 3+3 jen při nejasném DoD/API/bezpečnosti.
 
-| Vstup | Kdy použít |
-|-------|------------|
-| **`/m`** | Kickoff + orchestrace celé pipeline 3+3 |
-| **`/m #N`** | Orchestrace od aktuální fáze do STOP |
-| **`/m #N once`** | Jen jeden krok (aktuální fáze) |
-| **`/m 2`** / **`/m 2 #N`** | Rychlá 2er (orchestrace; `once` = jeden krok) |
-| **`/m #<bug>`** | Issue s `multiagent/bug` — Vývojář |
+**Modely:** [`multi-agent-workflow.md`](multi-agent-workflow.md) (sekce Modely).
 
-Číslo issue **vždy s `#`**. Labely `ma/*` nezavádět.
+**CLI first:** `docs/scripts/ma-run-role.sh` (exit 3 → Task). Next-bot vypisuje one-liner.
 
-**Modely:** kanonická tabulka v [`multi-agent-workflow.md`](multi-agent-workflow.md) (sekce Modely) — sem nekopíruj.
+I/O vždy přes GitHub Issues. Integrátor při kickoffu: existující pipeline **doplní**; nové jen když žádné neexistuje.
 
-**STOP orchestrace:** NO-GO, `gate/blocked`, chybí `gh` write, `once`, `MERGE-PENDING` (merge do main = člověk labelem `merge/approved`, ne agent).
-
-**CLI first, Task fallback:** role spouštěj přes `docs/scripts/ma-run-role.sh` (exit 3 = CLI chybí → vlož vytištěný prompt do Task).
-
-I/O vždy přes GitHub Issues (`VSTUP_ISSUE` / `VÝSTUP_ISSUE`). Integrátor při kickoffu: existující pipeline issue **doplní** (`[PIPELINE]` titulek + labely); nové vytvoří jen když žádné neexistuje.
-
-GH Action `multiagent-next.yml` komentuje `/m #N` (orchestrace) i `/m #N once` (jeden krok).
-Přehled celé pipeline: `[PIPELINE]` issue — sekce mezi markery `multiagent:prehled` (bot) nebo `bash docs/scripts/ma-pipeline-view.sh #N` lokálně.
+Přehled: `[PIPELINE]` markery `multiagent:prehled` nebo `bash docs/scripts/ma-pipeline-view.sh #N`.
 
 ### Snippet — nález testera → `[BUG]`
 
@@ -234,7 +223,8 @@ Bootstrap (jen dokud neproběhlo B0–B5 z #81 — jinak tento blok vynech):
 
 ## Multi‑agent rychlá 2er — `/m 2` (Vývojář + Kontrolor vývojáře)
 
-Když nestačí plná 3+3, aspoň vývojář + kontrolor. I/O přes Issues (`[IMPLEMENTACE]` → `[VERDIKT-V]`).
+Preferovaná cesta pro scoped / jasný DoD. Legacy „Scope-first + 2 agenti“ (bez Issues) odstraněn.  
+I/O přes Issues (`[IMPLEMENTACE]` → `[VERDIKT-V]`).
 
 ```text
 Cíl: <1 věta>
@@ -266,29 +256,4 @@ Hotovo když:
 - [VERDIKT-V] má label gate/go
 - ověření dle oblasti
 - záznam v docs/learning-log.md (Integrátor)
-```
-
-## Scope‑first + 2 agenti (rychlá verze)
-
-```text
-Cíl: <1 věta>
-
-Scope: <přesně vyjmenuj složky/soubory, např. examples/backend/src/*>
-Mimo scope: <např. docs/*, .cursor/rules/*, změna dependency>
-
-Vývojář:
-- Udělej změny pouze ve scope.
-- Přidej/aktualizuj unit testy.
-- Ověř: npm run check
-- Vrať: shrnutí + soubory + jak ověřit.
-
-Kontrolor vývojáře:
-- Neimplementuj nic.
-- Projdi diff: kontrakt, error envelope, edge cases, test coverage, bezpečnost.
-- Vrať: GO/NO-GO + konkrétní připomínky + doporučené fixy.
-
-Integrátor:
-- Zapracuj připomínky (nebo zdůvodni proč ne).
-- Ověř: npm run check
-- Zapiš do docs/learning-log.md
 ```

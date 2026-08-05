@@ -102,6 +102,22 @@ jobs:
 
             if (errors.length === 0) {
               core.info('Gate check passed');
+              const marker = '<!-- multiagent-gate-check -->';
+              const comments = await github.paginate(github.rest.issues.listComments, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                per_page: 20,
+              });
+              const existing = comments.find(c => c.body && c.body.includes(marker));
+              if (existing) {
+                await github.rest.issues.deleteComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: existing.id,
+                });
+                core.info('Removed stale gate-check comment');
+              }
               return;
             }
 

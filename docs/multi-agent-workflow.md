@@ -29,7 +29,7 @@ U změny chování **povinný** záznam `zmeny-YYYY-MM-DD-…` (+ řádek v `zme
 | **Kontrolor vývojáře** | Code review diffu | Neimplementuje |
 | **Tester** | Test plán, edge/regresní testy, ověření | Nerozšiřuje feature mimo testy |
 | **Kontrolor testera** | Kontrola pokrytí a kvality testů | Neimplementuje produkční kód |
-| **Integrátor** | Orchestruje pipeline, konflikty, finální testy/lint, commit feature větve, MERGE-PENDING | — |
+| **Integrátor** | Orchestruje pipeline, konflikty, commit + push feature větve, MERGE-PENDING (tenký — bez duplicitního full check) | — |
 
 ## Modely (doporučené přiřazení — ověř dostupnost)
 
@@ -40,7 +40,7 @@ Uživatel může přepsat; Integrátor v kickoffu uvede `MODEL:` u každé role.
 | Role | Doporučený model | Alternativa | Proč |
 |------|------------------|-------------|------|
 | **Analytik** | `claude-opus-5-thinking-high` | `claude-4.5-opus-high-thinking` | silný reasoning nad kontraktem a DoD |
-| **Kontrolor analytika** | `claude-opus-5-thinking-high` | `claude-4.5-opus-high-thinking` | hledá mezery a rozpory (ideálně jiný „pohled“ než Analytik) |
+| **Kontrolor analytika** | `gpt-5.6-terra-medium` | `claude-4.5-opus-high-thinking` | jiná rodina než Analytik (méně self-review bias + levnější default) |
 | **Vývojář** | `composer-2.5-fast` | `claude-sonnet-5-thinking-high` | implementace ve scope + základní testy |
 | **Kontrolor vývojáře** | `gpt-5.6-sol-medium` | `claude-opus-5-thinking-high` | code review oddělený od implementačního modelu |
 | **Tester** | `composer-2.5-fast` | `claude-sonnet-5-thinking-high` | psaní/spouštění testů, edge cases |
@@ -51,7 +51,7 @@ Uživatel může přepsat; Integrátor v kickoffu uvede `MODEL:` u každé role.
 
 ### Pravidla výběru modelu
 
-1. **Kontrolor ≠ stejný model jako produkce**, pokud to jde (snižuje „self-review bias“) — aspoň u Vývojář vs Kontrolor vývojáře. U **Kontrolor analytika** preferuj alternativu ze sloupce Alternativa, když Analytik běží na doporučeném slugů (oba defaultně sdílejí stejný doporučený model).
+1. **Kontrolor ≠ stejný model jako produkce**, pokud to jde (snižuje „self-review bias“) — Analytik (Opus) vs Kontrolor A (`gpt-5.6-terra-medium`); Vývojář vs Kontrolor V.
 2. **`*-fast` je legitimní**, když ne-fast alternativa neexistuje (dnes Vývojář/Tester/Integrátor). U ostatních rolí preferuj ne-fast alternativu ze sloupce Alternativa.
 3. Extra těžký reasoning jen u NO-GO smyčky na analýze nebo u riskantního review.
 4. V zadání každé role uveď řádek: `MODEL: <slug>`.
@@ -241,7 +241,7 @@ NESMÍŠ: implementovat; uzavírat verdikt; git push
 
 ```text
 ROLE: Kontrolor analytika
-MODEL: claude-opus-5-thinking-high
+MODEL: gpt-5.6-terra-medium
 VSTUP_ISSUE: #<ANALÝZA>
 VÝSTUP_ISSUE: #<VERDIKT-A>  (vždy **vytvoř nové** issue pro každé kolo; label multiagent/verdikt)
 
@@ -249,7 +249,15 @@ Do body VÝSTUP_ISSUE:
 - Verdikt: GO | NO-GO
 - Vstup: #<ANALÝZA>
 - Pipeline: #<PIPELINE>
-- při NO-GO: číslovaný seznam vad
+- Checklist (pevný, max 7 — viz `docs/ma-role-cards/kontrolor-a.md`):
+  1. Scope + DoD ověřitelné
+  2. Edge / fail-closed pojmenované
+  3. Auth/bezpečnost má guard + test (pokud relevantní)
+  4. Bootstrap/provoz checklist (nový workflow)
+  5. Wiki slug + MERGE-PENDING / bez PR konzistence
+  6. Labely + `Pipeline: #N`
+  7. Mini-plán v ANALÝZE 1–3 věty
+- při NO-GO: číslovaný seznam vad (vázané na checklist)
 - při GO: krátké „proč OK“ (2–4 body)
 
 Labely: na #<VERDIKT-A> nastav gate/go nebo gate/no-go;
@@ -355,8 +363,8 @@ VÝSTUP_ISSUE: #<PIPELINE> (handoff MERGE-PENDING; issue zůstává OPEN)
 
 Postup:
 1. Kickoff: pokud uživatel už má pipeline issue (např. bez `[PIPELINE]` titulku) → **doplní** titulek + labely; nové `[PIPELINE]` vytvoř **jen když žádné neexistuje**; odkaž v chatu
-2. Orchestruj vytvoření produkčních/verdikt issues dle pipeline
-3. Spoj kód, konflikty, finální testy/lint (Docker dle rules)
+2. Orchestruj vytvoření produkčních/verdikt issues dle pipeline (CLI first / Task)
+3. Spoj kód / konflikty na feature větvi — **ne** duplicitní full `npm run check`, pokud Tester doložil zelené v `[TESTY]` (výjimka: konflikt / pochybnost); full check = merge workflow G6
 4. **Ověř Wiki:** `bash docs/scripts/check-wiki-seed.sh`; u změny chování existuje záznam `docs/wiki/zmeny-…` + řádek v `zmeny-index.md`
 5. Commit (+ push **feature větve**); bez PR; **nesloučuj do `main`** (repo-git.mdc)
 6. docs/learning-log.md (povinně; „čeká na label `merge/approved`“)
@@ -426,13 +434,15 @@ Skill: `.cursor/skills/m/SKILL.md` · Command: `.cursor/commands/m.md`
 Číslo issue **vždy s `#`**. Bez `#` je `2` režim, ne issue.  
 Labely `ma/*` **nezavádět** — používej `multiagent/*` + `gate/*`.
 
-**Orchestrace:** jeden chat / jeden kick; **CLI first** (`docs/scripts/ma-run-role.sh`), **Task = fallback** při exitu 3. **STOP:** NO-GO, `gate/blocked`, chybí `gh` write, `once`, `MERGE-PENDING`.
+**Orchestrace:** jeden chat / jeden kick; **CLI first** (`docs/scripts/ma-run-role.sh` + role cards), **Task = fallback** při exitu 3. **STOP:** NO-GO, `gate/blocked`, chybí `gh` write, `once`, `MERGE-PENDING`. Kanonická gramatika: `.cursor/skills/m/SKILL.md` (tato tabulka je zrcadlo).
 
 Copy-paste šablony: `docs/prompt-snippets.md`.
 
 ## Token budget rolí
 
-Cíl: méně tokenů v parent chatu — role se spouští **CLI first** (`docs/scripts/ma-run-role.sh`), Task jen jako fallback (exit `3`, CLI chybí). Mini-plán píší **jen** Analytik a Vývojář; ostatní role rovnou artefakt. Integrátor je **tenký** — routing + `gh` + STOP/MERGE-PENDING, ne duplicitní full check.
+Cíl: méně tokenů v parent chatu — role se spouští **CLI first** (`docs/scripts/ma-run-role.sh`), Task jen jako fallback (exit `3`, CLI chybí). Prompt odkazuje na **role card** (`docs/ma-role-cards/<role>.md`), ne na celý tento dokument. Mini-plán píší **jen** Analytik a Vývojář. Integrátor je **tenký** — routing + `gh` + STOP/MERGE-PENDING, ne duplicitní full check.
+
+**Routing:** scoped / jasný DoD → `/m 2 #N`; plná 3+3 jen při nejasném API/DoD/bezpečnosti.
 
 | Role | Mini-plán | Čte (max) | Nesmí |
 |------|-----------|-----------|-------|
@@ -506,7 +516,8 @@ I/O: GitHub Issues (šablony .github/ISSUE_TEMPLATE/)
 4) Tester → [TESTY] → Kontrolor → [VERDIKT-T]
 5) Integrátor: handoff MERGE-PENDING (merge do main = člověk); [PIPELINE] zůstává OPEN
 Modely (default — ověř dostupnost):
-- Analytik / K. analytika: claude-opus-5-thinking-high
+- Analytik: claude-opus-5-thinking-high
+- Kontrolor analytika: gpt-5.6-terra-medium
 - Vývojář / Tester / Integrátor: composer-2.5-fast
 - Kontrolor vývojáře: gpt-5.6-sol-medium
 - Kontrolor testera: claude-sonnet-5-thinking-high

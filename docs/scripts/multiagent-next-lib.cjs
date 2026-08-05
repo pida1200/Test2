@@ -24,12 +24,29 @@ const GATE_PRECEDENCE = ['gate/go', 'gate/no-go', 'gate/blocked', 'gate/pending'
 
 const MODELS = {
   analytik: 'claude-opus-5-thinking-high',
-  kontrolorA: 'claude-opus-5-thinking-high',
+  // Jiná rodina než Analytik (self-review bias + tokeny) — viz workflow §Modely
+  kontrolorA: 'gpt-5.6-terra-medium',
   vyvojar: 'composer-2.5-fast',
   kontrolorV: 'gpt-5.6-sol-medium',
   tester: 'composer-2.5-fast',
   kontrolorT: 'claude-sonnet-5-thinking-high',
   integrator: 'composer-2.5-fast',
+};
+
+/** CLI role slug for docs/scripts/ma-run-role.sh --role */
+const ROLE_CLI = {
+  'Kontrolor analytika': 'kontrolor-a',
+  'Analytik (rework)': 'analytik',
+  Analytik: 'analytik',
+  Vývojář: 'vyvojar',
+  'Vývojář (rework)': 'vyvojar',
+  'Kontrolor vývojáře': 'kontrolor-v',
+  Tester: 'tester',
+  'Tester (rework)': 'tester',
+  'Kontrolor testera': 'kontrolor-t',
+  Integrátor: 'integrator',
+  'Integrátor → Analytik': 'integrator',
+  'Kontrolor A / Vývojář': 'kontrolor-a',
 };
 
 const verdictRoutes = {
@@ -245,16 +262,39 @@ function routeNextStep(opts) {
 
   const prompt = pipelineNum ? `/m #${pipelineNum}` : `/m #${n}`;
   const promptOnce = `${prompt} once`;
+  const roleCli = ROLE_CLI[info.role] || null;
+  const writeFlag =
+    roleCli === 'vyvojar' || roleCli === 'tester' || roleCli === 'integrator'
+      ? ' --write'
+      : '';
+  const cliOneLiner =
+    roleCli && pipelineNum && info.model && info.model !== '—'
+      ? `bash docs/scripts/ma-run-role.sh --role ${roleCli} --pipeline ${pipelineNum} --model ${info.model}${writeFlag}`
+      : null;
   const verdictTag = vk ? ` · Verdikt: **${vk}**` : '';
   const marker = '<!-- multiagent-next -->';
-  const commentBody = [
+  const commentLines = [
     marker,
     `### Multiagent — další krok`,
     ``,
     `Artefakt: \`${artifact}\` · Gate: \`${gate}\`${verdictTag} · Role: **${info.role}** · Model: \`${info.model}\``,
     ``,
-    `V Cursoru (Agent chat):`,
-    ``,
+  ];
+  if (cliOneLiner) {
+    commentLines.push(
+      `CLI first (Integrátor / terminál):`,
+      ``,
+      '```bash',
+      cliOneLiner,
+      '```',
+      ``,
+      `Exit 3 = CLI chybí → Task fallback s vytištěným promptem. Orchestace:`,
+      ``
+    );
+  } else {
+    commentLines.push(`V Cursoru (Agent chat):`, ``);
+  }
+  commentLines.push(
     '```text',
     `${prompt}           # orchestrace do STOP (default)`,
     `${promptOnce}      # jen jeden krok`,
@@ -264,10 +304,23 @@ function routeNextStep(opts) {
     ``,
     `_${info.hint}_`,
     ``,
-    `Docs: \`docs/multi-agent-workflow.md\``,
-  ].join('\n');
+    `Docs: role card \`docs/ma-role-cards/\` · \`docs/multi-agent-workflow.md\``
+  );
+  const commentBody = commentLines.join('\n');
 
-  return { artifact, gate, vk, pipelineNum, info, prompt, promptOnce, commentBody, marker };
+  return {
+    artifact,
+    gate,
+    vk,
+    pipelineNum,
+    info,
+    prompt,
+    promptOnce,
+    cliOneLiner,
+    roleCli,
+    commentBody,
+    marker,
+  };
 }
 
 function modelForPhase(phaseKey) {
@@ -280,6 +333,7 @@ module.exports = {
   VERDIKT_RE,
   MODELS,
   PHASE_MODELS,
+  ROLE_CLI,
   ARTIFACT_ORDER,
   GATE_PRECEDENCE,
   resolveGate,

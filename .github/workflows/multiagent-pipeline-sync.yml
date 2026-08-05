@@ -224,9 +224,9 @@ jobs:
                 return iss && issueGate(iss) === 'gate/go';
               });
               if (allGo && plLabels.includes('gate/go')) {
-                nextRole = 'Integrátor';
+                nextRole = 'Integrátor / člověk';
                 nextModel = nextLib.MODELS.integrator;
-                nextHint = 'Pipeline dokončena — uzavři issue';
+                nextHint = 'MERGE-PENDING — přidej label `merge/approved` (neuzavírej issue před merge)';
               }
             }
 

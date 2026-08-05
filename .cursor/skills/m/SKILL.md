@@ -10,6 +10,8 @@ Uživatel spustil slash `/m` s volitelnými argumenty.
 
 ## Parsování argumentů
 
+Kanonická gramatika: tato tabulka. Rule / command / snippets **jen odkazují** sem.
+
 | Vstup | Režim | Chování |
 |-------|-------|---------|
 | `/m` | plná 3+3 | kickoff + **orchestrace** (po child issues) |
@@ -25,11 +27,13 @@ Uživatel spustil slash `/m` s volitelnými argumenty.
 - Token **`once`** (libovolné pořadí s `#N`) = single-step; jinak **orchestrace**.
 - Chybí pipeline u `/m 2` → zeptej: „Které pipeline? Použij `/m 2 #N`.“
 
+**Routing (spotřeba):** scoped / drobná změna / jasný DoD → preferuj **`/m 2 #N`**. Plná 3+3 (`/m` / `/m #N`) jen při nejasném API/DoD, bezpečnosti, novém workflow nebo žádosti uživatele.
+
 ## Orchestrace vs once
 
 **Default (`/m #N`):** v **jednom chatu** proveď po sobě fáze pipeline (Integrátor řídí smyčku), dokud nenastane STOP.
 
-**CLI first, Task = fallback:** pro každou roli nejdřív zkus `bash docs/scripts/ma-run-role.sh --role <role> --pipeline #N --model <slug>` (detekuje `cursor-agent` v PATH). Exit `3` = CLI chybí → skript vytiskne hotový prompt, vlož ho do Cursor Task **beze změny**. `MODEL:` vždy z `docs/multi-agent-workflow.md` (sekce Modely). Kontrolor ideálně **jiný** model než produkce. Issues = zdroj pravdy (ne spoléhej jen na chat historii) — neopakuj v promptu obsah workflow, jen odkaz (token budget níže).
+**CLI first, Task = fallback:** pro každou roli nejdřív zkus `bash docs/scripts/ma-run-role.sh --role <role> --pipeline #N --model <slug>` (detekuje `cursor-agent` v PATH). Exit `3` = CLI chybí → skript vytiskne hotový prompt, vlož ho do Cursor Task **beze změny**. `MODEL:` z `docs/multi-agent-workflow.md` (sekce Modely). Role card: `docs/ma-role-cards/<role>.md` — **ne** celý workflow do kontextu.
 
 **Mini-plán (1–3 věty) jen Analytik a Vývojář** — do body `[ANALÝZA]` / na začátek `[IMPLEMENTACE]`. Kontrolor, Tester, Integrátor plán nepíšou.
 
@@ -93,7 +97,7 @@ Jen Vývojář → Kontrolor V. Orchestrace default; `once` = jeden krok.
 ## Postup jedné role
 
 1. Načti VSTUP: `gh issue view <num> --json body,labels,title`
-2. Proveď roli dle `docs/multi-agent-workflow.md` (I/O šablony).
+2. Proveď roli dle **role card** `docs/ma-role-cards/<role>.md` (+ skill STOP). Celý `docs/multi-agent-workflow.md` jen při potřebě (Modely, MERGE-PENDING marker).
 3. Zápis: `gh issue edit --body-file` (**ne** inline `--body`).
 4. Verdikt: řádek `Verdikt: GO|NO-GO` (line-anchored).
 5. Sync `gate/*` na verdikt **i** produkční issue.

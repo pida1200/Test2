@@ -147,6 +147,41 @@ console.log('OK  evaluateGuards: větev neexistuje na originu → fail (G4)');
 }
 console.log('OK  evaluateGuards: actor bez ≥ write → fail (G0)');
 
+{
+  const fixture = { ...fullGoFixture, markerPipelineOk: false };
+  const r = lib.evaluateGuards(fixture);
+  assert.strictEqual(r.pass, false);
+  assert.ok(r.failures.some((f) => f.startsWith('G4b:')));
+}
+console.log('OK  evaluateGuards: pipeline= v markeru ≠ issue → fail (G4b)');
+
+// --- shaMatches / markerPipelineMatches --------------------------------
+
+{
+  assert.strictEqual(lib.shaMatches('abcdef0123456789', 'abcdef0'), true);
+  assert.strictEqual(lib.shaMatches('abcdef0123456789', 'abcdef0123456789'), true);
+  assert.strictEqual(lib.shaMatches('abcdef0123456789', 'abc'), false); // < 7
+  assert.strictEqual(lib.shaMatches('abcdef0123456789', 'zzzzzzz'), false);
+  assert.strictEqual(lib.shaMatches('', 'abcdef0'), false);
+}
+console.log('OK  shaMatches: ≥7 prefix / equality; krátký SHA reject');
+
+{
+  assert.strictEqual(
+    lib.markerPipelineMatches({ pipeline: '81', source: 'marker' }, 81),
+    true
+  );
+  assert.strictEqual(
+    lib.markerPipelineMatches({ pipeline: '99', source: 'marker' }, 81),
+    false
+  );
+  assert.strictEqual(
+    lib.markerPipelineMatches({ pipeline: null, source: 'fallback' }, 81),
+    true
+  );
+}
+console.log('OK  markerPipelineMatches: marker vs fallback');
+
 // --- authorizeRun (vada 1 z VERDIKT-A NO-GO #94) ------------------------
 
 {

@@ -26,6 +26,15 @@ Pravidlo: `repo-kvalita.mdc`.
 
 ## Záznamy
 
+### 2026-08-05 – MA quality + token P0–P1 (revize spotřeba)
+
+- Výsledek: P0 — sync Další krok = `merge/approved`; Integrátor bez full check; Kontrolor A = `gpt-5.6-terra-medium`; gate-check maže stale; merge `shaMatches` (≥7) + G4b pipeline=. P1 — `docs/ma-role-cards/`, tenký `ma-run-role` prompt, next-bot CLI one-liner, `/m 2` routing, dedupe gramatika ve skillu, checklist KA, smazán Scope-first snippet. P2 založen jako samostatný `[PIPELINE]` (risk/low, verdikt-as-comment, check:merge).
+- Ověření: `npm run check` (vč. rozšířených `test-ma-merge-lib` / `test-multiagent-next-lib` / `test-ma-run-role`).
+- Riziko: `cursor-agent` stále často mimo PATH; live ostrý merge na nové pipeline ještě neběžel po těchto guard změnách.
+- Další krok: merge feature větve (label `merge/approved` nebo ručně); pak P2 pipeline [#100](https://github.com/pida1200/Test2/issues/100).
+- Wiki: `zmeny-2026-08-05-ma-quality-token-p0-p1`
+- P2 issue: [#100](https://github.com/pida1200/Test2/issues/100) `[PIPELINE] MA P2 — risk/low, verdikt-as-comment, check:merge`
+
 ### 2026-08-05 – /m #81 IMPLEMENTACE: merge/push jako Git úkol (label `merge/approved`)
 
 - Výsledek: nový `.github/workflows/multiagent-merge.yml` (spouštěč `issues.labeled` `merge/approved` nebo `workflow_dispatch`, fail-closed — `dry_run` default `true`, ostrý běh vyžaduje stejný ověřený `merge/approved`) + čisté funkce `docs/scripts/ma-merge-lib.cjs` (`parseMergePending`, `authorizeRun`, `evaluateGuards`, `composeResultComment`) s offline testy `test-ma-merge-lib.sh` (24 případů) zapojenými do `check:ma`; `create-multiagent-labels.sh` doplněn o `merge/approved`, `merge/done`, `merge/failed`, `wiki/sync-failed`; `multiagent-next-lib.cjs` hint u `multiagent/pipeline`+`gate/go` změněn na „přidej label `merge/approved`“ (+ nový assert v `test-multiagent-next-lib.sh`); dokumentace sladěna (`multi-agent-workflow.md` — MERGE-PENDING marker + bootstrap checklist B0–B5, `SKILL.md`, `multi-agenti.mdc`, `prompt-snippets.md`, `m.md`) a wiki (`provozni-konfigurace.md`, `provozni-deploy.md`, nový `zmeny-2026-08-05-pipeline-81-merge-git-ukol` + index).
