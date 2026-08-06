@@ -1,14 +1,14 @@
 name: Close pipeline 100 (one-shot)
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
-    paths:
-      - '.github/workflows/close-pipeline-100.yml'
 
 permissions:
   issues: write
-  contents: read
+  contents: write
+  actions: write
 
 jobs:
   close:
@@ -44,21 +44,28 @@ jobs:
               } catch (e) {
                 core.warning(`close #${n}: ${e.message}`);
               }
-              try {
-                await github.rest.issues.addLabels({
-                  owner, repo, issue_number: n, labels: ['merge/done'],
-                });
-              } catch (e) {
-                // merge/done only on pipeline is enough
-                if (n === 100) core.warning(`label #${n}: ${e.message}`);
-              }
             }
 
-            // Prefer merge/done only on pipeline; remove from children if added
-            for (const n of [102, 104, 105, 106, 107, 108, 109, 110, 111, 112]) {
-              try {
-                await github.rest.issues.removeLabel({
-                  owner, repo, issue_number: n, name: 'merge/done',
-                });
-              } catch (_) {}
+            try {
+              await github.rest.issues.addLabels({
+                owner, repo, issue_number: 100, labels: ['merge/done'],
+              });
+              core.info('labeled #100 merge/done');
+            } catch (e) {
+              core.warning(`label #100: ${e.message}`);
             }
+
+      - name: Remove one-shot workflow
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Delete workflow file and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ -f .github/workflows/close-pipeline-100.yml ]; then
+            git rm .github/workflows/close-pipeline-100.yml
+            git commit -m "ci: remove one-shot close-pipeline-100 workflow"
+            git push origin main
+          fi
