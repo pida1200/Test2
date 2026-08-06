@@ -1,0 +1,64 @@
+name: Close pipeline 100 (one-shot)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/close-pipeline-100.yml'
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  close:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const nums = [100, 102, 104, 105, 106, 107, 108, 109, 110, 111, 112];
+            const body = [
+              '## Uzavřeno po merge do `main`',
+              '',
+              'Merge commit: `22f9077` (feature/pipeline-100-ma-p2).',
+              'Verdikty A#105 V#108 T#111 = GO.',
+              '',
+              'Cloud agent nemohl přidat `merge/approved` / uzavřít Issues (403);',
+              'uzavření provedeno one-shot workflowem po explicitní žádosti.',
+            ].join('\n');
+
+            for (const n of nums) {
+              try {
+                await github.rest.issues.createComment({ owner, repo, issue_number: n, body });
+              } catch (e) {
+                core.warning(`comment #${n}: ${e.message}`);
+              }
+              try {
+                await github.rest.issues.update({
+                  owner, repo, issue_number: n, state: 'closed', state_reason: 'completed',
+                });
+                core.info(`closed #${n}`);
+              } catch (e) {
+                core.warning(`close #${n}: ${e.message}`);
+              }
+              try {
+                await github.rest.issues.addLabels({
+                  owner, repo, issue_number: n, labels: ['merge/done'],
+                });
+              } catch (e) {
+                // merge/done only on pipeline is enough
+                if (n === 100) core.warning(`label #${n}: ${e.message}`);
+              }
+            }
+
+            // Prefer merge/done only on pipeline; remove from children if added
+            for (const n of [102, 104, 105, 106, 107, 108, 109, 110, 111, 112]) {
+              try {
+                await github.rest.issues.removeLabel({
+                  owner, repo, issue_number: n, name: 'merge/done',
+                });
+              } catch (_) {}
+            }
