@@ -1,10 +1,15 @@
 /**
  * Pure helpers for .github/workflows/multiagent-merge.yml (testable offline, no GitHub/network deps).
- * Kontrakt: ANALÝZA #93 (v2, rework po VERDIKT-A NO-GO #94). Pipeline: #81.
+ * Kontrakt: ANALÝZA #93 (v2, rework po VERDIKT-A NO-GO #94) + ANALÝZA #102 v2 (G2 přes
+ * ma-verdict-lib.cjs, Pipeline #100). Guardy G0–G6 = evaluateGuards(); autorizace zápisu
+ * (G7) = authorizeRun() — jediná a společná pro issues.labeled i workflow_dispatch,
+ * default = deny. Workflow smí volat `git push` výhradně když authorizeRun().push === true.
  *
- * Guardy G0–G6 = evaluateGuards(); autorizace zápisu (G7) = authorizeRun() — jediná
- * a společná pro issues.labeled i workflow_dispatch, default = deny. Workflow smí
- * volat `git push` výhradně když authorizeRun().push === true.
+ * G2 (VERDIKT-A/V/T GO): preferovaný vstup je `verdictSignals` — `{ A, V, T }`, kde
+ * každá hodnota je výstup `ma-verdict-lib.cjs#resolveVerdictSignal()` (`status`
+ * GO|NO-GO|stale|none). Akceptuje se výhradně `status === 'GO'` — zpětně kompatibilní
+ * i s legacy `verdicts` tvarem (`{ gate, verdikt }` z `[VERDIKT-*]` issue) pro pipeline
+ * bez `verdictSignals`.
  */
 
 const MERGE_PENDING_RE =
@@ -137,7 +142,8 @@ function authorizeRun(input) {
  * @param {object} input
  * @param {string} input.actorPermission - oprávnění actora (G0)
  * @param {{ state: 'open'|'closed', labels: string[] }} input.pipelineIssue - G1
- * @param {{ A?: {gate: string|null, verdikt: string|null}, V?: ..., T?: ... }} input.verdicts - poslední verdikt každého druhu (G2)
+ * @param {{ A?: object, V?: object, T?: object }} [input.verdictSignals] - preferovaný G2 vstup: `resolveVerdictSignal()` výstup na fázi (`status` GO|NO-GO|stale|none)
+ * @param {{ A?: {gate: string|null, verdikt: string|null}, V?: ..., T?: ... }} [input.verdicts] - legacy G2 vstup (poslední verdikt issue každého druhu); ignorováno, je-li dán `verdictSignals`
  * @param {boolean} input.openBlockerBugInScope - otevřený multiagent/bug, blocker, ve scope – odloženo (G3)
  * @param {boolean} input.branchExistsOnOrigin - G4
  * @param {boolean} input.headMatchesSha - G4 (HEAD drift, D5)
@@ -164,11 +170,23 @@ function evaluateGuards(input) {
     failures.push('G1: [PIPELINE] není OPEN s labely multiagent/pipeline + gate/go');
   }
 
-  const verdicts = opts.verdicts || {};
-  for (const kind of ['A', 'V', 'T']) {
-    const v = verdicts[kind];
-    if (!v || v.gate !== 'gate/go' || v.verdikt !== 'GO') {
-      failures.push(`G2: poslední [VERDIKT-${kind}] nemá gate/go + „Verdikt: GO“`);
+  if (opts.verdictSignals) {
+    // Nový kontrakt (#102): jediný akceptovaný stav je 'GO' — fail-closed pro NO-GO/stale/none.
+    for (const kind of ['A', 'V', 'T']) {
+      const signal = opts.verdictSignals[kind];
+      const status = signal && signal.status;
+      if (status !== 'GO') {
+        failures.push(`G2: VERDIKT-${kind} signál není GO (status: ${status || 'none'})`);
+      }
+    }
+  } else {
+    // Zpětná kompatibilita se starým tvarem (poslední [VERDIKT-*] issue, žádný GO komentář).
+    const verdicts = opts.verdicts || {};
+    for (const kind of ['A', 'V', 'T']) {
+      const v = verdicts[kind];
+      if (!v || v.gate !== 'gate/go' || v.verdikt !== 'GO') {
+        failures.push(`G2: poslední [VERDIKT-${kind}] nemá gate/go + „Verdikt: GO“`);
+      }
     }
   }
 

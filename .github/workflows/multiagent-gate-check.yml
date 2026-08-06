@@ -1,11 +1,16 @@
 name: Multi-agent gate check
 
-# Validace verdikt issues — komentář při chybě (nefailuje celou pipeline).
-# Pipeline/Vstup/Verdikt: line-anchored regex z multiagent-next-lib.cjs
+# Validace verdikt issues (`[VERDIKT-*]`) i verdikt-as-comment (GO komentáře na produkčních
+# issues) — komentář při chybě (nefailuje celou pipeline). Formát/precedence/trust:
+# docs/scripts/ma-verdict-lib.cjs (jediný parser). Pipeline/Vstup/Verdikt (issue tvar):
+# line-anchored regex z multiagent-next-lib.cjs / pipeline-sync-lib.cjs.
+# Kontrakt: ANALÝZA #102 v2. Pipeline: #100.
 
 on:
   issues:
     types: [labeled, opened, edited]
+  issue_comment:
+    types: [created, edited]
 
 permissions:
   issues: write
@@ -14,6 +19,7 @@ permissions:
 jobs:
   validate-gate:
     if: >
+      github.event_name == 'issues' &&
       contains(join(github.event.issue.labels.*.name, ','), 'multiagent') &&
       contains(join(github.event.issue.labels.*.name, ','), 'multiagent/verdikt')
     runs-on: ubuntu-latest
@@ -153,3 +159,113 @@ jobs:
                 body: commentBody,
               });
             }
+
+  validate-verdict-comment:
+    # Verdikt-as-comment (#102): validace formátu + fail-closed trust GO komentáře na
+    # produkčním issue ([ANALÝZA]/[IMPLEMENTACE]/[TESTY]). NO-GO nikdy nejde tudy (marker
+    # verdikt="NO-GO" je vždy invalid — viz ma-verdict-lib.cjs).
+    if: >
+      github.event_name == 'issue_comment' &&
+      contains(github.event.comment.body, 'multiagent-verdikt')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate verdict comment (format + trust) + sync gate/go
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const verdictLib = require('./docs/scripts/ma-verdict-lib.cjs');
+            const nextLib = require('./docs/scripts/multiagent-next-lib.cjs');
+
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const comment = context.payload.comment;
+            const hostIssue = context.payload.issue;
+            const hostLabels = (hostIssue.labels || []).map((l) => l.name);
+
+            const parsed = verdictLib.parseVerdictComment({
+              id: comment.id,
+              body: comment.body,
+              created_at: comment.created_at,
+              author: comment.user && comment.user.login,
+            });
+
+            let errors = parsed.valid ? [] : parsed.errors;
+
+            if (parsed.valid) {
+              // Skutečná pipeline hostitele (jeho vlastní "Pipeline: #N" řádek) — NE marker
+              // samotný, jinak by byl replay guard (N3) bezzubý.
+              const actualPipelineNum = nextLib.parsePipelineNum(hostIssue.body || '');
+
+              let pipelineLabels = [];
+              if (actualPipelineNum) {
+                try {
+                  const { data: pipelineIssue } = await github.rest.issues.get({
+                    owner, repo, issue_number: parseInt(actualPipelineNum, 10),
+                  });
+                  pipelineLabels = (pipelineIssue.labels || []).map((l) => l.name);
+                } catch (e) {
+                  errors.push(`Pipeline issue #${actualPipelineNum} (z hostitele) nelze načíst.`);
+                }
+              } else {
+                errors.push('Hostitelské issue neobsahuje řádek "Pipeline: #N" — nelze ověřit vazbu na [PIPELINE].');
+              }
+
+              let authorPermission = null;
+              try {
+                const { data } = await github.rest.repos.getCollaboratorPermissionLevel({
+                  owner, repo, username: parsed.author,
+                });
+                authorPermission = data.permission;
+              } catch (e) {
+                authorPermission = null; // neověřitelný autor → fail-closed deny níže
+              }
+
+              const trust = verdictLib.checkCommentTrust(parsed, {
+                pipeline: actualPipelineNum,
+                hostIssueNumber: hostIssue.number,
+                hostLabels,
+                riskLow: pipelineLabels.includes('risk/low'),
+                authorPermission,
+              });
+              if (!trust.allowed) errors.push(`Fail-closed trust: ${trust.reason}`);
+            }
+
+            const marker = '<!-- multiagent-gate-check-verdikt -->';
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner, repo, issue_number: hostIssue.number, per_page: 20,
+            });
+            const existingError = comments.find((c) => c.body && c.body.includes(marker));
+
+            if (errors.length === 0) {
+              core.info('Verdikt komentář OK — validní GO + ověřená důvěryhodnost');
+              if (existingError) {
+                await github.rest.issues.deleteComment({ owner, repo, comment_id: existingError.id });
+                core.info('Removed stale gate-check-verdikt comment');
+              }
+              if (!hostLabels.includes('gate/go')) {
+                await github.rest.issues.addLabels({ owner, repo, issue_number: hostIssue.number, labels: ['gate/go'] });
+              }
+              for (const stale of ['gate/pending', 'gate/no-go']) {
+                if (hostLabels.includes(stale)) {
+                  await github.rest.issues.removeLabel({ owner, repo, issue_number: hostIssue.number, name: stale }).catch(() => {});
+                }
+              }
+              return;
+            }
+
+            const commentBody = [
+              marker,
+              '### ⚠️ Gate check — GO komentář má neplatný tvar nebo není důvěryhodný',
+              '',
+              ...errors.map((e) => `- ${e}`),
+              '',
+              'Oprav marker/text dle `docs/multi-agent-workflow.md` (sekce Verdikt-as-comment) a ulož komentář znovu (edit).',
+            ].join('\n');
+
+            if (existingError) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existingError.id, body: commentBody });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number: hostIssue.number, body: commentBody });
+            }
+            core.info(`Verdikt komentář neplatný: ${errors.join(' | ')}`);

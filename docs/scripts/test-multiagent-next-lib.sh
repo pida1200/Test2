@@ -59,5 +59,41 @@ const pipelineGo = next.routeNextStep({
 assert.ok(pipelineGo.commentBody.includes('merge/approved'));
 assert.ok(!pipelineGo.commentBody.includes('bez akce agenta'));
 assert.ok(pipelineGo.cliOneLiner.includes('--role integrator'));
+
+// risk/low (#102): ANALÝZA self-check gate/go → rovnou Vývojář, ne nejednoznačné "Kontrolor A / Vývojář"
+const analyzaGoDefault = next.routeNextStep({
+  labels: ['multiagent', 'multiagent/analyza', 'gate/go'],
+  title: '[ANALÝZA] test',
+  body: 'Pipeline: #100\n',
+  issueNumber: 102,
+});
+assert.strictEqual(analyzaGoDefault.info.role, 'Kontrolor A / Vývojář');
+
+const analyzaGoRiskLow = next.routeNextStep({
+  labels: ['multiagent', 'multiagent/analyza', 'gate/go'],
+  title: '[ANALÝZA] test',
+  body: 'Pipeline: #100\n',
+  issueNumber: 102,
+  riskLow: true,
+});
+assert.strictEqual(analyzaGoRiskLow.info.role, 'Vývojář');
+assert.strictEqual(analyzaGoRiskLow.info.model, next.MODELS.vyvojar);
+assert.ok(analyzaGoRiskLow.commentBody.includes('risk/low'));
+assert.ok(analyzaGoRiskLow.cliOneLiner.includes('--role vyvojar'));
+
+// risk/low nemá vliv mimo ANALÝZA gate/go (žádná zkratka jinde)
+const implGoRiskLow = next.routeNextStep({
+  labels: ['multiagent', 'multiagent/implementace', 'gate/go'],
+  title: '[IMPLEMENTACE] test',
+  body: 'Pipeline: #100\n',
+  issueNumber: 103,
+  riskLow: true,
+});
+assert.strictEqual(implGoRiskLow.info.role, 'Kontrolor V / Tester');
+
+// next-lib re-exportuje jediný verdikt parser (ma-verdict-lib.cjs)
+assert.strictEqual(typeof next.verdictLib.parseVerdictComment, 'function');
+assert.strictEqual(typeof next.verdictLib.resolveVerdictSignal, 'function');
+
 console.log('OK multiagent-next-lib tests');
 NODE

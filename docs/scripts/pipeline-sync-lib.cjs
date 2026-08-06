@@ -6,6 +6,10 @@
 const START = '<!-- multiagent:prehled:start -->';
 const END = '<!-- multiagent:prehled:end -->';
 const PIPELINE_RE = /^\s*Pipeline(?:\s+issue)?:\s*#?(\d+)\s*$/m;
+/** Line-anchored Vstup: #N (same style as Pipeline). Shared by next-lib + verdict-lib. */
+const VSTUP_RE = /^\s*Vstup(?:ní)?(?:\s+issue)?:\s*#?(\d+)\s*$/m;
+/** Line-anchored Verdikt (may appear after form ### headings). Shared by next-lib + verdict-lib. */
+const VERDIKT_RE = /^\s*Verdikt:\s*(NO-GO|GO)\b/m;
 
 function escapeRegExp(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -172,6 +176,8 @@ module.exports = {
   START,
   END,
   PIPELINE_RE,
+  VSTUP_RE,
+  VERDIKT_RE,
   extractOutsideMarkers,
   outsideKey,
   replacePrehledSection,

@@ -3,6 +3,12 @@ name: Multi-agent pipeline sync
 # Udržuje auto-přehled mezi markery v [PIPELINE] body.
 # Bot mění jen <!-- multiagent:prehled:start --> … <!-- multiagent:prehled:end -->.
 # Logika: docs/scripts/pipeline-sync-lib.cjs (unit test: test-pipeline-sync.sh)
+#
+# risk/low + verdikt-as-comment (#102 v2, Pipeline #100): label `risk/low` na [PIPELINE]
+# přeskočí Kontrolora A v routingu „Další krok“ (ANALÝZA gate/go → rovnou Vývojář).
+# „Historie verdiktů“ + gotovost k merge (allGo) jdou přes sjednocenou osu
+# docs/scripts/ma-verdict-lib.cjs#resolveVerdictSignal (staré [VERDIKT-*] issues i nové
+# GO komentáře, fail-closed) — ne pouhý gate label.
 
 on:
   issues:
@@ -27,8 +33,9 @@ jobs:
           script: |
             const sync = require('./docs/scripts/pipeline-sync-lib.cjs');
             const nextLib = require('./docs/scripts/multiagent-next-lib.cjs');
+            const verdictLib = require('./docs/scripts/ma-verdict-lib.cjs');
             const { START, END, PIPELINE_RE, parsePipelineNum, replacePrehledSection,
-              buildVerdictHistoryLine, countNoGoRounds, shouldBlockPipeline,
+              countNoGoRounds, shouldBlockPipeline,
               safeUpdatePipelineBody } = sync;
 
             const PHASES = [
@@ -136,6 +143,8 @@ jobs:
               return list.length ? list[list.length - 1] : null;
             }
 
+            const riskLow = plLabels.includes('risk/low');
+
             const tableRows = PHASES.map(phase => {
               const iss = latestIssue(phase.key);
               if (!iss) {
@@ -146,9 +155,70 @@ jobs:
               return `| ${phase.key} | #${iss.number} | \`${gate}\` | ${state} |`;
             });
 
+            // Sjednocená osa GO/NO-GO (#102 v2) — [VERDIKT-<kind>] issues + validní GO
+            // komentáře na produkčním issue (ANALÝZA/IMPLEMENTACE/TESTY), fail-closed.
+            const KIND_TO_PHASE = { A: 'ANALÝZA', V: 'IMPLEMENTACE', T: 'TESTY' };
+
+            async function getPermission(login) {
+              try {
+                const { data } = await github.rest.repos.getCollaboratorPermissionLevel({
+                  owner: context.repo.owner, repo: context.repo.repo, username: login,
+                });
+                return data.permission;
+              } catch (e) {
+                return 'none';
+              }
+            }
+
+            async function buildVerdictSignalForSync(kind) {
+              const verdictIssues = (byPhase[`VERDIKT-${kind}`] || []).map(i => ({
+                number: i.number, body: i.body || '', labels: (i.labels || []).map(l => l.name), created_at: i.created_at,
+              }));
+              const hostIssueRaw = latestIssue(KIND_TO_PHASE[kind]);
+              if (!hostIssueRaw) {
+                return verdictLib.resolveVerdictSignal({ kind, pipeline: pipelineNum, verdictIssues });
+              }
+              try {
+                const hostComments = await github.paginate(github.rest.issues.listComments, {
+                  owner: context.repo.owner, repo: context.repo.repo, issue_number: hostIssueRaw.number, per_page: 100,
+                });
+                const markerComments = hostComments.filter(c => c.body && c.body.includes('multiagent-verdikt'));
+                const hostTimeline = await github.paginate(github.rest.issues.listEventsForTimeline, {
+                  owner: context.repo.owner, repo: context.repo.repo, issue_number: hostIssueRaw.number, per_page: 100,
+                });
+                const labelEvents = hostTimeline
+                  .filter(e => e.event === 'labeled')
+                  .map(e => ({ event: 'labeled', label: { name: e.label && e.label.name }, created_at: e.created_at }));
+                const uniqueLogins = [...new Set(markerComments.map(c => c.user && c.user.login).filter(Boolean))];
+                const permissions = {};
+                for (const login of uniqueLogins) permissions[login] = await getPermission(login);
+                const commentsForLib = markerComments.map(c => ({
+                  id: c.id, body: c.body, created_at: c.created_at, author: c.user && c.user.login,
+                }));
+                return verdictLib.resolveVerdictSignal({
+                  kind,
+                  pipeline: pipelineNum,
+                  hostIssue: { number: hostIssueRaw.number, labels: (hostIssueRaw.labels || []).map(l => l.name) },
+                  comments: commentsForLib,
+                  verdictIssues,
+                  labelEvents,
+                  permissions,
+                  pipelineLabels: plLabels,
+                });
+              } catch (e) {
+                core.info(`buildVerdictSignalForSync(${kind}) fallback po chybě API: ${e.message}`);
+                return verdictLib.resolveVerdictSignal({ kind, pipeline: pipelineNum, verdictIssues });
+              }
+            }
+
+            const verdictSignals = {};
+            for (const kind of ['A', 'V', 'T']) {
+              verdictSignals[kind] = await buildVerdictSignalForSync(kind);
+            }
+
             const historyParts = [];
-            for (const phase of PHASES.filter(p => p.verdict)) {
-              const line = buildVerdictHistoryLine(phase.key, byPhase[phase.key] || []);
+            for (const kind of ['A', 'V', 'T']) {
+              const line = verdictLib.buildUnifiedVerdictHistoryLine(`VERDIKT-${kind}`, verdictSignals[kind]);
               if (line) historyParts.push(line);
             }
 
@@ -160,7 +230,10 @@ jobs:
             let nextModel = nextLib.MODELS.integrator;
             let nextHint = `/m #${pipelineNum}`;
 
-            outer: for (const phase of PHASES) {
+            // risk/low: self-check ANALÝZA (gate/go bez [VERDIKT-A]) → přeskoč Kontrolora A.
+            const routingPhases = riskLow ? PHASES.filter(p => p.key !== 'VERDIKT-A') : PHASES;
+
+            outer: for (const phase of routingPhases) {
               const iss = latestIssue(phase.key);
               if (!iss) {
                 if (phase.key === 'ANALÝZA') {
@@ -219,10 +292,10 @@ jobs:
               nextModel = '—';
               nextHint = '≥3 NO-GO verdikty — gate/blocked';
             } else {
-              const allGo = ['VERDIKT-A', 'VERDIKT-V', 'VERDIKT-T'].every(k => {
-                const iss = latestIssue(k);
-                return iss && issueGate(iss) === 'gate/go';
-              });
+              // Fail-closed (#102 v2): gotovost k merge počítáme ze sjednocené osy
+              // (verdictSignals), ne z pouhého gate labelu — GO musí být ověřitelné
+              // a důvěryhodné, ať už jako [VERDIKT-*] issue, nebo jako GO komentář.
+              const allGo = ['A', 'V', 'T'].every(k => verdictSignals[k].status === 'GO');
               if (allGo && plLabels.includes('gate/go')) {
                 nextRole = 'Integrátor / člověk';
                 nextModel = nextLib.MODELS.integrator;
