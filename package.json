@@ -9,6 +9,6 @@
     "check:docs": "npx --yes markdownlint-cli2 \"docs/multi-agent-workflow.md\" \"docs/multiagent-zadani.md\" \"docs/prompt-snippets.md\" \"docs/wiki/**/*.md\" \".cursor/rules/multi-agenti.mdc\" \".cursor/commands/m.md\" \".cursor/skills/m/SKILL.md\"",
     "check:wiki": "bash docs/scripts/check-wiki-seed.sh",
     "check:merge": "npm run check:examples-backend && npm run check:wiki",
-    "check:ma": "bash docs/scripts/test-pipeline-sync.sh && bash docs/scripts/test-pipeline-regex.sh && bash docs/scripts/test-check-wiki-seed.sh && bash docs/scripts/test-multiagent-next-lib.sh && bash docs/scripts/dry-run-multiagent-next.sh && bash docs/scripts/test-ma-run-role.sh && bash docs/scripts/test-ma-merge-lib.sh && bash docs/scripts/test-ma-verdict-lib.sh"
+    "check:ma": "bash docs/scripts/test-pipeline-sync.sh && bash docs/scripts/test-pipeline-regex.sh && bash docs/scripts/test-check-wiki-seed.sh && bash docs/scripts/test-multiagent-next-lib.sh && bash docs/scripts/dry-run-multiagent-next.sh && bash docs/scripts/test-ma-run-role.sh && bash docs/scripts/test-ma-merge-lib.sh && bash docs/scripts/test-ma-verdict-lib.sh && bash docs/scripts/test-check-ma-env.sh"
   }
 }

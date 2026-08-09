@@ -31,33 +31,36 @@ U změny chování **povinný** záznam `zmeny-YYYY-MM-DD-…` (+ řádek v `zme
 | **Kontrolor testera** | Kontrola pokrytí a kvality testů | Neimplementuje produkční kód |
 | **Integrátor** | Orchestruje pipeline, konflikty, commit + push feature větve, MERGE-PENDING (tenký — bez duplicitního full check) | — |
 
-## Modely (doporučené přiřazení — ověř dostupnost)
+## Modely (default = Cursor Auto)
 
-V Cursoru zvol model u každého chatu / sub-agenta podle tabulky. Slug = hodnota pro výběr modelu (Task / agent).  
-**Ověř dostupnost slugů v Cursor Task a uveď skutečný slug v `MODEL:`.**  
-Uživatel může přepsat; Integrátor v kickoffu uvede `MODEL:` u každé role.
+**Default pro `/m` a next-bot:** `auto` — Cursor Auto routing (preferuje remaining included usage, méně on-demand Anthropic/OpenAI).
 
-| Role | Doporučený model | Alternativa | Proč |
-|------|------------------|-------------|------|
-| **Analytik** | `claude-opus-5-thinking-high` | `claude-4.5-opus-high-thinking` | silný reasoning nad kontraktem a DoD |
-| **Kontrolor analytika** | `gpt-5.6-terra-medium` | `claude-4.5-opus-high-thinking` | jiná rodina než Analytik (méně self-review bias + levnější default) |
-| **Vývojář** | `composer-2.5-fast` | `claude-sonnet-5-thinking-high` | implementace ve scope + základní testy |
-| **Kontrolor vývojáře** | `gpt-5.6-sol-medium` | `claude-opus-5-thinking-high` | code review oddělený od implementačního modelu |
-| **Tester** | `composer-2.5-fast` | `claude-sonnet-5-thinking-high` | psaní/spouštění testů, edge cases |
-| **Kontrolor testera** | `claude-sonnet-5-thinking-high` | `gpt-5.6-terra-medium` | kontrola pokrytí |
-| **Integrátor** | `composer-2.5-fast` | `claude-sonnet-5-thinking-high` | orchestrace, konflikty, lint/commit |
+| Role | Default | Pin (volitelně) | Proč pin |
+|------|---------|-----------------|----------|
+| **Analytik** | `auto` | `cursor-grok-4.5-high` | stabilní reasoning |
+| **Kontrolor analytika** | `auto` | `cursor-grok-4.5-high-fast` | ≠ Analytik (high vs high-fast) |
+| **Vývojář** | `auto` | `composer-2.5-fast` | Composer = Cursor Models |
+| **Kontrolor vývojáře** | `auto` | `cursor-grok-4.5-high` | ≠ Composer |
+| **Tester** | `auto` | `composer-2.5-fast` | testy |
+| **Kontrolor testera** | `auto` | `cursor-grok-4.5-high-fast` | ≠ Tester |
+| **Integrátor** | `auto` | `composer-2.5-fast` | orchestrace |
 
-> **Poznámka:** Původní slugy (`claude-opus-4-8-thinking-high`, `composer-2.5`, `gpt-5.6-sol-high`, `gpt-5.5-high`) nejsou v Cursor Task dostupné. Tabulka výše používá ověřené náhrady.
+**CLI:** `ma-run-role.sh` — `--model` je volitelné (default `auto`). Při `auto` se CLI flagu `--model` **nepředává** (Cursor CLI Auto). Explicitní slug = pin.
+
+**Task fallback:** při `MODEL: auto` použij Task `model: "inherit"` (parent = Auto / Cursor Model). Nepřepínej na Anthropic/OpenAI, dokud uživatel neřekne.
+
+**Trade-off:** Auto negarantuje „kontrolor ≠ produkce“. Když chceš oddělené oči, pinuj přes `MODELS_PINNED` / `--model <slug>`.
 
 ### Pravidla výběru modelu
 
-1. **Kontrolor ≠ stejný model jako produkce**, pokud to jde (snižuje „self-review bias“) — Analytik (Opus) vs Kontrolor A (`gpt-5.6-terra-medium`); Vývojář vs Kontrolor V.
-2. **`*-fast` je legitimní**, když ne-fast alternativa neexistuje (dnes Vývojář/Tester/Integrátor). U ostatních rolí preferuj ne-fast alternativu ze sloupce Alternativa.
-3. Extra těžký reasoning jen u NO-GO smyčky na analýze nebo u riskantního review.
-4. V zadání každé role uveď řádek: `MODEL: <slug>`.
-5. **Fallback:** pokud doporučený slug není dostupný, použij alternativu ze sloupce Alternativa. Uveď skutečný slug v `MODEL:`.
+1. **Default = `auto`** (billing-safe).
+2. Pin jen když potřebuješ stabilní slug nebo kontrolor ≠ produkce (tabulka Pin).
+3. Pin = **jen Cursor Models** (Grok / Composer), dokud nestačí jejich kvóta.
+4. Anthropic/OpenAI (`claude-*`, `gpt-*`) jen na explicitní žádost uživatele.
+5. V zadání role uveď `MODEL: auto` nebo `MODEL: <slug>`.
+6. `MODELS` v `multiagent-next-lib.cjs` = default botu; `MODELS_PINNED` = doporučené pin slugs.
 
-> **Kanonická tabulka modelů** = tato sekce. Rule / skill / snippets / zadání jen odkazují sem — nekopíruj slugy jinam.
+> **Kanonická tabulka modelů** = tato sekce. Rule / skill / snippets odkazují sem.
 
 ## Pipeline + rework smyčka
 
@@ -222,7 +225,7 @@ Obsah artefaktu piš **do body issue** (ne jen do chatu). V chatu vrať shrnutí
 
 ```text
 ROLE: Analytik
-MODEL: claude-opus-5-thinking-high
+MODEL: auto
 VSTUP_ISSUE: #<PIPELINE>  (+ případně komentář/NO-GO z #<VERDIKT-A> při reworku)
 VÝSTUP_ISSUE: #<ANALÝZA>  (vytvoř pokud neexistuje; label multiagent/analyza, gate/pending)
 
@@ -247,7 +250,7 @@ NESMÍŠ: implementovat; uzavírat verdikt; git push
 
 ```text
 ROLE: Kontrolor analytika
-MODEL: gpt-5.6-terra-medium
+MODEL: auto
 VSTUP_ISSUE: #<ANALÝZA>
 VÝSTUP_ISSUE: #<VERDIKT-A>  (vždy **vytvoř nové** issue pro každé kolo; label multiagent/verdikt)
 
@@ -282,7 +285,7 @@ NESMÍŠ: editovat body #<ANALÝZA> „za analytika“; kódovat; vytvořit #<IM
 
 ```text
 ROLE: Vývojář
-MODEL: composer-2.5-fast
+MODEL: auto
 VSTUP_ISSUE: #<ANALÝZA> (musí mít gate/go + schválený #<VERDIKT-A>) + #<PIPELINE>
 VÝSTUP_ISSUE: #<IMPLEMENTACE> (label multiagent/implementace, gate/pending)
 
@@ -306,7 +309,7 @@ NESMÍŠ: měnit kontrakt bez eskalace; git push; start Testera bez gate/go na V
 
 ```text
 ROLE: Kontrolor vývojáře
-MODEL: gpt-5.6-sol-medium
+MODEL: auto
 VSTUP_ISSUE: #<IMPLEMENTACE> + #<ANALÝZA>
 VÝSTUP_ISSUE: #<VERDIKT-V>  (vždy **vytvoř nové** issue pro každé kolo; label multiagent/verdikt)
 
@@ -323,7 +326,7 @@ NESMÍŠ: implementovat fixy; posunout dál při NO-GO; přepisovat existující
 
 ```text
 ROLE: Tester
-MODEL: composer-2.5-fast
+MODEL: auto
 VSTUP_ISSUE: #<ANALÝZA> + #<IMPLEMENTACE> (oboje po gate/go) + #<VERDIKT-V>
 VÝSTUP_ISSUE: #<TESTY> (label multiagent/testy, gate/pending)
 
@@ -346,7 +349,7 @@ NESMÍŠ: rozšiřovat feature mimo testy; zakládat bug pro každý drobný ná
 
 ```text
 ROLE: Kontrolor testera
-MODEL: claude-sonnet-5-thinking-high
+MODEL: auto
 VSTUP_ISSUE: #<TESTY> + #<ANALÝZA>
 VÝSTUP_ISSUE: #<VERDIKT-T>  (vždy **vytvoř nové** issue pro každé kolo; label multiagent/verdikt)
 
@@ -363,13 +366,13 @@ NESMÍŠ: psát produkční kód; uzavírat pipeline při NO-GO; přepisovat exi
 
 ```text
 ROLE: Integrátor
-MODEL: composer-2.5-fast
+MODEL: auto
 VSTUP_ISSUE: #<PIPELINE> + #<VERDIKT-A> + #<VERDIKT-V> + #<VERDIKT-T> (vše gate/go)
 VÝSTUP_ISSUE: #<PIPELINE> (handoff MERGE-PENDING; issue zůstává OPEN)
 
 Postup:
 1. Kickoff: pokud uživatel už má pipeline issue (např. bez `[PIPELINE]` titulku) → **doplní** titulek + labely; nové `[PIPELINE]` vytvoř **jen když žádné neexistuje**; odkaž v chatu
-2. Orchestruj vytvoření produkčních/verdikt issues dle pipeline (CLI first / Task)
+2. Orchestruj vytvoření produkčních/verdikt issues dle pipeline (Task/subagent; CLI jen s `cursor-agent`)
 3. Spoj kód / konflikty na feature větvi — **ne** duplicitní full `npm run check`, pokud Tester doložil zelené v `[TESTY]` (výjimka: konflikt / pochybnost); full check = merge workflow G6
 4. **Ověř Wiki:** `bash docs/scripts/check-wiki-seed.sh`; u změny chování existuje záznam `docs/wiki/zmeny-…` + řádek v `zmeny-index.md`
 5. Commit (+ push **feature větve**); bez PR; **nesloučuj do `main`** (repo-git.mdc)
@@ -382,32 +385,29 @@ VÝJIMKA merge do main: jen explicitní „mergni a pushni“ v aktuální sessi
 PŘI BLOKACI (>3 reworky): komentář do #<PIPELINE> + eskalace uživateli
 ```
 
-#### MERGE-PENDING marker + merge = label v GitHubu (#81)
+#### MERGE-PENDING → GitHub úkol Ano/Ne (#81 + rozšíření)
 
-Merge do `main` **spouští člověk labelem `merge/approved`** na `[PIPELINE]` (workflow
-`.github/workflows/multiagent-merge.yml`), ne příkazem v Cursoru. MERGE-PENDING komentář
-Integrátora proto **musí** obsahovat, kromě lidsky čitelného textu, samostatný řádek
-s machine markerem (parser vezme **poslední** takový komentář dle `created_at` — rework
-generuje víc handoffů):
+Po MERGE-PENDING bot (`multiagent-merge-task.yml`) založí issue
+**`[MERGE] Pipeline #N — Ano / Ne?`** (label `multiagent/merge-review`, assignee = autor pipeline).
+
+| Rozhodnutí | Label na `[MERGE]` | Výsledek |
+|------------|--------------------|----------|
+| **Ano** | `merge/approved` | `multiagent-merge.yml` sloučí do `main` |
+| **Ne** | `merge/rejected` | úkol uzavřen, `main` beze změny |
+
+Zpětná kompatibilita: Ano lze dát i na `[PIPELINE]`. Ne v Cursoru.
+
+MERGE-PENDING komentář **musí** mít machine marker (parser vezme **poslední** dle `created_at`):
 
 ```text
 <!-- multiagent-merge-pending pipeline="81" branch="feature/pipeline-81-merge-git-ukol" sha="abc1234" -->
 ```
 
-Bez markeru běží tolerantní fallback na starší tvar `**Větev:** \`…\`` / `**HEAD:** \`…\``
-(#74, #83) — nový handoff ale marker vždy přidává. Chybí-li obojí, guard workflow selže
-(„chybí handoff“) a `main` zůstává beze změny.
+Bez markeru: fallback `**Větev:**` / `**HEAD:**` (#74/#83). Chybí-li obojí → guard fail, `main` beze změny.
 
-Po přidání `merge/approved`: guardy G0–G6 (actor ≥ write, gate/go, G2 = VERDIKT-A/V/T GO
-vyhodnoceno **jednotně** přes `verdictLib.resolveVerdictSignal()` — legacy `[VERDIKT-*]`
-issue i GO komentář (#102), žádný otevřený blocker bug ve scope, HEAD větve == sha
-z markeru, bezkonfliktní merge, G6 = zelený **`npm run check:merge`** — lehčí varianta
-`npm run check` pro post-merge ověření, viz níže) + autorizace G7 (`authorizeRun()` —
-jediná společná pro `issues.labeled` i `workflow_dispatch`, default **deny**). Po úspěchu
-workflow sám: pushne do `main`,
-zrcadlí wiki (`wiki-sync: ok|failed|skipped` — vždy v komentáři), odebere `merge/approved`,
-přidá `merge/done`, a **uzavře** `[PIPELINE]`. Guard fail → `main` beze změny, `merge/failed`,
-issue zůstává OPEN. Detail kontraktu: `docs/scripts/ma-merge-lib.cjs` + ANALÝZA #93.
+Po Ano: guardy G0–G6 (G2 přes `verdictLib.resolveVerdictSignal()`, G6 = `npm run check:merge`) + G7.
+Úspěch → push `main`, wiki mirror, `merge/done`, close `[PIPELINE]` i `[MERGE]`.
+Fail → `merge/failed`, issues OPEN. Detail: `docs/scripts/ma-merge-lib.cjs`.
 
 #### Bootstrap checklist B0–B5 (jen jednou, při zavedení této pipeline #81)
 
@@ -505,13 +505,13 @@ Skill: `.cursor/skills/m/SKILL.md` · Command: `.cursor/commands/m.md`
 Číslo issue **vždy s `#`**. Bez `#` je `2` režim, ne issue.  
 Labely `ma/*` **nezavádět** — používej `multiagent/*` + `gate/*`.
 
-**Orchestrace:** jeden chat / jeden kick; **CLI first** (`docs/scripts/ma-run-role.sh` + role cards), **Task = fallback** při exitu 3. **STOP:** NO-GO, `gate/blocked`, chybí `gh` write, `once`, `MERGE-PENDING`. Kanonická gramatika: `.cursor/skills/m/SKILL.md` (tato tabulka je zrcadlo).
+**Orchestrace:** jeden chat / jeden kick; **Task/subagent řetězí role** (mezi fázemi se neptat). CLI (`ma-run-role.sh`) jen když je `cursor-agent` v PATH; exit 3 → ihned Task, ne STOP. **STOP:** NO-GO, `gate/blocked`, chybí `gh` write, `once`, `MERGE-PENDING`. Kanonická gramatika: `.cursor/skills/m/SKILL.md`.
 
 Copy-paste šablony: `docs/prompt-snippets.md`.
 
 ## Token budget rolí
 
-Cíl: méně tokenů v parent chatu — role se spouští **CLI first** (`docs/scripts/ma-run-role.sh`), Task jen jako fallback (exit `3`, CLI chybí). Prompt odkazuje na **role card** (`docs/ma-role-cards/<role>.md`), ne na celý tento dokument. Mini-plán píší **jen** Analytik a Vývojář. Integrátor je **tenký** — routing + `gh` + STOP/MERGE-PENDING, ne duplicitní full check.
+Cíl: méně tokenů v parent chatu — parent orchestruje, role běží v **Task/subagent** (nebo CLI když `cursor-agent` existuje). Prompt = role card / `ma-run-role.sh --print-prompt`, ne celý tento dokument. Mini-plán píší **jen** Analytik a Vývojář. Integrátor je **tenký** — routing + `gh` + STOP/MERGE-PENDING, ne duplicitní full check.
 
 **Routing:** scoped / jasný DoD → `/m 2 #N`; plná 3+3 jen při nejasném API/DoD/bezpečnosti.
 
@@ -549,11 +549,12 @@ bash docs/scripts/ma-run-role.sh --role <role> --pipeline <N> \
 | Gate check | `.github/workflows/multiagent-gate-check.yml` | validace verdiktů (anchored `Verdikt:`/`Pipeline:`/`Vstup:`); komentář při chybě |
 | Wiki sync | `.github/workflows/wiki-sync.yml` | push `docs/wiki/**` na `main` → `sync-wiki-to-github.sh` |
 | Lokální přehled | `docs/scripts/ma-pipeline-view.sh` | stejný přehled přes `gh` když Actions nejsou dostupné |
-| Spuštění role | `docs/scripts/ma-run-role.sh` | CLI first (`cursor-agent`) / Task fallback (exit 3); token budget výše |
+| Spuštění role | `docs/scripts/ma-run-role.sh` + Task | Task/subagent default v orchestraci; CLI když `cursor-agent` v PATH; exit 3 → Task |
 | Labely | `docs/scripts/create-multiagent-labels.sh` | idempotentní vytvoření `multiagent/*` + `gate/*` + `merge/*` + `risk/low` + `wiki/sync-failed` |
 | MA check | `npm run check:ma` | pipeline-sync + regex + wiki-seed + next-lib + dry-run + ma-run-role + ma-merge-lib + **ma-verdict-lib** (offline) |
 | Post-merge check | `npm run check:merge` | lehčí subset (examples-backend + wiki) pro G6 v merge workflow; plný `npm run check` zůstává pro lokální/CI ověření |
-| Merge do main | `.github/workflows/multiagent-merge.yml` + `docs/scripts/ma-merge-lib.cjs` + `docs/scripts/ma-verdict-lib.cjs` | label `merge/approved` → guardy G0–G6 (G2 = jednotný verdikt signál issue/komentář) + autorizace G7 → merge `--no-ff` → push → wiki mirror → komentář + `merge/done` + close (#81; bootstrap B0–B5 do prvního ostrého použití) |
+| Merge úkol Ano/Ne | `.github/workflows/multiagent-merge-task.yml` | po MERGE-PENDING → `[MERGE]` issue; `merge/rejected` = Ne |
+| Merge do main | `.github/workflows/multiagent-merge.yml` + `ma-merge-lib.cjs` + `ma-verdict-lib.cjs` | Ano (`merge/approved` na `[MERGE]` nebo `[PIPELINE]`) → G0–G7 → merge → wiki → close |
 
 **Co zůstává ruční:** první kick `/m` / `/m #N` v Cursoru (CI agenta nespouští). Child issues pokud chybí `gh` write. **Merge do `main` spouští člověk labelem `merge/approved`** na `[PIPELINE]` (Integrátor jen feature větev + `MERGE-PENDING` handoff s markerem) — do bootstrapu B0–B5 (#81) i nadále ručně. Wiki UI sync po merge dělá workflow sám (`wiki-sync: ok|failed|skipped` v komentáři); mimo tuto cestu (dry-run, offline) po pushi na `main`. **Plně unattended z Actions** (Cursor API) = follow-up mimo scope.
 
@@ -587,12 +588,9 @@ I/O: GitHub Issues (šablony .github/ISSUE_TEMPLATE/)
 3) Vývojář → [IMPLEMENTACE] → Kontrolor → [VERDIKT-V]
 4) Tester → [TESTY] → Kontrolor → [VERDIKT-T]
 5) Integrátor: handoff MERGE-PENDING (merge do main = člověk); [PIPELINE] zůstává OPEN
-Modely (default — ověř dostupnost):
-- Analytik: claude-opus-5-thinking-high
-- Kontrolor analytika: gpt-5.6-terra-medium
-- Vývojář / Tester / Integrátor: composer-2.5-fast
-- Kontrolor vývojáře: gpt-5.6-sol-medium
-- Kontrolor testera: claude-sonnet-5-thinking-high
+Modely (default = auto; pin Grok/Composer dle potřeby):
+- Všechny role: auto
+- Pin (volitelně): viz sekce Modely / MODELS_PINNED
 Pravidlo: NO-GO = STOP; předchozí role opraví produkční issue; vždy nové VERDIKT issue každé kolo
 Ověření: <testy/lint/docker>
 Pravidla: .cursor/rules/ + repo-git (bez PR) + docs/learning-log.md

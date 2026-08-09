@@ -1,0 +1,150 @@
+name: Multi-agent merge task (Ano/Ne)
+
+# 1) Po komentáři MERGE-PENDING na [PIPELINE] založí [MERGE] úkol (assignee = autor pipeline).
+# 2) Label merge/rejected na [MERGE] (nebo [PIPELINE]) = Ne — uzavře úkol, nespustí merge.
+# Ano = label merge/approved → řeší multiagent-merge.yml.
+
+on:
+  issue_comment:
+    types: [created]
+  issues:
+    types: [labeled]
+
+permissions:
+  issues: write
+
+jobs:
+  create-from-pending:
+    if: >
+      github.event_name == 'issue_comment' &&
+      contains(join(github.event.issue.labels.*.name, ','), 'multiagent/pipeline')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const lib = require('./docs/scripts/ma-merge-lib.cjs');
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const issue = context.payload.issue;
+            const comment = context.payload.comment;
+            const body = (comment && comment.body) || '';
+            const m = body.match(lib.MERGE_PENDING_RE);
+            if (!m) {
+              core.info('Komentář není MERGE-PENDING marker — no-op');
+              return;
+            }
+            const pipelineNum = m[1];
+            const branch = m[2];
+            const sha = m[3];
+            if (String(issue.number) !== String(pipelineNum)) {
+              core.warning(`Marker pipeline=#${pipelineNum} ≠ issue #${issue.number} — použiji marker`);
+            }
+
+            const title = lib.mergeReviewTitle(pipelineNum);
+            const open = await github.paginate(github.rest.issues.listForRepo, {
+              owner, repo, state: 'open', labels: 'multiagent/merge-review', per_page: 50,
+            });
+            const existing = open.find((i) => {
+              const p = lib.parsePipelineFromMergeReviewBody(i.body || '');
+              return p === String(pipelineNum) || i.title === title;
+            });
+            if (existing) {
+              core.info(`MERGE task už existuje: #${existing.number}`);
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: Number(pipelineNum),
+                body: `### Merge úkol (Ano/Ne)\n\nUž otevřený: #${existing.number} — přidej \`merge/approved\` (Ano) nebo \`merge/rejected\` (Ne).`,
+              });
+              return;
+            }
+
+            const reviewBody = lib.composeMergeReviewBody({
+              pipeline: pipelineNum,
+              branch,
+              sha,
+              pipelineTitle: issue.title,
+            });
+            const assignees = [];
+            if (issue.user && issue.user.login && !issue.user.login.endsWith('[bot]')) {
+              assignees.push(issue.user.login);
+            }
+            const created = await github.rest.issues.create({
+              owner, repo,
+              title,
+              body: reviewBody,
+              labels: ['multiagent', 'multiagent/merge-review'],
+              assignees,
+            });
+            await github.rest.issues.createComment({
+              owner, repo, issue_number: Number(pipelineNum),
+              body: [
+                '### Merge úkol (Ano/Ne)',
+                '',
+                `Otevřen #${created.data.number} — **Ano** = label \`merge/approved\`, **Ne** = \`merge/rejected\`.`,
+                '',
+                created.data.html_url,
+              ].join('\n'),
+            });
+            core.info(`Created MERGE task #${created.data.number}`);
+
+  reject:
+    if: >
+      github.event_name == 'issues' &&
+      github.event.label.name == 'merge/rejected'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const lib = require('./docs/scripts/ma-merge-lib.cjs');
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const issue = context.payload.issue;
+            const labels = (issue.labels || []).map((l) => l.name);
+            let pipelineNum = null;
+            let reviewNum = null;
+
+            if (lib.isMergeReviewIssue(labels)) {
+              reviewNum = issue.number;
+              pipelineNum = lib.parsePipelineFromMergeReviewBody(issue.body || '');
+            } else if (labels.includes('multiagent/pipeline')) {
+              pipelineNum = String(issue.number);
+            } else {
+              core.info('merge/rejected mimo PIPELINE/MERGE-review — no-op');
+              return;
+            }
+
+            if (reviewNum) {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: reviewNum,
+                body: '### Merge zamítnut (Ne)\n\nÚkol uzavřen. `main` beze změny.',
+              });
+              await github.rest.issues.update({
+                owner, repo, issue_number: reviewNum, state: 'closed',
+              });
+              await github.rest.issues.removeLabel({
+                owner, repo, issue_number: reviewNum, name: 'merge/rejected',
+              }).catch(() => {});
+            }
+
+            if (pipelineNum) {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: Number(pipelineNum),
+                body: [
+                  '### Merge zamítnut (Ne)',
+                  '',
+                  reviewNum
+                    ? `Člověk zamítl na [MERGE] #${reviewNum}. \`main\` beze změny. Nový handoff = nový MERGE-PENDING.`
+                    : 'Člověk přidal `merge/rejected` na [PIPELINE]. `main` beze změny.',
+                ].join('\n'),
+              });
+              await github.rest.issues.removeLabel({
+                owner, repo, issue_number: Number(pipelineNum), name: 'merge/rejected',
+              }).catch(() => {});
+              await github.rest.issues.removeLabel({
+                owner, repo, issue_number: Number(pipelineNum), name: 'merge/approved',
+              }).catch(() => {});
+            }
+            core.info(`Rejected merge for pipeline #${pipelineNum || '?'}`);

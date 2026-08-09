@@ -25,14 +25,20 @@ assert.strictEqual(r.prompt, '/m #34');
 assert.ok(r.commentBody.includes('/m #34 once'));
 assert.strictEqual(r.info.role, 'Vývojář');
 assert.ok(r.commentBody.includes('<!-- multiagent-next -->'));
+assert.ok(r.commentBody.includes('orchestrace'));
+// /m orchestrace před CLI one-linerem (lidé nemají brát jen jeden CLI krok)
+assert.ok(r.commentBody.indexOf('/m #34') < r.commentBody.indexOf('ma-run-role.sh'));
 assert.ok(r.cliOneLiner.includes('ma-run-role.sh'));
 assert.ok(r.cliOneLiner.includes('--role vyvojar'));
 assert.ok(r.cliOneLiner.includes('--pipeline 34'));
 assert.ok(r.cliOneLiner.includes('--write'));
 assert.strictEqual(r.info.model, next.MODELS.vyvojar);
+assert.strictEqual(next.MODELS.vyvojar, next.MODEL_AUTO);
+assert.strictEqual(next.MODELS.analytik, 'auto');
 
-assert.strictEqual(next.MODELS.kontrolorA, 'gpt-5.6-terra-medium');
-assert.notStrictEqual(next.MODELS.kontrolorA, next.MODELS.analytik);
+// Pin tabulka drží kontrolor ≠ produkce (default MODELS = auto)
+assert.strictEqual(next.MODELS_PINNED.kontrolorA, 'cursor-grok-4.5-high-fast');
+assert.notStrictEqual(next.MODELS_PINNED.kontrolorA, next.MODELS_PINNED.analytik);
 
 assert.strictEqual(next.modelForPhase('VERDIKT-V'), next.MODELS.kontrolorV);
 assert.strictEqual(next.modelForPhase('VERDIKT-A'), next.MODELS.kontrolorA);

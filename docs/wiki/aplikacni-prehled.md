@@ -12,13 +12,15 @@ Jeden požadavek = jedno `[PIPELINE]` issue. Role (Analytik → Kontrolor → �
 |--------|--------|
 | `[PIPELINE]` | požadavek + dashboard (auto-přehled mezi markery) |
 | Child issues | `[ANALÝZA]`, `[VERDIKT-*]`, `[IMPLEMENTACE]`, `[TESTY]`, `[BUG]` |
+| `[MERGE]` | úkol Ano/Ne pro člověka po `MERGE-PENDING` |
 | `gate/*` | `pending` → `go` / `no-go` / `blocked` |
 | Wiki seed | `docs/wiki/` (ploché slugy `aplikacni-*`, `provozni-*`, `zmeny-*`) |
-| Slash `/m` | v Cursoru: `/m #N` = orchestrace fází do STOP; `/m #N once` = jeden krok |
+| Slash `/m` | `/m #N` = orchestrace (Task řetězí fáze); `/m #N once` = jeden krok |
+| Modely | default `auto`; pin Grok/Composer volitelně |
 
 ## Hranice systému
 
-- **Dělá:** řízení vývoje přes Issues + KB ve Wiki; boty (next/sync/gate-check) asistují.
+- **Dělá:** řízení vývoje přes Issues + KB ve Wiki; boty (next/sync/gate/merge-task) asistují.
 - **Nedělá:** nespouští Cursor agenty z CI; nenahrazuje unit testy / lint; není dokumentace konkrétní produktové aplikace (to patří do cílového repa).
 
 ## Kde je detail pro agenty

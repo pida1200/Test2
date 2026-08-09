@@ -31,9 +31,17 @@ Kanonická gramatika: tato tabulka. Rule / command / snippets **jen odkazují** 
 
 ## Orchestrace vs once
 
-**Default (`/m #N`):** v **jednom chatu** proveď po sobě fáze pipeline (Integrátor řídí smyčku), dokud nenastane STOP.
+**Default (`/m #N`):** v **jednom chatu** proveď po sobě fáze pipeline (Integrátor řídí smyčku), dokud nenastane STOP.  
+To je to „automatické“ řetězení — **ne** GitHub Actions (CI Cursor nespouští).
 
-**CLI first, Task = fallback:** pro každou roli nejdřív zkus `bash docs/scripts/ma-run-role.sh --role <role> --pipeline #N --model <slug>` (detekuje `cursor-agent` v PATH). Exit `3` = CLI chybí → skript vytiskne hotový prompt, vlož ho do Cursor Task **beze změny**. `MODEL:` z `docs/multi-agent-workflow.md` (sekce Modely). Role card: `docs/ma-role-cards/<role>.md` — **ne** celý workflow do kontextu.
+### Jak spouštět každou roli (důležité)
+
+1. **Preferuj Cursor Task / subagent ihned** (chování jako u pipeline #52). Prompt = `bash docs/scripts/ma-run-role.sh --role <role> --pipeline #N --print-prompt` (nebo role card). `MODEL: auto` → Task `model: "inherit"`; pin slug jen na žádost.
+2. **CLI** (`ma-run-role.sh` bez `--print-prompt`) **jen** když `command -v cursor-agent` (nebo `$CURSOR_AGENT_BIN`) uspěje.
+3. Exit `3` / chybí CLI: **nečekej na uživatele** — ihned Task se stejným promptem. V orchestraci exit 3 **není STOP**.
+4. Po dokončení role: shrnutí + issue → **hned** znovu načti labely / přehled → další řádek tabulky. **Neptat se** „mám pokračovat?“ mezi fázemi.
+
+Role card: `docs/ma-role-cards/<role>.md` — **ne** celý workflow do kontextu.
 
 **Mini-plán (1–3 věty) jen Analytik a Vývojář** — do body `[ANALÝZA]` / na začátek `[IMPLEMENTACE]`. Kontrolor, Tester, Integrátor plán nepíšou.
 
@@ -47,9 +55,7 @@ Kanonická gramatika: tato tabulka. Rule / command / snippets **jen odkazují** 
 4. Uživatel zadal `once`
 5. Integrátor předal handoff `MERGE-PENDING` (marker + `**Větev:**`/`**HEAD:**`) na `[PIPELINE]`, A+V+T GO — merge do `main` spustí **člověk** přidáním labelu `merge/approved` (workflow `multiagent-merge.yml`), ne agent v Cursoru
 
-**Nesmíš:** přeskočit Kontrolora; sloučit GO bez nového verdikt issue; pokračovat po NO-GO.
-
-Po každé fázi: krátké shrnutí v chatu + odkaz na issue; pak ihned další fáze (orchestrace) nebo STOP (`once` / NO-GO).
+**Nesmíš:** přeskočit Kontrolora; sloučit GO bez nového verdikt issue; pokračovat po NO-GO; ukončit orchestraci jen proto, že chybí `cursor-agent`.
 
 ## Kde je celkový obraz
 

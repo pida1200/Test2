@@ -26,6 +26,51 @@ Pravidlo: `repo-kvalita.mdc`.
 
 ## Záznamy
 
+### 2026-08-09 – /m #114 (P3) IMPLEMENTACE: cursor-agent, branch protection, smoke
+
+- Výsledek: `docs/scripts/check-ma-env.sh` (+ test); wiki `provozni-cursor-agent`,
+  `provozni-branch-protection`, `provozni-merge-smoke`, zmeny P3. CLI nainstalováno
+  lokálně v Cloud VM — flagy `-p/--output-format/--model/--force` sedí s `ma-run-role.sh`.
+  Issues write stále 403 → child issues vytvořeny create-only; labely = člověk.
+- Ověření: `npm run check:ma`; `PATH=… bash docs/scripts/check-ma-env.sh`
+- Riziko: ostrý live smoke merge musí udělat člověk; branch protection API 403 z Cloud.
+- Další krok: labely na #114 + child; Ano na `[MERGE]` až po push feature větve.
+
+### 2026-08-09 – Wiki seed sync: Auto + Task-first + merge Ano/Ne
+
+- Výsledek: aktualizovány Home, Sidebar, aplikacni-*, provozni-* podle Auto modelů,
+  Task-first orchestrace a `[MERGE]` Ano/Ne; `npm run check:wiki` + sync na GitHub Wiki.
+- Ověření: `npm run check:wiki`; `bash docs/scripts/sync-wiki-to-github.sh` (pokud token dovolí)
+- Riziko: mirror na UI vyžaduje Wiki enabled + token s push do `.wiki.git`
+- Další krok: po merge PR ověřit [Test2 wiki](https://github.com/pida1200/Test2/wiki)
+
+### 2026-08-09 – Merge jako GitHub úkol Ano/Ne
+
+- Výsledek: po MERGE-PENDING bot založí `[MERGE] … Ano / Ne?` (assignee). Ano =
+  `merge/approved` (na `[MERGE]` nebo `[PIPELINE]`), Ne = `merge/rejected`. Labely
+  `multiagent/merge-review` + `merge/rejected`; workflows merge-task + úprava merge.yml.
+- Ověření: `npm run check:ma`; `bash docs/scripts/create-multiagent-labels.sh`
+- Riziko: Actions musí běžet (veřejné repo OK); assignee jen pokud autor pipeline ≠ bot.
+- Další krok: po dalším MERGE-PENDING ověřit, že `[MERGE]` dorazí do Assigned.
+
+### 2026-08-09 – Obnova orchestrace Task-first (řetězení fází)
+
+- Výsledek: po #83 „CLI first“ agent často skončil u exit 3 / one-lineru a nepokračoval.
+  Skill/command/rule znovu: Task/subagent ihned, exit 3 ≠ STOP, mezi fázemi se neptat.
+  Next-bot: `/m #N` před CLI. Wiki `zmeny-2026-08-09-ma-orchestrace-task-first`.
+- Ověření: `npm run check:ma`
+- Riziko: bez otevřeného `/m #N` chatu CI pořád nespouští Cursor (mimo scope).
+- Další krok: ověřit `/m #<pipeline>` bez `once` — Analytik→…→MERGE-PENDING v jednom běhu.
+
+### 2026-08-09 – MA default modely → Cursor Auto (+ pin Grok/Composer)
+
+- Výsledek: default `MODELS` = `auto` u všech rolí; `MODELS_PINNED` drží Grok/Composer.
+  `ma-run-role.sh`: `--model` volitelné (default auto) — při auto se CLI flagu `--model`
+  nepředává. Docs/snippets/skill/rule/wiki sync.
+- Ověření: `npm run check:ma`
+- Riziko: Auto negarantuje kontrolor ≠ produkce; pin přes `--model <slug>` / `MODELS_PINNED`.
+- Další krok: merge PR; ověřit next-bot one-liner `--model auto` a Task `inherit`.
+
 ### 2026-08-05 – Rework IMPLEMENTACE #106 po VERDIKT-V NO-GO #107 (fail-closed marker)
 
 - Výsledek: `parseVerdictComment()` v `docs/scripts/ma-verdict-lib.cjs` opraven —

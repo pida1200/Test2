@@ -34,7 +34,7 @@ const sampleSection = [
   '',
   'Historie verdiktů: —',
   '',
-  'Další krok: **Analytik** · `claude-opus-5-thinking-high` · /m #17',
+  'Další krok: **Analytik** · `auto` · /m #17',
   '',
   END,
 ].join('\n');
@@ -48,7 +48,7 @@ const newSection = [
   '',
   'Historie verdiktů: VERDIKT-V #12 NO-GO → #14 GO (rework 1/3)',
   '',
-  'Další krok: **Vývojář** · `composer-2.5-fast` · /m #17',
+  'Další krok: **Vývojář** · `auto` · /m #17',
   '',
   END,
 ].join('\n');

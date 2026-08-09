@@ -10,6 +10,12 @@
   - [Deploy / Wiki sync](provozni-deploy)
   - [Konfigurace](provozni-konfigurace)
   - [Monitoring](provozni-monitoring)
+  - [Cursor Agent CLI](provozni-cursor-agent)
+  - [Branch protection](provozni-branch-protection)
+  - [Merge smoke](provozni-merge-smoke)
 - **Změny**
   - [Index](zmeny-index)
+  - [Merge Ano/Ne](zmeny-2026-08-09-ma-merge-ano-ne)
+  - [Task-first](zmeny-2026-08-09-ma-orchestrace-task-first)
+  - [Auto modely](zmeny-2026-08-09-ma-cursor-models-grok)
   - [Šablona](zmeny-sablona)

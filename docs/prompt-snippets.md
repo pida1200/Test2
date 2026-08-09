@@ -97,7 +97,7 @@ Role cards: [`docs/ma-role-cards/`](ma-role-cards/README.md).
 
 **Modely:** [`multi-agent-workflow.md`](multi-agent-workflow.md) (sekce Modely).
 
-**CLI first:** `docs/scripts/ma-run-role.sh` (exit 3 → Task). Next-bot vypisuje one-liner.
+**Orchestrace:** Task/subagent řetězí role (`/m #N`). `ma-run-role.sh` jen s `cursor-agent`; exit 3 → ihned Task. Next-bot: `/m #N` první, CLI secondary.
 
 I/O vždy přes GitHub Issues. Integrátor při kickoffu: existující pipeline **doplní**; nové jen když žádné neexistuje.
 
@@ -109,7 +109,7 @@ Použij **jen** když nález je mimo scope pipeline nebo Integrátor vědomě od
 
 ```text
 ROLE: Tester
-MODEL: composer-2.5-fast
+MODEL: auto
 VSTUP_ISSUE: #<TESTY> + #<ANALÝZA> (scope)
 
 Nález mimo scope / odložený → vytvoř [BUG]:
@@ -164,7 +164,7 @@ Hotovo když:
 
 ```text
 ROLE: Analytik
-MODEL: claude-opus-5-thinking-high
+MODEL: auto
 VSTUP_ISSUE: #<PIPELINE>
 VÝSTUP_ISSUE: #<ANALÝZA>
 
@@ -199,7 +199,7 @@ PŘI NO-GO: <kdo opravuje produkční issue; znovu který verdikt>
 
 ```text
 ROLE: Integrátor
-MODEL: composer-2.5-fast
+MODEL: auto
 VSTUP_ISSUE: #<PIPELINE> + #<VERDIKT-A> + #<VERDIKT-V> + #<VERDIKT-T> (vše gate/go)
 
 Před handoffem:
@@ -211,9 +211,9 @@ Před handoffem:
 5. Commit + push **feature větve** + docs/learning-log.md (ne merge do main)
 6. Komentář MERGE-PENDING do #<PIPELINE> — lidský text **+ machine marker** na samostatném řádku:
    <!-- multiagent-merge-pending pipeline="<PIPELINE>" branch="<větev>" sha="<HEAD>" -->
-   Issue nech OPEN s gate/go.
-7. Merge do main spustí ČLOVĚK přidáním labelu `merge/approved` (workflow multiagent-merge.yml
-   — guardy G0–G6 + autorizace G7, docs/scripts/ma-merge-lib.cjs). Ty do main nemerguj.
+   Issue nech OPEN s gate/go. Bot založí `[MERGE] … Ano / Ne?` (assignee).
+7. Merge do main = člověk na `[MERGE]`: **Ano** `merge/approved` / **Ne** `merge/rejected`
+   (workflows multiagent-merge.yml + multiagent-merge-task.yml). Ty do main nemerguj.
 
 Bootstrap (jen dokud neproběhlo B0–B5 z #81 — jinak tento blok vynech):
    B0 člověk zmerguje #81 ručně → B1 create-multiagent-labels.sh → B2 ověř 4× merge/*+wiki/sync-failed
@@ -237,7 +237,7 @@ I/O: GitHub Issues
 
 Vývojář:
 ROLE: Vývojář
-MODEL: composer-2.5-fast   # alt: claude-sonnet-5-thinking-high; *-fast OK když ne-fast není dostupná
+MODEL: auto   # pin: composer-2.5-fast
 VSTUP_ISSUE: #<PIPELINE nebo zadání>
 VÝSTUP_ISSUE: #<IMPLEMENTACE>
 Na začátek body: mini-plán (1–3 věty) — cíl, dotčené soubory, jak ověříš
@@ -246,7 +246,7 @@ PŘI NO-GO: oprav dle #<VERDIKT-V>, bump verze v body, znovu review
 
 Kontrolor vývojáře:
 ROLE: Kontrolor vývojáře
-MODEL: gpt-5.6-sol-medium   # alt: claude-opus-5-thinking-high
+MODEL: auto   # pin: cursor-grok-4.5-high (≠ Composer)
 VSTUP_ISSUE: #<IMPLEMENTACE>
 VÝSTUP_ISSUE: #<VERDIKT-V>
 GATE: GO → Integrátor commitne feature větev + MERGE-PENDING; NO-GO → Vývojář opraví

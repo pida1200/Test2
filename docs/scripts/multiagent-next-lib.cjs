@@ -17,15 +17,29 @@ const ARTIFACT_ORDER = [
 
 const GATE_PRECEDENCE = ['gate/go', 'gate/no-go', 'gate/blocked', 'gate/pending'];
 
-const MODELS = {
-  analytik: 'claude-opus-5-thinking-high',
-  // Jiná rodina než Analytik (self-review bias + tokeny) — viz workflow §Modely
-  kontrolorA: 'gpt-5.6-terra-medium',
+// Default = Cursor Auto (routing podle remaining included usage — méně on-demand).
+// Pin Grok/Composer: MODELS_PINNED nebo --model <slug> v ma-run-role.sh.
+const MODEL_AUTO = 'auto';
+
+const MODELS_PINNED = {
+  // Cursor Models only — pin když chceš kontrolor ≠ produkce / stabilní slug.
+  analytik: 'cursor-grok-4.5-high',
+  kontrolorA: 'cursor-grok-4.5-high-fast',
   vyvojar: 'composer-2.5-fast',
-  kontrolorV: 'gpt-5.6-sol-medium',
+  kontrolorV: 'cursor-grok-4.5-high',
   tester: 'composer-2.5-fast',
-  kontrolorT: 'claude-sonnet-5-thinking-high',
+  kontrolorT: 'cursor-grok-4.5-high-fast',
   integrator: 'composer-2.5-fast',
+};
+
+const MODELS = {
+  analytik: MODEL_AUTO,
+  kontrolorA: MODEL_AUTO,
+  vyvojar: MODEL_AUTO,
+  kontrolorV: MODEL_AUTO,
+  tester: MODEL_AUTO,
+  kontrolorT: MODEL_AUTO,
+  integrator: MODEL_AUTO,
 };
 
 /** CLI role slug for docs/scripts/ma-run-role.sh --role */
@@ -113,7 +127,7 @@ const artifactMap = {
     'gate/go': {
       role: 'Integrátor',
       model: MODELS.integrator,
-      hint: 'MERGE-PENDING — přidej label `merge/approved` (spustí multiagent-merge.yml)',
+      hint: 'MERGE-PENDING — na `[MERGE]` úkolu Ano=`merge/approved` / Ne=`merge/rejected`',
     },
   },
   'multiagent/analyza': {
@@ -287,27 +301,28 @@ function routeNextStep(opts) {
     `Artefakt: \`${artifact}\` · Gate: \`${gate}\`${verdictTag} · Role: **${info.role}** · Model: \`${info.model}\``,
     ``,
   ];
-  if (cliOneLiner) {
-    commentLines.push(
-      `CLI first (Integrátor / terminál):`,
-      ``,
-      '```bash',
-      cliOneLiner,
-      '```',
-      ``,
-      `Exit 3 = CLI chybí → Task fallback s vytištěným promptem. Orchestace:`,
-      ``
-    );
-  } else {
-    commentLines.push(`V Cursoru (Agent chat):`, ``);
-  }
+  // Orchestrace first (lidé/agent mají spustit /m #N = řetěz fází). CLI one-liner až sekundárně.
   commentLines.push(
+    `V Cursoru — **orchestrace** (default, řetězí fáze):`,
+    ``,
     '```text',
     `${prompt}           # orchestrace do STOP (default)`,
     `${promptOnce}      # jen jeden krok`,
     '```',
-    ``,
-    `_(skill: \`.cursor/skills/m/SKILL.md\` — CI nespouští Cursor)_`,
+    ``
+  );
+  if (cliOneLiner) {
+    commentLines.push(
+      `Volitelně CLI (jen když \`cursor-agent\` v PATH; jinak Task):`,
+      ``,
+      '```bash',
+      cliOneLiner,
+      '```',
+      ``
+    );
+  }
+  commentLines.push(
+    `_(skill: \`.cursor/skills/m/SKILL.md\` — CI nespouští Cursor; v chatu Task/subagent řetězí role)_`,
     ``,
     `_${info.hint}_`,
     ``,
@@ -338,7 +353,9 @@ module.exports = {
   PIPELINE_RE,
   VSTUP_RE,
   VERDIKT_RE,
+  MODEL_AUTO,
   MODELS,
+  MODELS_PINNED,
   PHASE_MODELS,
   ROLE_CLI,
   ARTIFACT_ORDER,

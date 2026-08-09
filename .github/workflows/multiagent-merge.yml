@@ -1,9 +1,10 @@
 name: Multi-agent merge
 
-# Zavrecny merge feature vetve do main jako ukol v GitHubu — label `merge/approved`
-# na `[PIPELINE]` issue (issues.labeled), nebo `workflow_dispatch` (fail-closed: dry_run
-# default true; ostry beh vyzaduje stejny overeny `merge/approved` — guard G7).
-# Kontrakt: ANALYZA #93 (v2, oprava vad z VERDIKT-A NO-GO #94). Pipeline: #81.
+# Zavrecny merge feature vetve do main — label `merge/approved` (Ano) na `[MERGE]`
+# ukolu (multiagent/merge-review) nebo zpetne kompatibilne na `[PIPELINE]`.
+# Ne = `merge/rejected` (workflow multiagent-merge-task.yml).
+# `workflow_dispatch` fail-closed (dry_run default true; ostry beh = overeny merge/approved).
+# Kontrakt: ANALYZA #93 (v2) + MERGE Ano/Ne task. Pipeline: #81.
 #
 # Bootstrap (§3.6, E14): #81 se timto workflow slouzit NEMUZE — workflow z `main` jeste
 # label `merge/approved` nezna a label v repu jeste neexistuje. Prvni merge #81 dela
@@ -50,7 +51,10 @@ jobs:
       (
         github.event_name == 'issues' &&
         github.event.label.name == 'merge/approved' &&
-        contains(join(github.event.issue.labels.*.name, ','), 'multiagent/pipeline')
+        (
+          contains(join(github.event.issue.labels.*.name, ','), 'multiagent/pipeline') ||
+          contains(join(github.event.issue.labels.*.name, ','), 'multiagent/merge-review')
+        )
       ) ||
       github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
@@ -129,15 +133,27 @@ jobs:
             let branchOverride = null;
             let dryRunInput = true;
             let labelName = null;
+            let reviewIssueNum = null; // [MERGE] Ano/Ne úkol (pokud Ano přišlo odtud)
 
             if (eventName === 'workflow_dispatch') {
               pipelineNum = parseInt(process.env.INPUT_PIPELINE || '', 10);
               branchOverride = process.env.INPUT_BRANCH || null;
               dryRunInput = String(process.env.INPUT_DRY_RUN || 'true') !== 'false';
             } else if (eventName === 'issues') {
-              pipelineNum = context.payload.issue.number;
               labelName = context.payload.label && context.payload.label.name;
               dryRunInput = false;
+              const triggerLabels = (context.payload.issue.labels || []).map((l) => l.name);
+              if (lib.isMergeReviewIssue(triggerLabels)) {
+                reviewIssueNum = context.payload.issue.number;
+                const fromBody = lib.parsePipelineFromMergeReviewBody(context.payload.issue.body || '');
+                pipelineNum = fromBody ? parseInt(fromBody, 10) : NaN;
+                if (!pipelineNum || Number.isNaN(pipelineNum)) {
+                  core.setFailed(`[MERGE] #${reviewIssueNum}: chybí řádek Pipeline: #N v body`);
+                  return;
+                }
+              } else {
+                pipelineNum = context.payload.issue.number;
+              }
             } else {
               core.info(`Nepodporovana udalost: ${eventName} — no-op`);
               return;
@@ -527,6 +543,42 @@ jobs:
             }
             await github.rest.issues.addLabels({ owner, repo, issue_number: pipelineNum, labels: ['merge/done'] });
             await github.rest.issues.update({ owner, repo, issue_number: pipelineNum, state: 'closed' });
+
+            // Uzavři [MERGE] Ano/Ne úkol, pokud Ano přišlo odtud
+            if (reviewIssueNum) {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: reviewIssueNum,
+                body: `### Merge hotov (Ano)\n\nSloučeno do \`main\` (\`${mergeSha}\`). Pipeline #${pipelineNum} uzavřen.\n\nBeh: ${runUrl}`,
+              });
+              await github.rest.issues
+                .removeLabel({ owner, repo, issue_number: reviewIssueNum, name: 'merge/approved' })
+                .catch(() => {});
+              await github.rest.issues.addLabels({
+                owner, repo, issue_number: reviewIssueNum, labels: ['merge/done'],
+              }).catch(() => {});
+              await github.rest.issues.update({
+                owner, repo, issue_number: reviewIssueNum, state: 'closed',
+              });
+            } else {
+              // Zavři otevřený [MERGE] úkol pro tuto pipeline (Ano bylo na PIPELINE)
+              const openReviews = await github.paginate(github.rest.issues.listForRepo, {
+                owner, repo, state: 'open', labels: 'multiagent/merge-review', per_page: 50,
+              });
+              for (const rev of openReviews) {
+                if (lib.parsePipelineFromMergeReviewBody(rev.body || '') === String(pipelineNum)) {
+                  await github.rest.issues.createComment({
+                    owner, repo, issue_number: rev.number,
+                    body: `### Merge hotov\n\nSchváleno na [PIPELINE] #${pipelineNum}. \`main\` @ \`${mergeSha}\`.`,
+                  });
+                  await github.rest.issues.addLabels({
+                    owner, repo, issue_number: rev.number, labels: ['merge/done'],
+                  }).catch(() => {});
+                  await github.rest.issues.update({
+                    owner, repo, issue_number: rev.number, state: 'closed',
+                  });
+                }
+              }
+            }
 
             core.info(`OK: merge ${mergeSha} -> main; wiki-sync: ${wikiSync}`);
 
