@@ -211,9 +211,9 @@ Před handoffem:
 5. Commit + push **feature větve** + docs/learning-log.md (ne merge do main)
 6. Komentář MERGE-PENDING do #<PIPELINE> — lidský text **+ machine marker** na samostatném řádku:
    <!-- multiagent-merge-pending pipeline="<PIPELINE>" branch="<větev>" sha="<HEAD>" -->
-   Issue nech OPEN s gate/go.
-7. Merge do main spustí ČLOVĚK přidáním labelu `merge/approved` (workflow multiagent-merge.yml
-   — guardy G0–G6 + autorizace G7, docs/scripts/ma-merge-lib.cjs). Ty do main nemerguj.
+   Issue nech OPEN s gate/go. Bot založí `[MERGE] … Ano / Ne?` (assignee).
+7. Merge do main = člověk na `[MERGE]`: **Ano** `merge/approved` / **Ne** `merge/rejected`
+   (workflows multiagent-merge.yml + multiagent-merge-task.yml). Ty do main nemerguj.
 
 Bootstrap (jen dokud neproběhlo B0–B5 z #81 — jinak tento blok vynech):
    B0 člověk zmerguje #81 ručně → B1 create-multiagent-labels.sh → B2 ověř 4× merge/*+wiki/sync-failed

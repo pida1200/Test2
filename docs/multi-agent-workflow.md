@@ -385,32 +385,29 @@ VÝJIMKA merge do main: jen explicitní „mergni a pushni“ v aktuální sessi
 PŘI BLOKACI (>3 reworky): komentář do #<PIPELINE> + eskalace uživateli
 ```
 
-#### MERGE-PENDING marker + merge = label v GitHubu (#81)
+#### MERGE-PENDING → GitHub úkol Ano/Ne (#81 + rozšíření)
 
-Merge do `main` **spouští člověk labelem `merge/approved`** na `[PIPELINE]` (workflow
-`.github/workflows/multiagent-merge.yml`), ne příkazem v Cursoru. MERGE-PENDING komentář
-Integrátora proto **musí** obsahovat, kromě lidsky čitelného textu, samostatný řádek
-s machine markerem (parser vezme **poslední** takový komentář dle `created_at` — rework
-generuje víc handoffů):
+Po MERGE-PENDING bot (`multiagent-merge-task.yml`) založí issue
+**`[MERGE] Pipeline #N — Ano / Ne?`** (label `multiagent/merge-review`, assignee = autor pipeline).
+
+| Rozhodnutí | Label na `[MERGE]` | Výsledek |
+|------------|--------------------|----------|
+| **Ano** | `merge/approved` | `multiagent-merge.yml` sloučí do `main` |
+| **Ne** | `merge/rejected` | úkol uzavřen, `main` beze změny |
+
+Zpětná kompatibilita: Ano lze dát i na `[PIPELINE]`. Ne v Cursoru.
+
+MERGE-PENDING komentář **musí** mít machine marker (parser vezme **poslední** dle `created_at`):
 
 ```text
 <!-- multiagent-merge-pending pipeline="81" branch="feature/pipeline-81-merge-git-ukol" sha="abc1234" -->
 ```
 
-Bez markeru běží tolerantní fallback na starší tvar `**Větev:** \`…\`` / `**HEAD:** \`…\``
-(#74, #83) — nový handoff ale marker vždy přidává. Chybí-li obojí, guard workflow selže
-(„chybí handoff“) a `main` zůstává beze změny.
+Bez markeru: fallback `**Větev:**` / `**HEAD:**` (#74/#83). Chybí-li obojí → guard fail, `main` beze změny.
 
-Po přidání `merge/approved`: guardy G0–G6 (actor ≥ write, gate/go, G2 = VERDIKT-A/V/T GO
-vyhodnoceno **jednotně** přes `verdictLib.resolveVerdictSignal()` — legacy `[VERDIKT-*]`
-issue i GO komentář (#102), žádný otevřený blocker bug ve scope, HEAD větve == sha
-z markeru, bezkonfliktní merge, G6 = zelený **`npm run check:merge`** — lehčí varianta
-`npm run check` pro post-merge ověření, viz níže) + autorizace G7 (`authorizeRun()` —
-jediná společná pro `issues.labeled` i `workflow_dispatch`, default **deny**). Po úspěchu
-workflow sám: pushne do `main`,
-zrcadlí wiki (`wiki-sync: ok|failed|skipped` — vždy v komentáři), odebere `merge/approved`,
-přidá `merge/done`, a **uzavře** `[PIPELINE]`. Guard fail → `main` beze změny, `merge/failed`,
-issue zůstává OPEN. Detail kontraktu: `docs/scripts/ma-merge-lib.cjs` + ANALÝZA #93.
+Po Ano: guardy G0–G6 (G2 přes `verdictLib.resolveVerdictSignal()`, G6 = `npm run check:merge`) + G7.
+Úspěch → push `main`, wiki mirror, `merge/done`, close `[PIPELINE]` i `[MERGE]`.
+Fail → `merge/failed`, issues OPEN. Detail: `docs/scripts/ma-merge-lib.cjs`.
 
 #### Bootstrap checklist B0–B5 (jen jednou, při zavedení této pipeline #81)
 
@@ -556,7 +553,8 @@ bash docs/scripts/ma-run-role.sh --role <role> --pipeline <N> \
 | Labely | `docs/scripts/create-multiagent-labels.sh` | idempotentní vytvoření `multiagent/*` + `gate/*` + `merge/*` + `risk/low` + `wiki/sync-failed` |
 | MA check | `npm run check:ma` | pipeline-sync + regex + wiki-seed + next-lib + dry-run + ma-run-role + ma-merge-lib + **ma-verdict-lib** (offline) |
 | Post-merge check | `npm run check:merge` | lehčí subset (examples-backend + wiki) pro G6 v merge workflow; plný `npm run check` zůstává pro lokální/CI ověření |
-| Merge do main | `.github/workflows/multiagent-merge.yml` + `docs/scripts/ma-merge-lib.cjs` + `docs/scripts/ma-verdict-lib.cjs` | label `merge/approved` → guardy G0–G6 (G2 = jednotný verdikt signál issue/komentář) + autorizace G7 → merge `--no-ff` → push → wiki mirror → komentář + `merge/done` + close (#81; bootstrap B0–B5 do prvního ostrého použití) |
+| Merge úkol Ano/Ne | `.github/workflows/multiagent-merge-task.yml` | po MERGE-PENDING → `[MERGE]` issue; `merge/rejected` = Ne |
+| Merge do main | `.github/workflows/multiagent-merge.yml` + `ma-merge-lib.cjs` + `ma-verdict-lib.cjs` | Ano (`merge/approved` na `[MERGE]` nebo `[PIPELINE]`) → G0–G7 → merge → wiki → close |
 
 **Co zůstává ruční:** první kick `/m` / `/m #N` v Cursoru (CI agenta nespouští). Child issues pokud chybí `gh` write. **Merge do `main` spouští člověk labelem `merge/approved`** na `[PIPELINE]` (Integrátor jen feature větev + `MERGE-PENDING` handoff s markerem) — do bootstrapu B0–B5 (#81) i nadále ručně. Wiki UI sync po merge dělá workflow sám (`wiki-sync: ok|failed|skipped` v komentáři); mimo tuto cestu (dry-run, offline) po pushi na `main`. **Plně unattended z Actions** (Cursor API) = follow-up mimo scope.
 

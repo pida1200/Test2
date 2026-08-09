@@ -18,8 +18,76 @@ const FALLBACK_BRANCH_RE = /\*\*Větev:\*\*\s*`([^`]+)`/;
 const FALLBACK_SHA_RE = /\*\*HEAD:\*\*\s*`([0-9a-fA-F]+)`/;
 
 const MERGE_RESULT_MARKER = '<!-- multiagent-merge-result -->';
+const MERGE_REVIEW_MARKER = '<!-- multiagent-merge-review -->';
 
 const WRITE_PERMISSIONS = ['admin', 'write'];
+
+/**
+ * Title for the human Ano/Ne merge task issue.
+ * @param {string|number} pipelineNum
+ * @returns {string}
+ */
+function mergeReviewTitle(pipelineNum) {
+  return `[MERGE] Pipeline #${pipelineNum} — Ano / Ne?`;
+}
+
+/**
+ * Parse `Pipeline: #N` (standalone line) from a `[MERGE]` review issue body.
+ * @param {string} body
+ * @returns {string|null}
+ */
+function parsePipelineFromMergeReviewBody(body) {
+  const m = String(body || '').match(/^Pipeline:\s*#(\d+)\s*$/m);
+  return m ? m[1] : null;
+}
+
+/**
+ * Body for `[MERGE]` review task — clear Ano/Ne via labels.
+ * @param {{ pipeline: string|number, branch?: string|null, sha?: string|null, pipelineTitle?: string|null }} input
+ * @returns {string}
+ */
+function composeMergeReviewBody(input) {
+  const opts = input || {};
+  const pipeline = opts.pipeline;
+  const branch = opts.branch || '?';
+  const sha = opts.sha || '?';
+  const lines = [
+    `Pipeline: #${pipeline}`,
+    '',
+    '## Úkol: sloučit do `main`?',
+    '',
+  ];
+  if (opts.pipelineTitle) {
+    lines.push(`**Pipeline:** ${opts.pipelineTitle}`, '');
+  }
+  lines.push(
+    `**Větev:** \`${branch}\``,
+    `**HEAD:** \`${sha}\``,
+    '',
+    '## Rozhodnutí (odklikni label na tomto issue)',
+    '',
+    '| | Label | Výsledek |',
+    '|---|--------|----------|',
+    '| **Ano** | `merge/approved` | workflow sloučí větev do `main` |',
+    '| **Ne** | `merge/rejected` | merge se neprovede, úkol se uzavře |',
+    '',
+    '_GitHub → toto issue → Labels (vpravo) → přidej `merge/approved` nebo `merge/rejected`._',
+    '',
+    'Zpětná kompatibilita: Ano lze dát i na `[PIPELINE]` (`merge/approved`).',
+    '',
+    MERGE_REVIEW_MARKER,
+    ''
+  );
+  return lines.join('\n');
+}
+
+/**
+ * @param {string[]} labels
+ * @returns {boolean}
+ */
+function isMergeReviewIssue(labels) {
+  return (labels || []).includes('multiagent/merge-review');
+}
 
 /**
  * Parse the MERGE-PENDING handoff from `[PIPELINE]` comments.
@@ -316,8 +384,13 @@ function markerPipelineMatches(pending, pipelineNum) {
 module.exports = {
   MERGE_PENDING_RE,
   MERGE_RESULT_MARKER,
+  MERGE_REVIEW_MARKER,
   WRITE_PERMISSIONS,
   parseMergePending,
+  mergeReviewTitle,
+  parsePipelineFromMergeReviewBody,
+  composeMergeReviewBody,
+  isMergeReviewIssue,
   authorizeRun,
   evaluateGuards,
   composeResultComment,

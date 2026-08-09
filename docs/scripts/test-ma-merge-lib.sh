@@ -353,5 +353,26 @@ console.log('OK  composeResultComment: status failed → číslovaný seznam dů
 }
 console.log('OK  composeResultComment: chybějící wikiSync → throw (řádek wiki-sync: nesmí chybět)');
 
+// --- merge review task (Ano/Ne) -----------------------------------------
+
+{
+  assert.strictEqual(lib.mergeReviewTitle(100), '[MERGE] Pipeline #100 — Ano / Ne?');
+  const body = lib.composeMergeReviewBody({
+    pipeline: 100,
+    branch: 'feature/pipeline-100',
+    sha: 'abc1234',
+    pipelineTitle: '[PIPELINE] MA P2',
+  });
+  assert.ok(body.includes('Pipeline: #100'));
+  assert.ok(body.includes('merge/approved'));
+  assert.ok(body.includes('merge/rejected'));
+  assert.ok(body.includes(lib.MERGE_REVIEW_MARKER));
+  assert.strictEqual(lib.parsePipelineFromMergeReviewBody(body), '100');
+  assert.strictEqual(lib.parsePipelineFromMergeReviewBody('nope'), null);
+  assert.strictEqual(lib.isMergeReviewIssue(['multiagent', 'multiagent/merge-review']), true);
+  assert.strictEqual(lib.isMergeReviewIssue(['multiagent/pipeline']), false);
+}
+console.log('OK  merge review task helpers (title/body/parse/Ano-Ne)');
+
 console.log('OK ma-merge-lib tests');
 NODE

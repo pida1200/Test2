@@ -109,10 +109,11 @@ produkce → kontrolor → GO → další fáze
 - `.github/workflows/multiagent-next.yml` — komentuje další roli + `/m #N` (logika: `docs/scripts/multiagent-next-lib.cjs`; u `[ANALÝZA]` dohledá `risk/low` na `[PIPELINE]`).
 - `.github/workflows/multiagent-gate-check.yml` — validace `[VERDIKT-*]` issues **i** GO komentářů (`issue_comment` s markerem `multiagent-verdikt`) — komentář při chybě; po úspěchu sám sync gate/go na hostitele.
 - `.github/workflows/multiagent-pipeline-sync.yml` — auto-přehled fází v `[PIPELINE]` mezi markery; „Historie verdiktů“ a gotovost k merge přes sjednocenou osu `docs/scripts/ma-verdict-lib.cjs`.
-- `.github/workflows/multiagent-merge.yml` — merge do `main` = label `merge/approved` na `[PIPELINE]` (guardy G0–G6 + autorizace G7 v `docs/scripts/ma-merge-lib.cjs`; G2 přes `ma-verdict-lib.cjs#resolveVerdictSignal`); `workflow_dispatch` je fail-closed (`dry_run` default `true`, ostrý běh vyžaduje stejný ověřený `merge/approved`). Post-merge ověření (G6) = `npm run check:merge` (rychlejší; plný `npm run check` zůstává lokálně/CI mimo merge job). Agent do `main` dál nemerguje. Bootstrap B0–B5 (#81): první merge dělá člověk ručně, label se ostře použije až na další pipeline.
-- `.github/workflows/wiki-sync.yml` — sync `docs/wiki/` → GitHub Wiki UI při pushi na `main`; po merge labelem to dělá `multiagent-merge.yml` sám (`wiki-sync: ok|failed|skipped` v komentáři).
-- Labely: `bash docs/scripts/create-multiagent-labels.sh` (vč. `merge/approved`, `merge/done`, `merge/failed`, `wiki/sync-failed`, `risk/low`)
-- Ověření: `npm run check:ma` (vč. `test-ma-verdict-lib.sh`); `npm run check:merge` = rychlejší subset použitý v merge workflow
+- `.github/workflows/multiagent-merge-task.yml` — po MERGE-PENDING založí `[MERGE] … Ano / Ne?`; `merge/rejected` = Ne
+- `.github/workflows/multiagent-merge.yml` — **Ano** = `merge/approved` na `[MERGE]` (nebo `[PIPELINE]`); G0–G7; G6 = `check:merge`. Agent do `main` nemerguje.
+- `.github/workflows/wiki-sync.yml` — sync `docs/wiki/` → GitHub Wiki UI při pushi na `main`; po merge to dělá `multiagent-merge.yml` sám.
+- Labely: `bash docs/scripts/create-multiagent-labels.sh` (vč. `multiagent/merge-review`, `merge/approved`, `merge/rejected`, …)
+- Ověření: `npm run check:ma`; `npm run check:merge`
 
 ## Kdy použít
 
@@ -129,8 +130,8 @@ produkce → kontrolor → GO → další fáze
 ## Ukončení (integrátor)
 
 - relevantní testy + lint + wiki seed
-- `docs/learning-log.md` (**povinně**, na feature větvi; stav „čeká na label `merge/approved`“)
+- `docs/learning-log.md` (**povinně**; stav „čeká na Ano/Ne v `[MERGE]`“)
 - commit + push **feature větve** (ne `main`)
-- komentář `MERGE-PENDING` do `[PIPELINE]` (větev, SHA, checklist pro člověka **+ machine marker** `<!-- multiagent-merge-pending pipeline="N" branch="…" sha="…" -->`)
-- `[PIPELINE]` **zůstává otevřený** s `gate/go`; **merge do `main` spustí člověk labelem `merge/approved`** (workflow `multiagent-merge.yml` uzavře issue po úspěchu)
+- komentář `MERGE-PENDING` + marker → bot založí `[MERGE]` úkol (assignee)
+- člověk na `[MERGE]`: **Ano** `merge/approved` / **Ne** `merge/rejected`
 - žádný otevřený NO-GO; sebehodnocení dle `repo-kvalita.mdc`

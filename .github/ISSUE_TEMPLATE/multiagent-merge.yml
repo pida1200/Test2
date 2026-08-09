@@ -1,0 +1,32 @@
+name: Multi-agent MERGE (Ano/Ne)
+description: Úkol pro člověka — schválit nebo zamítnout merge do main
+title: "[MERGE] Pipeline # — Ano / Ne?"
+labels: ["multiagent", "multiagent/merge-review"]
+body:
+  - type: input
+    id: pipeline
+    attributes:
+      label: Číslo [PIPELINE] issue
+      description: Jen číslo, bot doplní řádek Pipeline: #N
+      placeholder: "100"
+    validations:
+      required: true
+  - type: input
+    id: branch
+    attributes:
+      label: Feature větev
+      placeholder: feature/pipeline-100-…
+    validations:
+      required: true
+  - type: input
+    id: sha
+    attributes:
+      label: HEAD SHA (≥7 znaků)
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        Po vytvoření uprav body na tvar z `docs/scripts/ma-merge-lib.cjs#composeMergeReviewBody`
+        (řádek `Pipeline: #N` + tabulka Ano/Ne). Preferuj automatické založení po komentáři
+        `MERGE-PENDING` (workflow `multiagent-merge-task.yml`).

@@ -26,6 +26,15 @@ Pravidlo: `repo-kvalita.mdc`.
 
 ## Záznamy
 
+### 2026-08-09 – Merge jako GitHub úkol Ano/Ne
+
+- Výsledek: po MERGE-PENDING bot založí `[MERGE] … Ano / Ne?` (assignee). Ano =
+  `merge/approved` (na `[MERGE]` nebo `[PIPELINE]`), Ne = `merge/rejected`. Labely
+  `multiagent/merge-review` + `merge/rejected`; workflows merge-task + úprava merge.yml.
+- Ověření: `npm run check:ma`; `bash docs/scripts/create-multiagent-labels.sh`
+- Riziko: Actions musí běžet (veřejné repo OK); assignee jen pokud autor pipeline ≠ bot.
+- Další krok: po dalším MERGE-PENDING ověřit, že `[MERGE]` dorazí do Assigned.
+
 ### 2026-08-09 – Obnova orchestrace Task-first (řetězení fází)
 
 - Výsledek: po #83 „CLI first“ agent často skončil u exit 3 / one-lineru a nepokračoval.
