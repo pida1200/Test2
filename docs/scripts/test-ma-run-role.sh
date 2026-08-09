@@ -59,9 +59,9 @@ assert_contains "${out}" "Exit kódy:" "help lists exit codes"
 
 # 2) --dry-run → exit 0 i BEZ binárky (CURSOR_AGENT_BIN nesmyslná cesta), obsahuje ROLE: i --model
 out="$(CURSOR_AGENT_BIN=/nonexistent/cursor-agent assert_exit 0 "--dry-run bez binárky" \
-  --role analytik --pipeline 83 --model claude-opus-5-thinking-high --dry-run)"
+  --role analytik --pipeline 83 --model cursor-grok-4.5-high --dry-run)"
 assert_contains "${out}" "ROLE: Analytik" "dry-run obsahuje ROLE:"
-assert_contains "${out}" "--model claude-opus-5-thinking-high" "dry-run obsahuje --model"
+assert_contains "${out}" "--model cursor-grok-4.5-high" "dry-run obsahuje --model"
 assert_contains "${out}" "PIPELINE: #83" "dry-run obsahuje PIPELINE"
 assert_contains "${out}" "ROLE_CARD: docs/ma-role-cards/analytik.md" "dry-run obsahuje ROLE_CARD"
 assert_contains "${out}" "docs/ma-role-cards/" "dry-run odkazuje role cards"
@@ -86,7 +86,7 @@ assert_contains "${out}" "ROLE: Tester" "CLI missing output contains prompt"
 
 # 7) role, která nesmí zapisovat → bez --write se nepředává --force
 out="$(CURSOR_AGENT_BIN=/nonexistent assert_exit 0 "role bez zápisu (dry-run)" \
-  --role analytik --pipeline 83 --model claude-opus-5-thinking-high --dry-run)"
+  --role analytik --pipeline 83 --model cursor-grok-4.5-high --dry-run)"
 assert_not_contains "${out}" "--force" "no --force without --write"
 
 # 8) --write → mapuje na --force
@@ -96,13 +96,13 @@ assert_contains "${out}" "--force" "--write maps to --force"
 
 # 9) --print-prompt → jen prompt (bez řádku PŘÍKAZ:)
 out="$(CURSOR_AGENT_BIN=/nonexistent assert_exit 0 "--print-prompt" \
-  --role kontrolor-v --pipeline 83 --model gpt-5.6-sol-medium --print-prompt)"
+  --role kontrolor-v --pipeline 83 --model cursor-grok-4.5-high --print-prompt)"
 assert_contains "${out}" "ROLE: Kontrolor vývojáře" "print-prompt obsahuje ROLE"
 assert_not_contains "${out}" "PŘÍKAZ:" "print-prompt neobsahuje sestavený příkaz"
 
 # 10) diakritika / # v promptu zůstává neporušená (žádný eval, žádné rozbití quoting)
 out="$(CURSOR_AGENT_BIN=/nonexistent assert_exit 0 "diakritika v promptu" \
-  --role kontrolor-t --pipeline 83 --model claude-sonnet-5-thinking-high --dry-run)"
+  --role kontrolor-t --pipeline 83 --model cursor-grok-4.5-high-fast --dry-run)"
 assert_contains "${out}" "Kontrolor testera" "diacritics preserved"
 assert_contains "${out}" "NESMÍŠ:" "diacritics preserved (NESMÍŠ)"
 

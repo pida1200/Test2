@@ -18,13 +18,14 @@ const ARTIFACT_ORDER = [
 const GATE_PRECEDENCE = ['gate/go', 'gate/no-go', 'gate/blocked', 'gate/pending'];
 
 const MODELS = {
-  analytik: 'claude-opus-5-thinking-high',
-  // Jiná rodina než Analytik (self-review bias + tokeny) — viz workflow §Modely
-  kontrolorA: 'gpt-5.6-terra-medium',
+  // Cursor Models only (Grok + Composer) — vyhnout se Anthropic/OpenAI on-demand.
+  // Kontrolor ≠ produkce: Grok high vs high-fast / Composer vs Grok.
+  analytik: 'cursor-grok-4.5-high',
+  kontrolorA: 'cursor-grok-4.5-high-fast',
   vyvojar: 'composer-2.5-fast',
-  kontrolorV: 'gpt-5.6-sol-medium',
+  kontrolorV: 'cursor-grok-4.5-high',
   tester: 'composer-2.5-fast',
-  kontrolorT: 'claude-sonnet-5-thinking-high',
+  kontrolorT: 'cursor-grok-4.5-high-fast',
   integrator: 'composer-2.5-fast',
 };
 

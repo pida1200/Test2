@@ -31,7 +31,7 @@ assert.ok(r.cliOneLiner.includes('--pipeline 34'));
 assert.ok(r.cliOneLiner.includes('--write'));
 assert.strictEqual(r.info.model, next.MODELS.vyvojar);
 
-assert.strictEqual(next.MODELS.kontrolorA, 'gpt-5.6-terra-medium');
+assert.strictEqual(next.MODELS.kontrolorA, 'cursor-grok-4.5-high-fast');
 assert.notStrictEqual(next.MODELS.kontrolorA, next.MODELS.analytik);
 
 assert.strictEqual(next.modelForPhase('VERDIKT-V'), next.MODELS.kontrolorV);

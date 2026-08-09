@@ -34,7 +34,7 @@ const sampleSection = [
   '',
   'Historie verdiktů: —',
   '',
-  'Další krok: **Analytik** · `claude-opus-5-thinking-high` · /m #17',
+  'Další krok: **Analytik** · `cursor-grok-4.5-high` · /m #17',
   '',
   END,
 ].join('\n');

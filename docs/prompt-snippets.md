@@ -164,7 +164,7 @@ Hotovo když:
 
 ```text
 ROLE: Analytik
-MODEL: claude-opus-5-thinking-high
+MODEL: cursor-grok-4.5-high
 VSTUP_ISSUE: #<PIPELINE>
 VÝSTUP_ISSUE: #<ANALÝZA>
 
@@ -237,7 +237,7 @@ I/O: GitHub Issues
 
 Vývojář:
 ROLE: Vývojář
-MODEL: composer-2.5-fast   # alt: claude-sonnet-5-thinking-high; *-fast OK když ne-fast není dostupná
+MODEL: composer-2.5-fast   # alt: composer-2.5; Cursor Models only
 VSTUP_ISSUE: #<PIPELINE nebo zadání>
 VÝSTUP_ISSUE: #<IMPLEMENTACE>
 Na začátek body: mini-plán (1–3 věty) — cíl, dotčené soubory, jak ověříš
@@ -246,7 +246,7 @@ PŘI NO-GO: oprav dle #<VERDIKT-V>, bump verze v body, znovu review
 
 Kontrolor vývojáře:
 ROLE: Kontrolor vývojáře
-MODEL: gpt-5.6-sol-medium   # alt: claude-opus-5-thinking-high
+MODEL: cursor-grok-4.5-high   # alt: cursor-grok-4.5-high-fast; Cursor Models only
 VSTUP_ISSUE: #<IMPLEMENTACE>
 VÝSTUP_ISSUE: #<VERDIKT-V>
 GATE: GO → Integrátor commitne feature větev + MERGE-PENDING; NO-GO → Vývojář opraví

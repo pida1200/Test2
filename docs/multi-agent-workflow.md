@@ -31,33 +31,36 @@ U změny chování **povinný** záznam `zmeny-YYYY-MM-DD-…` (+ řádek v `zme
 | **Kontrolor testera** | Kontrola pokrytí a kvality testů | Neimplementuje produkční kód |
 | **Integrátor** | Orchestruje pipeline, konflikty, commit + push feature větve, MERGE-PENDING (tenký — bez duplicitního full check) | — |
 
-## Modely (doporučené přiřazení — ověř dostupnost)
+## Modely (doporučené přiřazení — jen Cursor Models)
 
-V Cursoru zvol model u každého chatu / sub-agenta podle tabulky. Slug = hodnota pro výběr modelu (Task / agent).  
+**Proč:** Included kvóta u Anthropic/OpenAI („Other Models“) se rychle vyčerpá a spouští on-demand poplatky. Cursor Models (Grok + Composer) mají oddělenou kvótu — **defaultně je preferuj**.
+
+V Cursoru zvol model u každého chatu / sub-agenta podle tabulky. Slug = hodnota pro výběr modelu (Task / `ma-run-role.sh --model`).  
 **Ověř dostupnost slugů v Cursor Task a uveď skutečný slug v `MODEL:`.**  
 Uživatel může přepsat; Integrátor v kickoffu uvede `MODEL:` u každé role.
 
 | Role | Doporučený model | Alternativa | Proč |
 |------|------------------|-------------|------|
-| **Analytik** | `claude-opus-5-thinking-high` | `claude-4.5-opus-high-thinking` | silný reasoning nad kontraktem a DoD |
-| **Kontrolor analytika** | `gpt-5.6-terra-medium` | `claude-4.5-opus-high-thinking` | jiná rodina než Analytik (méně self-review bias + levnější default) |
-| **Vývojář** | `composer-2.5-fast` | `claude-sonnet-5-thinking-high` | implementace ve scope + základní testy |
-| **Kontrolor vývojáře** | `gpt-5.6-sol-medium` | `claude-opus-5-thinking-high` | code review oddělený od implementačního modelu |
-| **Tester** | `composer-2.5-fast` | `claude-sonnet-5-thinking-high` | psaní/spouštění testů, edge cases |
-| **Kontrolor testera** | `claude-sonnet-5-thinking-high` | `gpt-5.6-terra-medium` | kontrola pokrytí |
-| **Integrátor** | `composer-2.5-fast` | `claude-sonnet-5-thinking-high` | orchestrace, konflikty, lint/commit |
+| **Analytik** | `cursor-grok-4.5-high` | `cursor-grok-4.5-high-fast` | reasoning nad kontraktem (Cursor Models) |
+| **Kontrolor analytika** | `cursor-grok-4.5-high-fast` | `composer-2.5-fast` | ≠ Analytik (high vs high-fast); stále Cursor Models |
+| **Vývojář** | `composer-2.5-fast` | `composer-2.5` | implementace ve scope + základní testy |
+| **Kontrolor vývojáře** | `cursor-grok-4.5-high` | `cursor-grok-4.5-high-fast` | review oddělený od Composer (jiná rodina) |
+| **Tester** | `composer-2.5-fast` | `composer-2.5` | psaní/spouštění testů, edge cases |
+| **Kontrolor testera** | `cursor-grok-4.5-high-fast` | `cursor-grok-4.5-high` | kontrola pokrytí ≠ Tester |
+| **Integrátor** | `composer-2.5-fast` | `composer-2.5` | orchestrace, konflikty, lint/commit |
 
-> **Poznámka:** Původní slugy (`claude-opus-4-8-thinking-high`, `composer-2.5`, `gpt-5.6-sol-high`, `gpt-5.5-high`) nejsou v Cursor Task dostupné. Tabulka výše používá ověřené náhrady.
+> **Poznámka:** Anthropic/OpenAI slugy (`claude-*`, `gpt-*`) nepoužívej v default pipeline — rezervuj jen na explicitní žádost uživatele. Bot (`multiagent-next`) bere slugs z `docs/scripts/multiagent-next-lib.cjs` (`MODELS`) — musí sedět s tabulkou výše.
 
 ### Pravidla výběru modelu
 
-1. **Kontrolor ≠ stejný model jako produkce**, pokud to jde (snižuje „self-review bias“) — Analytik (Opus) vs Kontrolor A (`gpt-5.6-terra-medium`); Vývojář vs Kontrolor V.
-2. **`*-fast` je legitimní**, když ne-fast alternativa neexistuje (dnes Vývojář/Tester/Integrátor). U ostatních rolí preferuj ne-fast alternativu ze sloupce Alternativa.
-3. Extra těžký reasoning jen u NO-GO smyčky na analýze nebo u riskantního review.
+1. **Jen Cursor Models** (Grok / Composer), dokud nestačí jejich included kvóta.
+2. **Kontrolor ≠ stejný model jako produkce**, pokud to jde — Analytik (`cursor-grok-4.5-high`) vs Kontrolor A (`cursor-grok-4.5-high-fast`); Vývojář (Composer) vs Kontrolor V (Grok).
+3. **`*-fast` je legitimní** u Composer i Grok, když stačí rychlost / šetří kvótu.
 4. V zadání každé role uveď řádek: `MODEL: <slug>`.
-5. **Fallback:** pokud doporučený slug není dostupný, použij alternativu ze sloupce Alternativa. Uveď skutečný slug v `MODEL:`.
+5. **Fallback:** pokud doporučený slug není dostupný, použij alternativu ze sloupce Alternativa (stále Cursor Models). Uveď skutečný slug v `MODEL:`.
+6. **Auto:** Cursor UI „Auto“ zatím CLI/`ma-run-role.sh` spolehlivě nepředává — orchestrátor vždy posílá explicitní slug z tabulky. Task fallback: stejný `--model`; `inherit` jen když parent už běží na Cursor Modelu.
 
-> **Kanonická tabulka modelů** = tato sekce. Rule / skill / snippets / zadání jen odkazují sem — nekopíruj slugy jinam.
+> **Kanonická tabulka modelů** = tato sekce. Rule / skill / snippets / zadání jen odkazují sem — nekopíruj slugy jinam. `MODELS` v `multiagent-next-lib.cjs` drž v sync.
 
 ## Pipeline + rework smyčka
 
@@ -222,7 +225,7 @@ Obsah artefaktu piš **do body issue** (ne jen do chatu). V chatu vrať shrnutí
 
 ```text
 ROLE: Analytik
-MODEL: claude-opus-5-thinking-high
+MODEL: cursor-grok-4.5-high
 VSTUP_ISSUE: #<PIPELINE>  (+ případně komentář/NO-GO z #<VERDIKT-A> při reworku)
 VÝSTUP_ISSUE: #<ANALÝZA>  (vytvoř pokud neexistuje; label multiagent/analyza, gate/pending)
 
@@ -247,7 +250,7 @@ NESMÍŠ: implementovat; uzavírat verdikt; git push
 
 ```text
 ROLE: Kontrolor analytika
-MODEL: gpt-5.6-terra-medium
+MODEL: cursor-grok-4.5-high-fast
 VSTUP_ISSUE: #<ANALÝZA>
 VÝSTUP_ISSUE: #<VERDIKT-A>  (vždy **vytvoř nové** issue pro každé kolo; label multiagent/verdikt)
 
@@ -306,7 +309,7 @@ NESMÍŠ: měnit kontrakt bez eskalace; git push; start Testera bez gate/go na V
 
 ```text
 ROLE: Kontrolor vývojáře
-MODEL: gpt-5.6-sol-medium
+MODEL: cursor-grok-4.5-high
 VSTUP_ISSUE: #<IMPLEMENTACE> + #<ANALÝZA>
 VÝSTUP_ISSUE: #<VERDIKT-V>  (vždy **vytvoř nové** issue pro každé kolo; label multiagent/verdikt)
 
@@ -346,7 +349,7 @@ NESMÍŠ: rozšiřovat feature mimo testy; zakládat bug pro každý drobný ná
 
 ```text
 ROLE: Kontrolor testera
-MODEL: claude-sonnet-5-thinking-high
+MODEL: cursor-grok-4.5-high-fast
 VSTUP_ISSUE: #<TESTY> + #<ANALÝZA>
 VÝSTUP_ISSUE: #<VERDIKT-T>  (vždy **vytvoř nové** issue pro každé kolo; label multiagent/verdikt)
 
@@ -587,12 +590,12 @@ I/O: GitHub Issues (šablony .github/ISSUE_TEMPLATE/)
 3) Vývojář → [IMPLEMENTACE] → Kontrolor → [VERDIKT-V]
 4) Tester → [TESTY] → Kontrolor → [VERDIKT-T]
 5) Integrátor: handoff MERGE-PENDING (merge do main = člověk); [PIPELINE] zůstává OPEN
-Modely (default — ověř dostupnost):
-- Analytik: claude-opus-5-thinking-high
-- Kontrolor analytika: gpt-5.6-terra-medium
+Modely (default — Cursor Models / Grok+Composer):
+- Analytik: cursor-grok-4.5-high
+- Kontrolor analytika: cursor-grok-4.5-high-fast
 - Vývojář / Tester / Integrátor: composer-2.5-fast
-- Kontrolor vývojáře: gpt-5.6-sol-medium
-- Kontrolor testera: claude-sonnet-5-thinking-high
+- Kontrolor vývojáře: cursor-grok-4.5-high
+- Kontrolor testera: cursor-grok-4.5-high-fast
 Pravidlo: NO-GO = STOP; předchozí role opraví produkční issue; vždy nové VERDIKT issue každé kolo
 Ověření: <testy/lint/docker>
 Pravidla: .cursor/rules/ + repo-git (bez PR) + docs/learning-log.md

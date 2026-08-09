@@ -26,6 +26,17 @@ Pravidlo: `repo-kvalita.mdc`.
 
 ## Záznamy
 
+### 2026-08-09 – MA default modely → Cursor Models (Grok + Composer)
+
+- Výsledek: `MODELS` v `multiagent-next-lib.cjs` + kanonická tabulka v `multi-agent-workflow.md`
+  přepnuty na Cursor Models — Analytik/Kontrolor V = `cursor-grok-4.5-high`, Kontrolor A/T =
+  `cursor-grok-4.5-high-fast`, Vývojář/Tester/Integrátor = `composer-2.5-fast`. Snippets, rule
+  `multi-agenti.mdc`, testy a wiki `zmeny-2026-08-09-ma-cursor-models-grok` sync.
+- Ověření: `npm run check:ma`
+- Riziko: Grok/Composer mohou být slabší na těžký reasoning než Opus; při explicitní žádosti
+  uživatele lze Anthropic/OpenAI stále použít (mimo default). CLI „Auto“ není wireované.
+- Další krok: merge feature větve; další `/m` běhy ověřit, že next-bot komentáře ukazují Grok/Composer.
+
 ### 2026-08-05 – Rework IMPLEMENTACE #106 po VERDIKT-V NO-GO #107 (fail-closed marker)
 
 - Výsledek: `parseVerdictComment()` v `docs/scripts/ma-verdict-lib.cjs` opraven —
