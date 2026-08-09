@@ -4,6 +4,7 @@ Chronologie změn řešení. Každá větší pipeline doplní řádek + stránk
 
 | Datum | Pipeline | Stránka | Shrnutí |
 |-------|----------|---------|---------|
+| 2026-08-09 | #114 / #103 | [pipeline-114-ma-p3](zmeny-2026-08-09-pipeline-114-ma-p3) | P3: check-ma-env (cursor-agent), branch protection docs, live smoke checklist |
 | 2026-08-09 | (direct) | [ma-merge-ano-ne](zmeny-2026-08-09-ma-merge-ano-ne) | `[MERGE]` GitHub úkol Ano/Ne (`merge/approved` / `merge/rejected`) po MERGE-PENDING |
 | 2026-08-09 | (direct) | [ma-orchestrace-task-first](zmeny-2026-08-09-ma-orchestrace-task-first) | Obnova řetězení fází: Task/subagent default; CLI jen s cursor-agent; next-bot `/m #N` první |
 | 2026-08-09 | (direct) | [ma-cursor-models-grok](zmeny-2026-08-09-ma-cursor-models-grok) | Default MA = Cursor Auto; pin Grok/Composer volitelně; Anthropic/OpenAI jen na žádost |

@@ -26,6 +26,16 @@ Pravidlo: `repo-kvalita.mdc`.
 
 ## Záznamy
 
+### 2026-08-09 – /m #114 (P3) IMPLEMENTACE: cursor-agent, branch protection, smoke
+
+- Výsledek: `docs/scripts/check-ma-env.sh` (+ test); wiki `provozni-cursor-agent`,
+  `provozni-branch-protection`, `provozni-merge-smoke`, zmeny P3. CLI nainstalováno
+  lokálně v Cloud VM — flagy `-p/--output-format/--model/--force` sedí s `ma-run-role.sh`.
+  Issues write stále 403 → child issues vytvořeny create-only; labely = člověk.
+- Ověření: `npm run check:ma`; `PATH=… bash docs/scripts/check-ma-env.sh`
+- Riziko: ostrý live smoke merge musí udělat člověk; branch protection API 403 z Cloud.
+- Další krok: labely na #114 + child; Ano na `[MERGE]` až po push feature větve.
+
 ### 2026-08-09 – Wiki seed sync: Auto + Task-first + merge Ano/Ne
 
 - Výsledek: aktualizovány Home, Sidebar, aplikacni-*, provozni-* podle Auto modelů,

@@ -22,6 +22,6 @@ Zdroj pravdy v gitu (`docs/wiki/`). GitHub Wiki UI = publikační mirror.
 ## Rychlé odkazy
 
 - Aplikace: [moduly (role)](aplikacni-moduly) · [scénáře `/m`](aplikacni-uzivatelske-scenare)
-- Provoz: [deploy / sync](provozni-deploy) · [konfigurace](provozni-konfigurace) · [monitoring](provozni-monitoring)
+- Provoz: [deploy / sync](provozni-deploy) · [konfigurace](provozni-konfigurace) · [monitoring](provozni-monitoring) · [cursor-agent](provozni-cursor-agent) · [branch protection](provozni-branch-protection) · [merge smoke](provozni-merge-smoke)
 - Nejnovější změny: [merge Ano/Ne](zmeny-2026-08-09-ma-merge-ano-ne) · [Task-first](zmeny-2026-08-09-ma-orchestrace-task-first) · [Auto modely](zmeny-2026-08-09-ma-cursor-models-grok)
 - Šablona změny: [zmeny-sablona](zmeny-sablona)

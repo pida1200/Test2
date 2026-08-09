@@ -14,6 +14,7 @@ Jak MA **běží** v repu Test2: labely, Actions, lokální skripty, Wiki sync.
 
 ```bash
 gh auth status
+bash docs/scripts/check-ma-env.sh
 bash docs/scripts/create-multiagent-labels.sh
 bash docs/scripts/ma-pipeline-view.sh #<PIPELINE>
 npm run check:ma
