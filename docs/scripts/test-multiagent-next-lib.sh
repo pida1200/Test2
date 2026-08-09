@@ -30,9 +30,12 @@ assert.ok(r.cliOneLiner.includes('--role vyvojar'));
 assert.ok(r.cliOneLiner.includes('--pipeline 34'));
 assert.ok(r.cliOneLiner.includes('--write'));
 assert.strictEqual(r.info.model, next.MODELS.vyvojar);
+assert.strictEqual(next.MODELS.vyvojar, next.MODEL_AUTO);
+assert.strictEqual(next.MODELS.analytik, 'auto');
 
-assert.strictEqual(next.MODELS.kontrolorA, 'cursor-grok-4.5-high-fast');
-assert.notStrictEqual(next.MODELS.kontrolorA, next.MODELS.analytik);
+// Pin tabulka drží kontrolor ≠ produkce (default MODELS = auto)
+assert.strictEqual(next.MODELS_PINNED.kontrolorA, 'cursor-grok-4.5-high-fast');
+assert.notStrictEqual(next.MODELS_PINNED.kontrolorA, next.MODELS_PINNED.analytik);
 
 assert.strictEqual(next.modelForPhase('VERDIKT-V'), next.MODELS.kontrolorV);
 assert.strictEqual(next.modelForPhase('VERDIKT-A'), next.MODELS.kontrolorA);

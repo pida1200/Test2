@@ -17,9 +17,12 @@ const ARTIFACT_ORDER = [
 
 const GATE_PRECEDENCE = ['gate/go', 'gate/no-go', 'gate/blocked', 'gate/pending'];
 
-const MODELS = {
-  // Cursor Models only (Grok + Composer) — vyhnout se Anthropic/OpenAI on-demand.
-  // Kontrolor ≠ produkce: Grok high vs high-fast / Composer vs Grok.
+// Default = Cursor Auto (routing podle remaining included usage — méně on-demand).
+// Pin Grok/Composer: MODELS_PINNED nebo --model <slug> v ma-run-role.sh.
+const MODEL_AUTO = 'auto';
+
+const MODELS_PINNED = {
+  // Cursor Models only — pin když chceš kontrolor ≠ produkce / stabilní slug.
   analytik: 'cursor-grok-4.5-high',
   kontrolorA: 'cursor-grok-4.5-high-fast',
   vyvojar: 'composer-2.5-fast',
@@ -27,6 +30,16 @@ const MODELS = {
   tester: 'composer-2.5-fast',
   kontrolorT: 'cursor-grok-4.5-high-fast',
   integrator: 'composer-2.5-fast',
+};
+
+const MODELS = {
+  analytik: MODEL_AUTO,
+  kontrolorA: MODEL_AUTO,
+  vyvojar: MODEL_AUTO,
+  kontrolorV: MODEL_AUTO,
+  tester: MODEL_AUTO,
+  kontrolorT: MODEL_AUTO,
+  integrator: MODEL_AUTO,
 };
 
 /** CLI role slug for docs/scripts/ma-run-role.sh --role */
@@ -339,7 +352,9 @@ module.exports = {
   PIPELINE_RE,
   VSTUP_RE,
   VERDIKT_RE,
+  MODEL_AUTO,
   MODELS,
+  MODELS_PINNED,
   PHASE_MODELS,
   ROLE_CLI,
   ARTIFACT_ORDER,

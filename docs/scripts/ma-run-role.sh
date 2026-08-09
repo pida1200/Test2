@@ -3,7 +3,7 @@
 # Kontrakt: ANALÝZA #85 §3 · docs/multi-agent-workflow.md (sekce "Token budget rolí").
 # Použití:
 #   bash docs/scripts/ma-run-role.sh --role <role> --pipeline <N> \
-#        [--issue <N>] [--model <slug>] [--write] [--dry-run] [--print-prompt] [--help]
+#        [--issue <N>] [--model <slug|auto>] [--write] [--dry-run] [--print-prompt] [--help]
 # Exit: 0 OK/--dry-run/--help/--print-prompt · 2 usage · 3 CLI chybí (vytiskne prompt) · 4 CLI selhalo.
 # Portable: bash 3.2+ (bez asociativních polí; indexová pole OK).
 #
@@ -20,7 +20,7 @@ usage() {
   cat <<'EOF'
 Použití:
   bash docs/scripts/ma-run-role.sh --role <role> --pipeline <N> \
-       [--issue <N>] [--model <slug>] [--write] [--dry-run] [--print-prompt] [--help]
+       [--issue <N>] [--model <slug|auto>] [--write] [--dry-run] [--print-prompt] [--help]
 
 Role (whitelist):
   analytik | kontrolor-a | vyvojar | kontrolor-v | tester | kontrolor-t | integrator
@@ -29,7 +29,8 @@ Parametry:
   --role          povinný  role z whitelistu výše
   --pipeline      povinný  číslo [PIPELINE] issue (akceptuje "83" i "#83")
   --issue         volitelný  vstupní artefakt; lze opakovat pro víc vstupů
-  --model         povinný  slug z docs/multi-agent-workflow.md (sekce Modely)
+  --model         volitelný  default auto (= Cursor Auto routing; CLI bez --model).
+                  Explicitní slug z docs/multi-agent-workflow.md (pin Grok/Composer).
   --write         volitelný  povolí zápisové nástroje (mapuje na --force)
   --dry-run       volitelný  vytiskne příkaz + prompt, nespustí CLI, exit 0 i bez binárky
   --print-prompt  volitelný  vytiskne jen prompt (pro ruční vložení do Task)
@@ -37,7 +38,7 @@ Parametry:
 
 Exit kódy:
   0  OK / --dry-run / --help / --print-prompt
-  2  chybný vstup (neznámá role, chybí --pipeline nebo --model)
+  2  chybný vstup (neznámá role, chybí --pipeline)
   3  Cursor Agent CLI nenalezeno v PATH — vytiskne hotový prompt pro Task fallback
   4  CLI nalezeno, ale skončilo nenulovým exit kódem
 
@@ -49,7 +50,8 @@ Env:
   MA_ROLE_EXTRA_ARGS   volitelné doplňkové flagy pro CLI (např. "--trust"), whitespace-oddělené
 
 Sestavený příkaz (referenční tvar):
-  $CURSOR_AGENT_BIN -p --output-format text --model <slug> [--force] "<prompt>"
+  $CURSOR_AGENT_BIN -p --output-format text [--model <slug>] [--force] "<prompt>"
+  (při --model auto / vynechaném --model se CLI flag --model nepřidává → Auto)
 
 Detail: docs/multi-agent-workflow.md (sekce "Token budget rolí"), .cursor/skills/m/SKILL.md
 EOF
@@ -103,7 +105,7 @@ is_known_role() {
 
 ROLE=""
 PIPELINE=""
-MODEL=""
+MODEL="auto"
 WRITE=0
 DRY_RUN=0
 PRINT_PROMPT=0
@@ -149,10 +151,10 @@ if [[ -z "${PIPELINE}" ]]; then
   exit 2
 fi
 
-if [[ -z "${MODEL}" ]]; then
-  echo "Chybí povinný parametr --model" >&2
-  usage >&2
-  exit 2
+# Normalizuj: prázdné / Auto → auto (Cursor Auto routing)
+MODEL="$(printf '%s' "${MODEL}" | tr '[:upper:]' '[:lower:]')"
+if [[ -z "${MODEL}" || "${MODEL}" == "auto" ]]; then
+  MODEL="auto"
 fi
 
 PIPELINE_NUM="${PIPELINE#\#}"
@@ -182,7 +184,11 @@ build_prompt() {
 
 PROMPT="$(build_prompt)"
 
-CMD_ARGS=("-p" "--output-format" "text" "--model" "${MODEL}")
+# auto = Cursor Auto → nepřidávej --model (CLI default routing). Explicitní slug → --model <slug>.
+CMD_ARGS=("-p" "--output-format" "text")
+if [[ "${MODEL}" != "auto" ]]; then
+  CMD_ARGS+=("--model" "${MODEL}")
+fi
 if [[ "${WRITE}" -eq 1 ]]; then
   CMD_ARGS+=("--force")
 fi

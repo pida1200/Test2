@@ -31,36 +31,36 @@ U změny chování **povinný** záznam `zmeny-YYYY-MM-DD-…` (+ řádek v `zme
 | **Kontrolor testera** | Kontrola pokrytí a kvality testů | Neimplementuje produkční kód |
 | **Integrátor** | Orchestruje pipeline, konflikty, commit + push feature větve, MERGE-PENDING (tenký — bez duplicitního full check) | — |
 
-## Modely (doporučené přiřazení — jen Cursor Models)
+## Modely (default = Cursor Auto)
 
-**Proč:** Included kvóta u Anthropic/OpenAI („Other Models“) se rychle vyčerpá a spouští on-demand poplatky. Cursor Models (Grok + Composer) mají oddělenou kvótu — **defaultně je preferuj**.
+**Default pro `/m` a next-bot:** `auto` — Cursor Auto routing (preferuje remaining included usage, méně on-demand Anthropic/OpenAI).
 
-V Cursoru zvol model u každého chatu / sub-agenta podle tabulky. Slug = hodnota pro výběr modelu (Task / `ma-run-role.sh --model`).  
-**Ověř dostupnost slugů v Cursor Task a uveď skutečný slug v `MODEL:`.**  
-Uživatel může přepsat; Integrátor v kickoffu uvede `MODEL:` u každé role.
+| Role | Default | Pin (volitelně) | Proč pin |
+|------|---------|-----------------|----------|
+| **Analytik** | `auto` | `cursor-grok-4.5-high` | stabilní reasoning |
+| **Kontrolor analytika** | `auto` | `cursor-grok-4.5-high-fast` | ≠ Analytik (high vs high-fast) |
+| **Vývojář** | `auto` | `composer-2.5-fast` | Composer = Cursor Models |
+| **Kontrolor vývojáře** | `auto` | `cursor-grok-4.5-high` | ≠ Composer |
+| **Tester** | `auto` | `composer-2.5-fast` | testy |
+| **Kontrolor testera** | `auto` | `cursor-grok-4.5-high-fast` | ≠ Tester |
+| **Integrátor** | `auto` | `composer-2.5-fast` | orchestrace |
 
-| Role | Doporučený model | Alternativa | Proč |
-|------|------------------|-------------|------|
-| **Analytik** | `cursor-grok-4.5-high` | `cursor-grok-4.5-high-fast` | reasoning nad kontraktem (Cursor Models) |
-| **Kontrolor analytika** | `cursor-grok-4.5-high-fast` | `composer-2.5-fast` | ≠ Analytik (high vs high-fast); stále Cursor Models |
-| **Vývojář** | `composer-2.5-fast` | `composer-2.5` | implementace ve scope + základní testy |
-| **Kontrolor vývojáře** | `cursor-grok-4.5-high` | `cursor-grok-4.5-high-fast` | review oddělený od Composer (jiná rodina) |
-| **Tester** | `composer-2.5-fast` | `composer-2.5` | psaní/spouštění testů, edge cases |
-| **Kontrolor testera** | `cursor-grok-4.5-high-fast` | `cursor-grok-4.5-high` | kontrola pokrytí ≠ Tester |
-| **Integrátor** | `composer-2.5-fast` | `composer-2.5` | orchestrace, konflikty, lint/commit |
+**CLI:** `ma-run-role.sh` — `--model` je volitelné (default `auto`). Při `auto` se CLI flagu `--model` **nepředává** (Cursor CLI Auto). Explicitní slug = pin.
 
-> **Poznámka:** Anthropic/OpenAI slugy (`claude-*`, `gpt-*`) nepoužívej v default pipeline — rezervuj jen na explicitní žádost uživatele. Bot (`multiagent-next`) bere slugs z `docs/scripts/multiagent-next-lib.cjs` (`MODELS`) — musí sedět s tabulkou výše.
+**Task fallback:** při `MODEL: auto` použij Task `model: "inherit"` (parent = Auto / Cursor Model). Nepřepínej na Anthropic/OpenAI, dokud uživatel neřekne.
+
+**Trade-off:** Auto negarantuje „kontrolor ≠ produkce“. Když chceš oddělené oči, pinuj přes `MODELS_PINNED` / `--model <slug>`.
 
 ### Pravidla výběru modelu
 
-1. **Jen Cursor Models** (Grok / Composer), dokud nestačí jejich included kvóta.
-2. **Kontrolor ≠ stejný model jako produkce**, pokud to jde — Analytik (`cursor-grok-4.5-high`) vs Kontrolor A (`cursor-grok-4.5-high-fast`); Vývojář (Composer) vs Kontrolor V (Grok).
-3. **`*-fast` je legitimní** u Composer i Grok, když stačí rychlost / šetří kvótu.
-4. V zadání každé role uveď řádek: `MODEL: <slug>`.
-5. **Fallback:** pokud doporučený slug není dostupný, použij alternativu ze sloupce Alternativa (stále Cursor Models). Uveď skutečný slug v `MODEL:`.
-6. **Auto:** Cursor UI „Auto“ zatím CLI/`ma-run-role.sh` spolehlivě nepředává — orchestrátor vždy posílá explicitní slug z tabulky. Task fallback: stejný `--model`; `inherit` jen když parent už běží na Cursor Modelu.
+1. **Default = `auto`** (billing-safe).
+2. Pin jen když potřebuješ stabilní slug nebo kontrolor ≠ produkce (tabulka Pin).
+3. Pin = **jen Cursor Models** (Grok / Composer), dokud nestačí jejich kvóta.
+4. Anthropic/OpenAI (`claude-*`, `gpt-*`) jen na explicitní žádost uživatele.
+5. V zadání role uveď `MODEL: auto` nebo `MODEL: <slug>`.
+6. `MODELS` v `multiagent-next-lib.cjs` = default botu; `MODELS_PINNED` = doporučené pin slugs.
 
-> **Kanonická tabulka modelů** = tato sekce. Rule / skill / snippets / zadání jen odkazují sem — nekopíruj slugy jinam. `MODELS` v `multiagent-next-lib.cjs` drž v sync.
+> **Kanonická tabulka modelů** = tato sekce. Rule / skill / snippets odkazují sem.
 
 ## Pipeline + rework smyčka
 
@@ -225,7 +225,7 @@ Obsah artefaktu piš **do body issue** (ne jen do chatu). V chatu vrať shrnutí
 
 ```text
 ROLE: Analytik
-MODEL: cursor-grok-4.5-high
+MODEL: auto
 VSTUP_ISSUE: #<PIPELINE>  (+ případně komentář/NO-GO z #<VERDIKT-A> při reworku)
 VÝSTUP_ISSUE: #<ANALÝZA>  (vytvoř pokud neexistuje; label multiagent/analyza, gate/pending)
 
@@ -250,7 +250,7 @@ NESMÍŠ: implementovat; uzavírat verdikt; git push
 
 ```text
 ROLE: Kontrolor analytika
-MODEL: cursor-grok-4.5-high-fast
+MODEL: auto
 VSTUP_ISSUE: #<ANALÝZA>
 VÝSTUP_ISSUE: #<VERDIKT-A>  (vždy **vytvoř nové** issue pro každé kolo; label multiagent/verdikt)
 
@@ -285,7 +285,7 @@ NESMÍŠ: editovat body #<ANALÝZA> „za analytika“; kódovat; vytvořit #<IM
 
 ```text
 ROLE: Vývojář
-MODEL: composer-2.5-fast
+MODEL: auto
 VSTUP_ISSUE: #<ANALÝZA> (musí mít gate/go + schválený #<VERDIKT-A>) + #<PIPELINE>
 VÝSTUP_ISSUE: #<IMPLEMENTACE> (label multiagent/implementace, gate/pending)
 
@@ -309,7 +309,7 @@ NESMÍŠ: měnit kontrakt bez eskalace; git push; start Testera bez gate/go na V
 
 ```text
 ROLE: Kontrolor vývojáře
-MODEL: cursor-grok-4.5-high
+MODEL: auto
 VSTUP_ISSUE: #<IMPLEMENTACE> + #<ANALÝZA>
 VÝSTUP_ISSUE: #<VERDIKT-V>  (vždy **vytvoř nové** issue pro každé kolo; label multiagent/verdikt)
 
@@ -326,7 +326,7 @@ NESMÍŠ: implementovat fixy; posunout dál při NO-GO; přepisovat existující
 
 ```text
 ROLE: Tester
-MODEL: composer-2.5-fast
+MODEL: auto
 VSTUP_ISSUE: #<ANALÝZA> + #<IMPLEMENTACE> (oboje po gate/go) + #<VERDIKT-V>
 VÝSTUP_ISSUE: #<TESTY> (label multiagent/testy, gate/pending)
 
@@ -349,7 +349,7 @@ NESMÍŠ: rozšiřovat feature mimo testy; zakládat bug pro každý drobný ná
 
 ```text
 ROLE: Kontrolor testera
-MODEL: cursor-grok-4.5-high-fast
+MODEL: auto
 VSTUP_ISSUE: #<TESTY> + #<ANALÝZA>
 VÝSTUP_ISSUE: #<VERDIKT-T>  (vždy **vytvoř nové** issue pro každé kolo; label multiagent/verdikt)
 
@@ -366,7 +366,7 @@ NESMÍŠ: psát produkční kód; uzavírat pipeline při NO-GO; přepisovat exi
 
 ```text
 ROLE: Integrátor
-MODEL: composer-2.5-fast
+MODEL: auto
 VSTUP_ISSUE: #<PIPELINE> + #<VERDIKT-A> + #<VERDIKT-V> + #<VERDIKT-T> (vše gate/go)
 VÝSTUP_ISSUE: #<PIPELINE> (handoff MERGE-PENDING; issue zůstává OPEN)
 
@@ -590,12 +590,9 @@ I/O: GitHub Issues (šablony .github/ISSUE_TEMPLATE/)
 3) Vývojář → [IMPLEMENTACE] → Kontrolor → [VERDIKT-V]
 4) Tester → [TESTY] → Kontrolor → [VERDIKT-T]
 5) Integrátor: handoff MERGE-PENDING (merge do main = člověk); [PIPELINE] zůstává OPEN
-Modely (default — Cursor Models / Grok+Composer):
-- Analytik: cursor-grok-4.5-high
-- Kontrolor analytika: cursor-grok-4.5-high-fast
-- Vývojář / Tester / Integrátor: composer-2.5-fast
-- Kontrolor vývojáře: cursor-grok-4.5-high
-- Kontrolor testera: cursor-grok-4.5-high-fast
+Modely (default = auto; pin Grok/Composer dle potřeby):
+- Všechny role: auto
+- Pin (volitelně): viz sekce Modely / MODELS_PINNED
 Pravidlo: NO-GO = STOP; předchozí role opraví produkční issue; vždy nové VERDIKT issue každé kolo
 Ověření: <testy/lint/docker>
 Pravidla: .cursor/rules/ + repo-git (bez PR) + docs/learning-log.md

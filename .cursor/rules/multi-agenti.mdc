@@ -66,10 +66,11 @@ Zápis body: `gh issue edit --body-file` (ne inline `--body`).
 ## Modely
 
 **Kanonická tabulka:** `docs/multi-agent-workflow.md` (sekce Modely).  
-**Default = Cursor Models** (Grok + Composer) — vyhnout se Anthropic/OpenAI on-demand.  
-V kickoffu uveď `MODEL:` u role; kontrolor ideálně **jiný** model než produkce.
+**Default = `auto`** (Cursor Auto routing — méně on-demand). Pin Grok/Composer jen při potřebě stability / „kontrolor ≠ produkce“.  
+V kickoffu uveď `MODEL: auto` (nebo pin slug).
 
-**Fallback:** pokud doporučený slug není v Cursor Task dostupný, použij alternativu ze sloupce Alternativa (stále Cursor Models). **`*-fast` je legitimní** u Grok i Composer.
+**CLI:** `ma-run-role.sh` bez `--model` nebo `--model auto` → CLI bez flagu `--model`.  
+**Task fallback:** `inherit` při Auto. Anthropic/OpenAI jen na explicitní žádost.
 
 ## risk/low + verdikt-as-comment (#102)
 

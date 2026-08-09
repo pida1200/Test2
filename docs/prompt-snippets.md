@@ -109,7 +109,7 @@ Použij **jen** když nález je mimo scope pipeline nebo Integrátor vědomě od
 
 ```text
 ROLE: Tester
-MODEL: composer-2.5-fast
+MODEL: auto
 VSTUP_ISSUE: #<TESTY> + #<ANALÝZA> (scope)
 
 Nález mimo scope / odložený → vytvoř [BUG]:
@@ -164,7 +164,7 @@ Hotovo když:
 
 ```text
 ROLE: Analytik
-MODEL: cursor-grok-4.5-high
+MODEL: auto
 VSTUP_ISSUE: #<PIPELINE>
 VÝSTUP_ISSUE: #<ANALÝZA>
 
@@ -199,7 +199,7 @@ PŘI NO-GO: <kdo opravuje produkční issue; znovu který verdikt>
 
 ```text
 ROLE: Integrátor
-MODEL: composer-2.5-fast
+MODEL: auto
 VSTUP_ISSUE: #<PIPELINE> + #<VERDIKT-A> + #<VERDIKT-V> + #<VERDIKT-T> (vše gate/go)
 
 Před handoffem:
@@ -237,7 +237,7 @@ I/O: GitHub Issues
 
 Vývojář:
 ROLE: Vývojář
-MODEL: composer-2.5-fast   # alt: composer-2.5; Cursor Models only
+MODEL: auto   # pin: composer-2.5-fast
 VSTUP_ISSUE: #<PIPELINE nebo zadání>
 VÝSTUP_ISSUE: #<IMPLEMENTACE>
 Na začátek body: mini-plán (1–3 věty) — cíl, dotčené soubory, jak ověříš
@@ -246,7 +246,7 @@ PŘI NO-GO: oprav dle #<VERDIKT-V>, bump verze v body, znovu review
 
 Kontrolor vývojáře:
 ROLE: Kontrolor vývojáře
-MODEL: cursor-grok-4.5-high   # alt: cursor-grok-4.5-high-fast; Cursor Models only
+MODEL: auto   # pin: cursor-grok-4.5-high (≠ Composer)
 VSTUP_ISSUE: #<IMPLEMENTACE>
 VÝSTUP_ISSUE: #<VERDIKT-V>
 GATE: GO → Integrátor commitne feature větev + MERGE-PENDING; NO-GO → Vývojář opraví

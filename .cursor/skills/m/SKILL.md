@@ -33,7 +33,7 @@ Kanonická gramatika: tato tabulka. Rule / command / snippets **jen odkazují** 
 
 **Default (`/m #N`):** v **jednom chatu** proveď po sobě fáze pipeline (Integrátor řídí smyčku), dokud nenastane STOP.
 
-**CLI first, Task = fallback:** pro každou roli nejdřív zkus `bash docs/scripts/ma-run-role.sh --role <role> --pipeline #N --model <slug>` (detekuje `cursor-agent` v PATH). Exit `3` = CLI chybí → skript vytiskne hotový prompt, vlož ho do Cursor Task **beze změny**. `MODEL:` z `docs/multi-agent-workflow.md` (sekce Modely). Role card: `docs/ma-role-cards/<role>.md` — **ne** celý workflow do kontextu.
+**CLI first, Task = fallback:** pro každou roli nejdřív zkus `bash docs/scripts/ma-run-role.sh --role <role> --pipeline #N` (default `--model auto`; detekuje `cursor-agent` v PATH). Exit `3` = CLI chybí → skript vytiskne hotový prompt, vlož ho do Cursor Task **beze změny**; při `MODEL: auto` použij Task `model: "inherit"`. Pin slug jen když next-bot / uživatel výslovně žádá. Role card: `docs/ma-role-cards/<role>.md` — **ne** celý workflow do kontextu.
 
 **Mini-plán (1–3 věty) jen Analytik a Vývojář** — do body `[ANALÝZA]` / na začátek `[IMPLEMENTACE]`. Kontrolor, Tester, Integrátor plán nepíšou.
 
