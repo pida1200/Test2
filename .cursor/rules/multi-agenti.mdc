@@ -18,7 +18,7 @@ Kanonicky: `.cursor/skills/m/SKILL.md` (sekce Parsování / STOP). Sem nekopíru
 
 Labely `ma/*` z PR #3 **nezavádět** — používej `multiagent/*` + `gate/*`.
 
-**Orchestrace (default):** v jednom chatu postupně role — **CLI first** (`docs/scripts/ma-run-role.sh` + `docs/ma-role-cards/`), **Task = fallback** při exitu 3 — dokud NO-GO / `blocked` / `MERGE-PENDING` / `once`. Mini-plán jen Analytik + Vývojář. CI **nespouští** Cursor — bot komentuje CLI one-liner + `/m #N`.
+**Orchestrace (default `/m #N`):** v jednom chatu řetěz role přes **Task/subagent** (mezi fázemi se neptat). CLI (`ma-run-role.sh`) jen když je `cursor-agent` v PATH; exit 3 → ihned Task, ne STOP. Mini-plán jen Analytik + Vývojář. CI **nespouští** Cursor — bot komentuje `/m #N` (+ volitelný CLI one-liner).
 
 ## Role
 

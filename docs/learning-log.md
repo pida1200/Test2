@@ -26,6 +26,15 @@ Pravidlo: `repo-kvalita.mdc`.
 
 ## Záznamy
 
+### 2026-08-09 – Obnova orchestrace Task-first (řetězení fází)
+
+- Výsledek: po #83 „CLI first“ agent často skončil u exit 3 / one-lineru a nepokračoval.
+  Skill/command/rule znovu: Task/subagent ihned, exit 3 ≠ STOP, mezi fázemi se neptat.
+  Next-bot: `/m #N` před CLI. Wiki `zmeny-2026-08-09-ma-orchestrace-task-first`.
+- Ověření: `npm run check:ma`
+- Riziko: bez otevřeného `/m #N` chatu CI pořád nespouští Cursor (mimo scope).
+- Další krok: ověřit `/m #<pipeline>` bez `once` — Analytik→…→MERGE-PENDING v jednom běhu.
+
 ### 2026-08-09 – MA default modely → Cursor Auto (+ pin Grok/Composer)
 
 - Výsledek: default `MODELS` = `auto` u všech rolí; `MODELS_PINNED` drží Grok/Composer.

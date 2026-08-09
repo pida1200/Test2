@@ -372,7 +372,7 @@ VÝSTUP_ISSUE: #<PIPELINE> (handoff MERGE-PENDING; issue zůstává OPEN)
 
 Postup:
 1. Kickoff: pokud uživatel už má pipeline issue (např. bez `[PIPELINE]` titulku) → **doplní** titulek + labely; nové `[PIPELINE]` vytvoř **jen když žádné neexistuje**; odkaž v chatu
-2. Orchestruj vytvoření produkčních/verdikt issues dle pipeline (CLI first / Task)
+2. Orchestruj vytvoření produkčních/verdikt issues dle pipeline (Task/subagent; CLI jen s `cursor-agent`)
 3. Spoj kód / konflikty na feature větvi — **ne** duplicitní full `npm run check`, pokud Tester doložil zelené v `[TESTY]` (výjimka: konflikt / pochybnost); full check = merge workflow G6
 4. **Ověř Wiki:** `bash docs/scripts/check-wiki-seed.sh`; u změny chování existuje záznam `docs/wiki/zmeny-…` + řádek v `zmeny-index.md`
 5. Commit (+ push **feature větve**); bez PR; **nesloučuj do `main`** (repo-git.mdc)
@@ -508,13 +508,13 @@ Skill: `.cursor/skills/m/SKILL.md` · Command: `.cursor/commands/m.md`
 Číslo issue **vždy s `#`**. Bez `#` je `2` režim, ne issue.  
 Labely `ma/*` **nezavádět** — používej `multiagent/*` + `gate/*`.
 
-**Orchestrace:** jeden chat / jeden kick; **CLI first** (`docs/scripts/ma-run-role.sh` + role cards), **Task = fallback** při exitu 3. **STOP:** NO-GO, `gate/blocked`, chybí `gh` write, `once`, `MERGE-PENDING`. Kanonická gramatika: `.cursor/skills/m/SKILL.md` (tato tabulka je zrcadlo).
+**Orchestrace:** jeden chat / jeden kick; **Task/subagent řetězí role** (mezi fázemi se neptat). CLI (`ma-run-role.sh`) jen když je `cursor-agent` v PATH; exit 3 → ihned Task, ne STOP. **STOP:** NO-GO, `gate/blocked`, chybí `gh` write, `once`, `MERGE-PENDING`. Kanonická gramatika: `.cursor/skills/m/SKILL.md`.
 
 Copy-paste šablony: `docs/prompt-snippets.md`.
 
 ## Token budget rolí
 
-Cíl: méně tokenů v parent chatu — role se spouští **CLI first** (`docs/scripts/ma-run-role.sh`), Task jen jako fallback (exit `3`, CLI chybí). Prompt odkazuje na **role card** (`docs/ma-role-cards/<role>.md`), ne na celý tento dokument. Mini-plán píší **jen** Analytik a Vývojář. Integrátor je **tenký** — routing + `gh` + STOP/MERGE-PENDING, ne duplicitní full check.
+Cíl: méně tokenů v parent chatu — parent orchestruje, role běží v **Task/subagent** (nebo CLI když `cursor-agent` existuje). Prompt = role card / `ma-run-role.sh --print-prompt`, ne celý tento dokument. Mini-plán píší **jen** Analytik a Vývojář. Integrátor je **tenký** — routing + `gh` + STOP/MERGE-PENDING, ne duplicitní full check.
 
 **Routing:** scoped / jasný DoD → `/m 2 #N`; plná 3+3 jen při nejasném API/DoD/bezpečnosti.
 
@@ -552,7 +552,7 @@ bash docs/scripts/ma-run-role.sh --role <role> --pipeline <N> \
 | Gate check | `.github/workflows/multiagent-gate-check.yml` | validace verdiktů (anchored `Verdikt:`/`Pipeline:`/`Vstup:`); komentář při chybě |
 | Wiki sync | `.github/workflows/wiki-sync.yml` | push `docs/wiki/**` na `main` → `sync-wiki-to-github.sh` |
 | Lokální přehled | `docs/scripts/ma-pipeline-view.sh` | stejný přehled přes `gh` když Actions nejsou dostupné |
-| Spuštění role | `docs/scripts/ma-run-role.sh` | CLI first (`cursor-agent`) / Task fallback (exit 3); token budget výše |
+| Spuštění role | `docs/scripts/ma-run-role.sh` + Task | Task/subagent default v orchestraci; CLI když `cursor-agent` v PATH; exit 3 → Task |
 | Labely | `docs/scripts/create-multiagent-labels.sh` | idempotentní vytvoření `multiagent/*` + `gate/*` + `merge/*` + `risk/low` + `wiki/sync-failed` |
 | MA check | `npm run check:ma` | pipeline-sync + regex + wiki-seed + next-lib + dry-run + ma-run-role + ma-merge-lib + **ma-verdict-lib** (offline) |
 | Post-merge check | `npm run check:merge` | lehčí subset (examples-backend + wiki) pro G6 v merge workflow; plný `npm run check` zůstává pro lokální/CI ověření |

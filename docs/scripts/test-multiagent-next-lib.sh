@@ -25,6 +25,9 @@ assert.strictEqual(r.prompt, '/m #34');
 assert.ok(r.commentBody.includes('/m #34 once'));
 assert.strictEqual(r.info.role, 'Vývojář');
 assert.ok(r.commentBody.includes('<!-- multiagent-next -->'));
+assert.ok(r.commentBody.includes('orchestrace'));
+// /m orchestrace před CLI one-linerem (lidé nemají brát jen jeden CLI krok)
+assert.ok(r.commentBody.indexOf('/m #34') < r.commentBody.indexOf('ma-run-role.sh'));
 assert.ok(r.cliOneLiner.includes('ma-run-role.sh'));
 assert.ok(r.cliOneLiner.includes('--role vyvojar'));
 assert.ok(r.cliOneLiner.includes('--pipeline 34'));

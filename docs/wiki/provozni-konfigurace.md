@@ -72,7 +72,7 @@ Detail: `docs/wiki/zmeny-2026-08-05-pipeline-81-merge-git-ukol.md`.
 
 | Vrstva | Co dělá |
 |--------|---------|
-| Cursor `/m #N` | spouští role — **CLI first** (`docs/scripts/ma-run-role.sh`), Task = fallback |
+| Cursor `/m #N` | orchestruje role — **Task/subagent** řetězí fáze; CLI jen když `cursor-agent` v PATH |
 | `multiagent-next.yml` | jen komentář s `/m #N` a `/m #N once` |
 | Actions | **nespouští** Cursor agenty (API = follow-up) |
 
@@ -80,7 +80,7 @@ Detail: `docs/wiki/zmeny-2026-08-05-pipeline-81-merge-git-ukol.md`.
 
 Bez `gh` write scope: agent vypíše body/labely k ručnímu vložení — nefailuje napůl.
 
-Chybí-li `cursor-agent` v PATH: `docs/scripts/ma-run-role.sh` skončí exitem `3` a vytiskne hotový prompt — vlož ho do Cursor Task beze změny (fallback, ne STOP). `--dry-run` funguje i bez binárky.
+Chybí-li `cursor-agent` v PATH: v orchestraci ihned **Task/subagent** (exit 3 z `ma-run-role.sh` není STOP — parent nesmí čekat na uživatele). `--print-prompt` / `--dry-run` fungují i bez binárky.
 
 Dlouhý/visící běh CLI: `ma-run-role.sh` nemá vlastní timeout — přerušení (Ctrl-C / kill) je na volajícím, ne na skriptu.
 

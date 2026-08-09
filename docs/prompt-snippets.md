@@ -97,7 +97,7 @@ Role cards: [`docs/ma-role-cards/`](ma-role-cards/README.md).
 
 **Modely:** [`multi-agent-workflow.md`](multi-agent-workflow.md) (sekce Modely).
 
-**CLI first:** `docs/scripts/ma-run-role.sh` (exit 3 → Task). Next-bot vypisuje one-liner.
+**Orchestrace:** Task/subagent řetězí role (`/m #N`). `ma-run-role.sh` jen s `cursor-agent`; exit 3 → ihned Task. Next-bot: `/m #N` první, CLI secondary.
 
 I/O vždy přes GitHub Issues. Integrátor při kickoffu: existující pipeline **doplní**; nové jen když žádné neexistuje.
 

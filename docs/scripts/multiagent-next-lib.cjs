@@ -301,27 +301,28 @@ function routeNextStep(opts) {
     `Artefakt: \`${artifact}\` · Gate: \`${gate}\`${verdictTag} · Role: **${info.role}** · Model: \`${info.model}\``,
     ``,
   ];
-  if (cliOneLiner) {
-    commentLines.push(
-      `CLI first (Integrátor / terminál):`,
-      ``,
-      '```bash',
-      cliOneLiner,
-      '```',
-      ``,
-      `Exit 3 = CLI chybí → Task fallback s vytištěným promptem. Orchestace:`,
-      ``
-    );
-  } else {
-    commentLines.push(`V Cursoru (Agent chat):`, ``);
-  }
+  // Orchestrace first (lidé/agent mají spustit /m #N = řetěz fází). CLI one-liner až sekundárně.
   commentLines.push(
+    `V Cursoru — **orchestrace** (default, řetězí fáze):`,
+    ``,
     '```text',
     `${prompt}           # orchestrace do STOP (default)`,
     `${promptOnce}      # jen jeden krok`,
     '```',
-    ``,
-    `_(skill: \`.cursor/skills/m/SKILL.md\` — CI nespouští Cursor)_`,
+    ``
+  );
+  if (cliOneLiner) {
+    commentLines.push(
+      `Volitelně CLI (jen když \`cursor-agent\` v PATH; jinak Task):`,
+      ``,
+      '```bash',
+      cliOneLiner,
+      '```',
+      ``
+    );
+  }
+  commentLines.push(
+    `_(skill: \`.cursor/skills/m/SKILL.md\` — CI nespouští Cursor; v chatu Task/subagent řetězí role)_`,
     ``,
     `_${info.hint}_`,
     ``,
