@@ -6,11 +6,12 @@
 
 | Produkce | Artefakt | Kontrola | Artefakt |
 |----------|----------|----------|----------|
-| Analytik | `[ANALÝZA]` | Kontrolor A | `[VERDIKT-A]` |
+| Analytik | `[ANALÝZA]` | Kontrolor A | `[VERDIKT-A]` (nebo GO komentář při `risk/low`) |
 | Vývojář | `[IMPLEMENTACE]` | Kontrolor V | `[VERDIKT-V]` |
 | Tester | `[TESTY]` | Kontrolor T | `[VERDIKT-T]` |
 
-**Integrátor** (tenký) orchestruje kickoff, konflikty, squash + push **feature větve**, learning-log, handoff `MERGE-PENDING` (**merge do `main` = člověk** labelem `merge/approved`; bez PR). Full check = Tester / merge G6.
+**Integrátor** (tenký) orchestruje kickoff, konflikty, push **feature větve**, learning-log, handoff `MERGE-PENDING`.  
+**Merge do `main`** = člověk na `[MERGE]` úkolu (Ano/Ne) — bez PR. Full check = Tester / merge G6.
 
 ## Pravidla brány
 
@@ -26,5 +27,5 @@
 
 ## Labely
 
-`multiagent` + `multiagent/{pipeline,analyza,implementace,testy,verdikt,bug}` + `gate/{pending,go,no-go,blocked}`.  
+`multiagent` + `multiagent/{pipeline,analyza,implementace,testy,verdikt,bug,merge-review}` + `gate/{pending,go,no-go,blocked}` + `merge/{approved,rejected,done,failed}`.  
 Labely `ma/*` se **nezavádějí**.

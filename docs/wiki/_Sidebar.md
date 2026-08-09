@@ -12,4 +12,7 @@
   - [Monitoring](provozni-monitoring)
 - **Změny**
   - [Index](zmeny-index)
+  - [Merge Ano/Ne](zmeny-2026-08-09-ma-merge-ano-ne)
+  - [Task-first](zmeny-2026-08-09-ma-orchestrace-task-first)
+  - [Auto modely](zmeny-2026-08-09-ma-cursor-models-grok)
   - [Šablona](zmeny-sablona)

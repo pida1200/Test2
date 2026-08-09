@@ -26,6 +26,14 @@ Pravidlo: `repo-kvalita.mdc`.
 
 ## Záznamy
 
+### 2026-08-09 – Wiki seed sync: Auto + Task-first + merge Ano/Ne
+
+- Výsledek: aktualizovány Home, Sidebar, aplikacni-*, provozni-* podle Auto modelů,
+  Task-first orchestrace a `[MERGE]` Ano/Ne; `npm run check:wiki` + sync na GitHub Wiki.
+- Ověření: `npm run check:wiki`; `bash docs/scripts/sync-wiki-to-github.sh` (pokud token dovolí)
+- Riziko: mirror na UI vyžaduje Wiki enabled + token s push do `.wiki.git`
+- Další krok: po merge PR ověřit [Test2 wiki](https://github.com/pida1200/Test2/wiki)
+
 ### 2026-08-09 – Merge jako GitHub úkol Ano/Ne
 
 - Výsledek: po MERGE-PENDING bot založí `[MERGE] … Ano / Ne?` (assignee). Ano =

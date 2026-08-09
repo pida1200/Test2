@@ -5,11 +5,15 @@
 ## Happy path — plná pipeline
 
 1. Vytvoř / doplň `[PIPELINE]` (šablona nebo Integrátor).
-2. V Cursoru: **`/m #N`** — **orchestrace** (Analytik → … → Integrátor) v jednom chatu.
+2. V Cursoru: **`/m #N`** — **orchestrace** (Analytik → … → Integrátor) v jednom chatu.  
+   Role běží přes **Task/subagent**; mezi fázemi se agent neptá. Model default `auto`.
 3. Jen jeden krok: **`/m #N once`**.
-4. Po GO na A+V+T Integrátor: learning-log + push feature větve + komentář `MERGE-PENDING`; **merge do `main` dělá člověk**, teprve pak se zavře `[PIPELINE]`.
+4. Po GO na A+V+T Integrátor: learning-log + push feature větve + komentář `MERGE-PENDING`.
+5. Bot založí **`[MERGE] … Ano / Ne?`** (Assigned). Člověk:
+   - **Ano** → label `merge/approved` → merge do `main`, close pipeline
+   - **Ne** → label `merge/rejected` → bez merge
 
-CI bot komentuje oba příkazy; **nespouští** Cursor sám.
+CI bot komentuje `/m #N`; **nespouští** Cursor sám.
 
 ## Rychlá 2er
 
